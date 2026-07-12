@@ -197,6 +197,8 @@ export const translations = {
       chat: 'Chat',
       chatHint: 'You can chat with Admin here',
       search: 'Search',
+      events: 'Events',
+      places: 'Places',
     }
   },
   tr: {
@@ -394,6 +396,8 @@ export const translations = {
       chat: 'Mesaj',
       chatHint: 'Buradan Admin ile mesajlaşabilirsiniz',
       search: 'Ara',
+      events: 'Etkinlik',
+      places: 'Gezi',
     }
   }
 };

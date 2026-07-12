@@ -15,9 +15,6 @@ import {
   Heart,
   ShieldCheck,
   X,
-  ZoomIn,
-  ZoomOut,
-  Download,
   Globe,
   Clock,
   Tag,
@@ -154,7 +151,6 @@ import {
   CompanyCategoryFilterBar,
   CompanyCategoriesExplorerPage,
   AnnouncementFeedList,
-  EventFeedList,
 } from './lib/categoryCards';
 import {
   ALL_CATEGORY_STYLE,
@@ -164,6 +160,7 @@ import {
   ANNOUNCEMENT_CATEGORY_STYLES,
 } from './lib/categoryStyles';
 import { BusinessProfileTemplate } from './lib/BusinessProfileTemplate';
+import { EventsExplorePage, PlacesExplorePage } from './lib/explorePages';
 import { BusinessAddressMapPickerLoader } from './lib/BusinessAddressMapPickerLoader';
 import type { BusinessLocationValue } from './lib/BusinessAddressMapPicker';
 import { getMediaDevices, getNavigator, getPlatform, getUserAgent } from './lib/browserEnv';
@@ -177,6 +174,13 @@ import {
   UserCompanyMessagesInbox,
   UserCompanyMessagesQuickBox,
 } from './lib/userCompanyMessages';
+import {
+  AnnouncementHeaderActions,
+  buildIncomingAnnouncementThreads,
+  buildOutgoingAnnouncementThreads,
+  countUnreadAnnouncementMessages,
+  UserAnnouncementMessagesInbox,
+} from './lib/userAnnouncementMessages';
 import { NearbyMapLoader } from './lib/NearbyMapLoader';
 import { MapBrandMark } from './lib/mapBrandMark';
 import {
@@ -406,7 +410,7 @@ const StarRating = ({ rating, size = 12 }: { rating: number; size?: number }) =>
 };
 
 const MapNavIcon = ({ active = false }: { active?: boolean }) => (
-  <MapBrandMark size={44} active={active} className={active ? 'scale-105' : ''} />
+  <MapBrandMark size={22} active={active} className={active ? 'scale-105' : ''} />
 );
 
 const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-xl", fullBleed = false, fullscreen = false }: { isOpen: boolean, onClose: () => void, title: string, children?: React.ReactNode, maxWidth?: string, fullBleed?: boolean, fullscreen?: boolean }) => {
@@ -1244,6 +1248,7 @@ const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'All' | 'Landing' | 'Admin' | 'Announcements'>('Landing');
+  const [homeNavSection, setHomeNavSection] = useState<'home' | 'events' | 'places'>('home');
 
   useEffect(() => {
     if (selectedCategory === 'Admin') {
@@ -1845,7 +1850,6 @@ const App: React.FC = () => {
   const [profileUser, setProfileUser] = useState<any | null>(null);
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
-  const [avatarUrlInput, setAvatarUrlInput] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isEditingProfileDetails, setIsEditingProfileDetails] = useState(false);
   const [editNameInput, setEditNameInput] = useState('');
@@ -1889,6 +1893,61 @@ const App: React.FC = () => {
     if (!currentUser || hasBusinessOwned) return [];
     return buildUserOutgoingCompanyThreads(businessChatMessages, currentUser.id, businesses, lang);
   }, [businessChatMessages, currentUser, businesses, lang, hasBusinessOwned]);
+
+  const userOwnAnnouncements = useMemo(() => {
+    if (!currentUser) return [];
+    return notifications.filter((n) => n.userId === currentUser.id && n.approved);
+  }, [notifications, currentUser?.id]);
+
+  const hasPostedAnnouncement = userOwnAnnouncements.length > 0;
+
+  const incomingAnnouncementThreads = useMemo(() => {
+    if (!currentUser) return [];
+    return buildIncomingAnnouncementThreads(
+      notificationMessages,
+      currentUser.id,
+      notifications,
+      lang,
+      dbUsers,
+    );
+  }, [notificationMessages, currentUser?.id, notifications, lang, dbUsers]);
+
+  const outgoingAnnouncementThreads = useMemo(() => {
+    if (!currentUser) return [];
+    return buildOutgoingAnnouncementThreads(
+      notificationMessages,
+      currentUser.id,
+      notifications,
+      lang,
+      dbUsers,
+    );
+  }, [notificationMessages, currentUser?.id, notifications, lang, dbUsers]);
+
+  const unreadAnnouncementMessageCount = useMemo(() => {
+    if (!currentUser) return 0;
+    return countUnreadAnnouncementMessages(notificationMessages, currentUser.id);
+  }, [notificationMessages, currentUser?.id]);
+
+  const handleOpenAnnouncementMessages = useCallback(() => {
+    setActiveNotifMsgThread(null);
+    setIsNotifMessageModalOpen(true);
+  }, []);
+
+  const handleOpenNotifMsgThread = useCallback(
+    (threadKey: string) => {
+      setActiveNotifMsgThread(threadKey);
+      const [notifId, otherId] = threadKey.split('_');
+      notificationMessages
+        .filter((m) => {
+          const mOtherId = m.senderId === currentUser?.id ? m.receiverId : m.senderId;
+          return m.notifId === notifId && mOtherId === otherId && m.receiverId === currentUser?.id && !m.read;
+        })
+        .forEach((m) => {
+          void updateDoc(doc(db, 'notification_messages', m.id), { read: true });
+        });
+    },
+    [notificationMessages, currentUser?.id],
+  );
 
   const handleOpenCompanyMessageThread = useCallback(
     (businessId: string, partnerId: string) => {
@@ -2277,6 +2336,13 @@ const App: React.FC = () => {
     });
   }, []);
 
+  const closeLightbox = useCallback(() => {
+    setLightboxIndex(-1);
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setRotationAngle(0);
+  }, []);
+
   // Global click listener to intercept any image zoom view and gather gallery context
   useEffect(() => {
     const handleGlobalImageClick = (e: MouseEvent) => {
@@ -2413,7 +2479,7 @@ const App: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setLightboxIndex(-1);
+        closeLightbox();
       } else if (e.key === 'ArrowRight' || e.key === 'Right') {
         handleNextImage();
       } else if (e.key === 'ArrowLeft' || e.key === 'Left') {
@@ -2427,30 +2493,12 @@ const App: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [lightboxIndex, lightboxImages, handleNextImage, handlePrevImage]);
+  }, [lightboxIndex, lightboxImages, handleNextImage, handlePrevImage, closeLightbox]);
 
   const handleWheel = (e: React.WheelEvent) => {
     const scaleFactor = 0.12;
     const nextZoom = zoomLevel + (e.deltaY < 0 ? scaleFactor : -scaleFactor);
     setZoomLevel(Math.min(Math.max(nextZoom, 0.5), 4));
-  };
-
-  const handleDownload = async (url: string) => {
-    if (!url) return;
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `goofind_download_${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(url, '_blank');
-    }
   };
 
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
@@ -3488,6 +3536,20 @@ const App: React.FC = () => {
     setSelectedNotificationCategoriesMulti([]);
     setSearchQuery('');
     setError(null);
+    setIsNearbyMapOpen(false);
+    setHomeNavSection('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToHomeSection = (section: 'home' | 'events' | 'places') => {
+    setSelectedCategory('Landing');
+    setSelectedCompanyCategory('All');
+    setSelectedNotificationCategory('All');
+    setSelectedNotificationCategoriesMulti([]);
+    setSearchQuery('');
+    setError(null);
+    setIsNearbyMapOpen(false);
+    setHomeNavSection(section);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -5550,6 +5612,10 @@ const App: React.FC = () => {
 
   const isAdminView = selectedCategory === 'Admin';
   const isHomeView = selectedCategory === 'Landing';
+  const isHomeLandingView = isHomeView && homeNavSection === 'home';
+  const isEventsPageView = isHomeView && homeNavSection === 'events';
+  const isPlacesPageView = isHomeView && homeNavSection === 'places';
+  const isFullScreenTabView = isEventsPageView || isPlacesPageView;
 
   const handleSendVerification = async () => {
     if (auth.currentUser) {
@@ -6481,45 +6547,36 @@ const App: React.FC = () => {
                   <LogoText size="text-xl sm:text-3xl" dark={isHeaderTransparent} />
                 </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <button
-                    onClick={() => setLang(lang === 'tr' ? 'en' : 'tr')}
-                    className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-b from-accent to-accent-dark text-white rounded-xl sm:rounded-2xl border border-accent/30 shadow-[0_6px_16px_rgba(255,107,0,0.32)] hover:scale-105 active:scale-95 transition-all"
-                    title={lang === 'tr' ? 'Switch to English' : 'Türkçe\'ye Geç'}
-                  >
-                    <span className="text-sm sm:text-base leading-none">{lang === 'tr' ? '🇨🇦' : '🇹🇷'}</span>
-                    <span className="text-[12px] sm:text-[13px] font-black tracking-wider uppercase">
-                      {lang === 'tr' ? 'EN' : 'TR'}
-                    </span>
-                  </button>
-
+                <div className="flex flex-col items-center gap-1 shrink-0">
                   {currentUser ? (
                     <button
                       onClick={() => setIsProfileOpen(true)}
-                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 sm:py-2 bg-gradient-to-b from-accent to-accent-dark text-white rounded-xl sm:rounded-2xl border border-accent/30 shadow-[0_6px_16px_rgba(255,107,0,0.32)] hover:scale-105 active:scale-95 transition-all"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border-2 border-primary/25 bg-primary-soft hover:border-primary/50 active:scale-95 transition-all flex items-center justify-center"
                       title={lang === 'tr' ? 'Profilim' : 'My Profile'}
                     >
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/10 overflow-hidden border border-white/20 shrink-0">
-                        {currentUser.photoUrl ? (
-                          <img src={currentUser.photoUrl} className="w-full h-full object-cover" alt={currentUser.name} referrerPolicy="no-referrer" />
-                        ) : (
-                          <User size={20} className="text-white m-auto mt-1.5" />
-                        )}
-                      </div>
-                      <span className="hidden sm:inline text-[13px] font-black tracking-wider uppercase">PROFIL</span>
+                      {currentUser.photoUrl ? (
+                        <img src={currentUser.photoUrl} className="w-full h-full object-cover" alt={currentUser.name} referrerPolicy="no-referrer" />
+                      ) : (
+                        <User size={16} className="text-primary" strokeWidth={2.5} />
+                      )}
                     </button>
                   ) : (
                     <button
                       onClick={() => { setAuthView('login'); setIsAuthModalOpen(true); }}
-                      className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 bg-gradient-to-b from-accent to-accent-dark text-white rounded-xl sm:rounded-2xl border border-accent/30 shadow-[0_6px_16px_rgba(255,107,0,0.32)] hover:scale-105 active:scale-95 transition-all"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden border-2 border-primary/25 bg-primary-soft hover:border-primary/50 active:scale-95 transition-all flex items-center justify-center"
                       title={lang === 'tr' ? 'Giriş Yap' : 'Sign In'}
                     >
-                      <User size={20} className="stroke-[2.5] shrink-0" />
-                      <span className="text-[12px] sm:text-[13px] font-black tracking-wider uppercase">
-                        {lang === 'tr' ? 'GİRİŞ' : 'LOGIN'}
-                      </span>
+                      <User size={16} className="text-primary" strokeWidth={2.5} />
                     </button>
                   )}
+
+                  <button
+                    onClick={() => setLang(lang === 'tr' ? 'en' : 'tr')}
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border border-primary/20 text-primary flex items-center justify-center hover:bg-primary-soft/40 active:scale-95 transition-all"
+                    title={lang === 'tr' ? 'Switch to English' : 'Türkçe\'ye Geç'}
+                  >
+                    <Globe size={13} strokeWidth={2.5} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -6528,7 +6585,7 @@ const App: React.FC = () => {
       })()}
 
       {/* Hero Section — matches news detail page layout */}
-      {isHomeView && !isAdminView && (
+      {isHomeLandingView && !isAdminView && (
           <section className="relative bg-[#EFF6FF] border-b border-slate-100 pt-4 pb-6 sm:pb-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
               {combinedBannerItems.length > 0 ? (
@@ -6623,7 +6680,30 @@ const App: React.FC = () => {
       )}
 
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      {isEventsPageView && (
+        <EventsExplorePage
+          events={events}
+          lang={lang}
+          onSelect={(evt) => setSelectedEventForModal(evt)}
+        />
+      )}
+
+      {isPlacesPageView && (
+        <PlacesExplorePage
+          places={places}
+          lang={lang}
+          selectedCategory={selectedPlaceCategory}
+          onCategoryChange={setSelectedPlaceCategory}
+          onSelectPlace={(place) => setSelectedPlace(place)}
+          onOpenAllPlaces={() => {
+            setSelectedPlaceCategory('All');
+            setIsAllPlacesModalOpen(true);
+          }}
+        />
+      )}
+
+      {!isFullScreenTabView && (
+      <main className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isHomeLandingView ? 'pt-3 pb-8 sm:pt-4' : 'py-8 sm:py-12'}`}>
              {isAdminView ? (
           <div className="space-y-12 animate-in fade-in zoom-in duration-500">
              <div className="flex items-center justify-between">
@@ -10001,13 +10081,25 @@ Designed with ❤️ for Goofind App Store Listings.
 
                     </div>
         ) : (
-          <div className="space-y-32 pb-32">
+          <div className="pb-32">
             {isHomeView ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="space-y-32"
+                className="home-sections"
               >
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSearchOpen(true)}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 bg-white border border-primary/15 rounded-lg text-left hover:border-primary/30 hover:bg-primary-soft/30 transition-all active:scale-[0.99] shadow-sm"
+                  >
+                    <Search size={16} className="text-primary shrink-0" strokeWidth={2.5} />
+                    <span className="text-[13px] font-semibold text-slate-400 truncate">
+                      {t.hero.searchPlaceholder}
+                    </span>
+                  </button>
+
                 {/* --- COMPANIES: Directory zone (blue) --- */}
                 <section className="animate-in fade-in duration-1000 relative rounded-[1.75rem] sm:rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-primary-soft via-white to-primary-soft/30 p-4 sm:p-6 shadow-sm shadow-primary/5">
                   <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-primary/10">
@@ -10025,9 +10117,9 @@ Designed with ❤️ for Goofind App Store Listings.
                       {!currentUser ? (
                         <motion.button 
                           onClick={() => { setAuthView('register'); setIsAuthModalOpen(true); }}
-                          className="px-3 sm:px-5 py-1.5 sm:py-2 bg-primary text-white rounded-lg font-black text-[11px] sm:text-[13px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap flex items-center gap-1.5 shrink-0"
+                          className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary text-white rounded-md font-black text-[9px] sm:text-[10px] uppercase tracking-wide shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap flex items-center gap-1 shrink-0"
                         >
-                          <UserPlus size={16} strokeWidth={3} />
+                          <UserPlus size={12} strokeWidth={3} />
                           {lang === 'en' ? 'Add' : 'Ekle'}
                         </motion.button>
                       ) : (
@@ -10056,11 +10148,11 @@ Designed with ❤️ for Goofind App Store Listings.
                                 });
                               }
                             }}
-                            className="px-3 sm:px-5 py-1.5 sm:py-2 bg-primary text-white rounded-lg font-black text-[11px] sm:text-[13px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap flex items-center gap-1.5 shrink-0"
+                            className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary text-white rounded-md font-black text-[9px] sm:text-[10px] uppercase tracking-wide shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap flex items-center gap-1 shrink-0"
                           >
-                            {hasBusinessOwned ? <Building2 size={16} strokeWidth={3} /> : <Plus size={16} strokeWidth={3} />}
+                            {hasBusinessOwned ? <Building2 size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
                             {hasBusinessOwned 
-                              ? (lang === 'en' ? 'My Business' : 'İşletmem')
+                              ? (lang === 'en' ? 'Company' : 'Şirketim')
                               : (lang === 'en' ? 'Add' : 'Ekle')}
                           </motion.button>
                         </div>
@@ -10103,6 +10195,7 @@ Designed with ❤️ for Goofind App Store Listings.
                     }}
                   />
                 </section>
+                </div>
 
                 {/* --- ANNOUNCEMENTS: warm orange panel + light blue harmony --- */}
                 <section className="announcements-zone animate-in fade-in duration-1000 delay-100 relative rounded-[1.75rem] sm:rounded-[2.25rem] p-4 sm:p-6">
@@ -10118,13 +10211,14 @@ Designed with ❤️ for Goofind App Store Listings.
                           </h3>
                         </div>
                       </div>
-                      <motion.button 
-                        onClick={() => checkAuth(() => setIsPostModalOpen(true))} 
-                        className="px-3 sm:px-5 py-1.5 sm:py-2 bg-accent text-white rounded-lg font-black text-[11px] sm:text-[13px] uppercase tracking-widest shadow-lg shadow-accent/25 hover:scale-105 active:scale-95 transition-all whitespace-nowrap flex items-center gap-1.5 shrink-0"
-                      >
-                         <PenSquare size={16} strokeWidth={3} />
-                         {t.buttons.postNotice}
-                      </motion.button>
+                      <AnnouncementHeaderActions
+                        lang={lang}
+                        unreadMessageCount={unreadAnnouncementMessageCount}
+                        hasOwnListings={hasPostedAnnouncement}
+                        onPostListing={() => checkAuth(() => setIsPostModalOpen(true))}
+                        onOpenMyAds={() => checkAuth(handleOpenAnnouncementMessages)}
+                        variant="landing"
+                      />
                     </div>
                   </div>
 
@@ -10156,7 +10250,7 @@ Designed with ❤️ for Goofind App Store Listings.
                 </section>
 
                 {/* City Communities Section */}
-                <section className="py-2 sm:py-8 border-t border-slate-100">
+                <section className="rounded-[1.75rem] sm:rounded-[2.25rem] border border-primary/10 bg-white p-4 sm:p-6 shadow-sm">
                   <div className="flex flex-row items-center justify-between mb-4 sm:mb-5 gap-2 sm:gap-4 w-full">
                     <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                        <div className="p-1.5 sm:p-2.5 bg-accent rounded-lg shadow-xl shadow-accent/20 shrink-0">
@@ -10182,23 +10276,22 @@ Designed with ❤️ for Goofind App Store Listings.
                                 setSelectedCommunity(myCommObj);
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                               }}
-                              className="text-[14px] font-black text-white bg-emerald-600 hover:bg-emerald-500 uppercase tracking-widest px-3 py-2 sm:px-5 sm:py-2.5 rounded-full hover:scale-105 active:scale-95 transition-all duration-300 shadow-lg shadow-emerald-500/20 flex items-center gap-2 group cursor-pointer shrink-0"
+                              className="px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-[10px] font-black text-white bg-emerald-600 hover:bg-emerald-500 uppercase tracking-wide rounded-md hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-md shadow-emerald-500/20 flex items-center gap-1 group cursor-pointer shrink-0"
                             >
                               <span className="relative flex h-1.5 w-1.5 shrink-0">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-200"></span>
                               </span>
-                              <span className="block sm:hidden text-[13px] font-black tracking-wider">my COMmunity</span>
-                              <span className="hidden sm:inline">{lang === 'en' ? 'My Community' : 'Benim Topluluğum'}</span>
+                              <span>{lang === 'en' ? 'Community' : 'Topluluğum'}</span>
                             </button>
                           ) : null;
                         })()
                       )}
                       <button 
                         onClick={() => setSelectedCategory('Communities')}
-                        className="text-[14px] font-black text-primary uppercase tracking-widest hover:text-primary/70 transition-colors flex items-center gap-2 group cursor-pointer"
+                        className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-wide hover:text-primary/70 transition-colors cursor-pointer shrink-0"
                       >
-                        {t.buttons.viewAll} <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                        {t.buttons.viewAll}
                       </button>
                     </div>
                   </div>
@@ -10258,100 +10351,6 @@ Designed with ❤️ for Goofind App Store Listings.
                     ))}
                   </div>
                 </section>
-
-                {/* --- EVENTS SECTION --- */}
-                <section className="animate-in fade-in duration-1000 delay-100 py-2 sm:py-8">
-                  <div className="mb-4 sm:mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                    <div className="flex items-center gap-2.5 sm:gap-4">
-                      <div className="p-1.5 bg-accent rounded-lg shadow-lg">
-                        <Calendar className="text-white w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" size={22} />
-                      </div>
-                      <div className="flex flex-col">
-                        <h3 className="text-base sm:text-xl font-black uppercase tracking-tight-brand text-primary font-display italic leading-none">
-                          {t.sections.events}
-                        </h3>
-                        <p className="text-accent-vivid text-[11px] font-black uppercase tracking-widest mt-0.5">
-                          {lang === 'en' ? 'Upcoming Community Events' : 'Gelecek Topluluk Etkinlikleri'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <EventFeedList
-                    events={events.filter(e => e && e.approved && (
-                      !searchQuery.trim() ||
-                      (e.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-                      ((e.description || '').toLowerCase().includes((searchQuery || '').toLowerCase())) ||
-                      ((e.location || '').toLowerCase().includes((searchQuery || '').toLowerCase()))
-                    ))}
-                    lang={lang}
-                    onSelect={(evt) => setSelectedEventForModal(evt)}
-                  />
-                </section>
-
-                {/* --- PLACES TO VISIT SECTION --- */}
-                <section className="animate-in fade-in duration-1000 delay-150 py-4 sm:py-12 relative overflow-hidden">
-                  <div className="mb-4 sm:mb-6 text-center relative flex flex-col items-center">
-                    <h3 className="text-xl sm:text-4xl font-black mb-1.5 sm:mb-3 tracking-tight-brand uppercase text-primary font-display">{t.sections.placesToVisit}</h3>
-                    <div className="w-8 sm:w-12 h-0.5 sm:h-1 bg-accent rounded-full mb-1 sm:mb-2" />
-                    <p className="text-accent-vivid text-[11px] sm:text-[13px] font-black uppercase tracking-widest sm:tracking-brand font-sans">{lang === 'en' ? 'Discover Hidden Gems of Canada' : 'Kanada\'nın Gizli Hazinelerini Keşfedin'}</p>
-                  </div>
-
-                  <PlaceCategoryFilterBar
-                    selected={selectedPlaceCategory}
-                    onSelect={setSelectedPlaceCategory}
-                    lang={lang}
-                    className="mb-4 sm:mb-6"
-                  />
-
-                  <div className="flex gap-4 sm:gap-6 overflow-x-auto no-scrollbar pb-6 px-1.5 snap-x snap-mandatory scroll-smooth min-w-full">
-                    {/* ALL (HEPSİ) Card */}
-                    <div 
-                      onClick={() => {
-                        setSelectedPlaceCategory('All');
-                        setIsAllPlacesModalOpen(true);
-                      }}
-                      className="group cursor-pointer relative aspect-[4/5] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-primary/25 transition-all duration-700 hover:-translate-y-3 border-2 border-dashed border-primary/20 hover:border-primary/50 bg-gradient-to-br from-primary/8 via-primary-mid/8 to-slate-50/50 flex-shrink-0 w-40 sm:w-60 snap-start flex flex-col items-center justify-center text-center p-4 sm:p-6"
-                    >
-                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-primary to-primary-mid text-white flex items-center justify-center mb-4 shadow-lg shadow-primary/20 group-hover:scale-110 group-hover:rotate-12 transition-all duration-500">
-                        <Compass className="w-5 h-5 sm:w-8 sm:h-8 animate-pulse text-white" />
-                      </div>
-                      <h4 className="text-sm sm:text-lg font-black uppercase tracking-widest text-slate-900 font-display">
-                        {lang === 'en' ? 'ALL' : 'HEPSİ'}
-                      </h4>
-                      <p className="text-[12px] sm:text-[14px] font-black uppercase tracking-brand text-accent-vivid mt-2 font-sans px-2 leading-relaxed">
-                        {lang === 'en' ? 'Explore All Places' : 'Tüm Harika Yerler'}
-                      </p>
-                    </div>
-
-                    {places
-                      .filter(p => {
-                        const isApproved = p && p.approved !== false;
-                        if (!isApproved) return false;
-                        if (!matchesPlaceCategoryFilter(p, selectedPlaceCategory)) return false;
-                        if (!searchQuery.trim()) return true;
-                        const matchQuery = searchQuery.trim().toLowerCase();
-                        return (p.name || '').toLowerCase().includes(matchQuery) ||
-                               (p.province || '').toLowerCase().includes(matchQuery) ||
-                               (p.address || '').toLowerCase().includes(matchQuery);
-                      })
-                      .map((place, idx) => {
-                        const placeCat = resolvePlaceCategory(place);
-                        return (
-                          <div key={place.id || idx} onClick={() => setSelectedPlace(place)} className="group cursor-pointer relative aspect-[4/5] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-xl hover:shadow-primary/10 transition-all duration-700 hover:-translate-y-3 border border-slate-100 hover:border-primary/30 flex-shrink-0 w-40 sm:w-60 snap-start">
-                            <img src={place.img} alt={place.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent" />
-                            <div className="absolute top-3 left-3 right-3">
-                              <PlaceCategoryBadge category={placeCat} lang={lang} className="max-w-full truncate" />
-                            </div>
-                            <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 right-4 sm:right-6 text-white transform group-hover:translate-y-[-4px] transition-transform">
-                              <p className="text-[12px] sm:text-[14px] font-black uppercase tracking-brand text-accent-vivid mb-0.5 sm:mb-1 font-sans">{place.province}</p>
-                              <h4 className="text-xs sm:text-base font-black uppercase tracking-tight-brand italic leading-tight font-display text-primary">{place.name}</h4>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </section>
               </motion.div>
             ) : (
               /* BUSINESS DIRECTORY / SEARCH RESULTS VIEW */
@@ -10383,12 +10382,14 @@ Designed with ❤️ for Goofind App Store Listings.
                           </p>
                         </div>
                       </div>
-                      <button 
-                        onClick={() => checkAuth(() => setIsPostModalOpen(true))}
-                        className="px-6 py-2.5 bg-accent text-white rounded-xl font-black text-[13px] uppercase tracking-widest shadow-lg shadow-accent/25 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
-                      >
-                        {lang === 'en' ? 'Post Listing' : 'İlan Ver'}
-                      </button>
+                      <AnnouncementHeaderActions
+                        lang={lang}
+                        unreadMessageCount={unreadAnnouncementMessageCount}
+                        hasOwnListings={hasPostedAnnouncement}
+                        onPostListing={() => checkAuth(() => setIsPostModalOpen(true))}
+                        onOpenMyAds={() => checkAuth(handleOpenAnnouncementMessages)}
+                        variant="page"
+                      />
                     </div>
 
                     <CategoryTabBar
@@ -11237,6 +11238,7 @@ Designed with ❤️ for Goofind App Store Listings.
           </div>
         )}
       </main>
+      )}
 
       <Modal 
         isOpen={isAuthModalOpen} 
@@ -12042,81 +12044,16 @@ Designed with ❤️ for Goofind App Store Listings.
           setIsNotifMessageModalOpen(false);
           setActiveNotifMsgThread(null);
         }} 
-        title={lang === 'en' ? 'Announcement Messages' : 'İlan Mesajlarım'}
+        title={lang === 'en' ? 'My Ads' : 'İlanlarım'}
       >
         <div className="space-y-4 max-h-[70vh] overflow-y-auto no-scrollbar pb-6 px-1">
-           {notificationMessages.length > 0 ? (
-             Object.values(
-               notificationMessages.reduce((acc: any, msg) => {
-                 const otherId = msg.senderId === currentUser?.id ? msg.receiverId : msg.senderId;
-                 const key = `${msg.notifId}_${otherId}`;
-                 if (!acc[key]) {
-                   acc[key] = {
-                     key,
-                     notifId: msg.notifId,
-                     otherId: otherId,
-                     otherName: msg.senderId === currentUser?.id ? 'User' : msg.senderName, 
-                     lastMessage: formatChatPreviewText(msg.content, msg.type === 'image' || !!msg.imageUrl, lang),
-                     timestamp: msg.timestamp,
-                     unread: msg.receiverId === currentUser?.id && !msg.read
-                   };
-                 } else if (msg.timestamp > acc[key].timestamp) {
-                    acc[key].lastMessage = formatChatPreviewText(msg.content, msg.type === 'image' || !!msg.imageUrl, lang);
-                    acc[key].timestamp = msg.timestamp;
-                    if (msg.receiverId === currentUser?.id && !msg.read) acc[key].unread = true;
-                 }
-                 return acc;
-               }, {})
-             ).sort((a: any, b: any) => b.timestamp - a.timestamp).map((thread: any) => {
-               const notif = notifications.find(n => n.id === thread.notifId);
-               return (
-                 <button 
-                   key={thread.key}
-                   onClick={() => {
-                     setActiveNotifMsgThread(thread.key);
-                     notificationMessages
-                       .filter(m => {
-                         const mOtherId = m.senderId === currentUser?.id ? m.receiverId : m.senderId;
-                         return m.notifId === thread.notifId && mOtherId === thread.otherId && m.receiverId === currentUser?.id && !m.read;
-                       })
-                       .forEach(m => {
-                         updateDoc(doc(db, 'notification_messages', m.id), { read: true });
-                       });
-                   }}
-                   className={`w-full text-left p-4 rounded-2xl border transition-all ${activeNotifMsgThread === thread.key ? 'bg-primary/5 border-primary ring-2 ring-primary/10' : 'bg-white border-slate-100 hover:bg-slate-50'}`}
-                 >
-                   <div className="flex gap-4">
-                     <div className="w-12 h-12 rounded-xl bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
-                       {notif?.imageUrl ? <img src={notif.imageUrl} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><MessageSquare size={26}/></div>}
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <div className="flex items-center justify-between mb-1">
-                         <p className="text-[14px] font-black text-slate-900 truncate uppercase tracking-tight">{notif?.title || (lang === 'en' ? 'Annoucement' : 'Duyuru')}</p>
-                         <p className="text-[12px] font-black text-slate-400 shrink-0 uppercase tracking-widest">{new Date(thread.timestamp).toLocaleDateString()}</p>
-                       </div>
-                       <p className="text-[14px] font-black text-slate-400 uppercase tracking-widest mb-1">{thread.otherName}</p>
-                       <p className="text-sm font-semibold text-slate-500 truncate">{thread.lastMessage}</p>
-                     </div>
-                     {thread.unread && (
-                       <div className="w-2.5 h-2.5 bg-primary rounded-full shrink-0 animate-pulse mt-1" />
-                     )}
-                   </div>
-                 </button>
-               );
-             })
-           ) : (
-             <div className="py-20 text-center">
-               <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-100 shadow-inner">
-                  <MessageSquare className="text-slate-300" size={38} />
-               </div>
-               <p className="text-sm font-black text-slate-400 leading-relaxed uppercase tracking-widest">
-                  {lang === 'en' ? 'Your message box is empty' : 'Mesaj kutunuz henüz boş'}
-               </p>
-               <p className="text-[14px] font-bold text-slate-300 uppercase tracking-tighter mt-2">
-                  {lang === 'en' ? 'Inquiries about your posts will appear here' : 'Paylaşımlarınıza gelen sorular burada görünecek'}
-               </p>
-             </div>
-           )}
+           <UserAnnouncementMessagesInbox
+             lang={lang}
+             incomingThreads={incomingAnnouncementThreads}
+             outgoingThreads={outgoingAnnouncementThreads}
+             activeThreadKey={activeNotifMsgThread}
+             onOpenThread={handleOpenNotifMsgThread}
+           />
 
            {activeNotifMsgThread && (
              <div className="mt-8 pt-8 border-t border-slate-100 space-y-6 animate-in slide-in-from-bottom duration-300">
@@ -12524,20 +12461,28 @@ Designed with ❤️ for Goofind App Store Listings.
 
       {/* --- COMMUNITY IMAGE FULLSCREEN VIEWER --- */}
       {previewMessageImage && (
-        <div 
-          className="fixed inset-0 bg-slate-950/90 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-200 select-none"
+        <div
+          className="fixed inset-0 bg-black/95 z-[3000] flex items-center justify-center p-4 select-none no-lightbox"
           onClick={() => setPreviewMessageImage(null)}
         >
-          <button 
+          <button
             type="button"
-            className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 active:scale-95 text-white rounded-full transition-all"
-            onClick={() => setPreviewMessageImage(null)}
+            className="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-[3010] w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all shadow-lg border border-white/20"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPreviewMessageImage(null);
+            }}
+            aria-label={lang === 'tr' ? 'Kapat' : 'Close'}
           >
-            <X size={30} />
+            <X size={24} strokeWidth={2.5} />
           </button>
-          <div className="max-w-4xl max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl border border-white/10 animate-in zoom-in-95 duration-200 bg-black/40" onClick={(e) => e.stopPropagation()}>
-            <img src={previewMessageImage} className="w-full h-auto max-h-[85vh] object-contain rounded-2xl" alt="Preview" referrerPolicy="no-referrer" />
-          </div>
+          <img
+            src={previewMessageImage}
+            className="max-w-[92vw] max-h-[85vh] object-contain"
+            alt=""
+            referrerPolicy="no-referrer"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 
@@ -12666,11 +12611,10 @@ Designed with ❤️ for Goofind App Store Listings.
 
              {/* Expandable Photo Customizer Frame */}
              {isEditingAvatar && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-4 space-y-4 animate-in fade-in slide-in-from-top-3 duration-300">
-                   {/* Top Title */}
+                <div className="bg-white border border-slate-100 rounded-3xl p-4 space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
                    <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                       <span className="text-[13px] font-black text-slate-400 uppercase tracking-wider">
-                         {lang === 'en' ? 'Configure Profile Picture' : 'Profil Resmini Ayarla'}
+                         {lang === 'en' ? 'Profile Photo' : 'Profil Fotoğrafı'}
                       </span>
                       <button 
                         type="button"
@@ -12681,94 +12625,24 @@ Designed with ❤️ for Goofind App Store Listings.
                       </button>
                    </div>
 
-                   {/* Custom File Upload Drawer & Input */}
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Upload local image */}
-                      <div className="flex flex-col">
-                        <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider mb-1.5">
-                          {lang === 'en' ? 'Upload Image File' : 'Fotoğraf Dosyası Yükle'}
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => userAvatarFileInputRef.current?.click()}
-                          disabled={isUploadingAvatar}
-                          className="flex items-center justify-center gap-2 border border-dashed border-slate-250 hover:border-primary/50 hover:bg-primary/5 rounded-2xl p-4 text-center transition-all group cursor-pointer bg-slate-50/50"
-                        >
-                          <Upload size={20} className="text-slate-400 group-hover:text-primary transition-colors duration-200 shrink-0" />
-                          <span className="text-xs font-bold text-slate-600 group-hover:text-primary transition-colors duration-200">
-                            {isUploadingAvatar ? (lang === 'en' ? 'Processing...' : 'Yükleniyor...') : (lang === 'en' ? 'Browse Files' : 'Dosya Seç')}
-                          </span>
-                        </button>
-                        <input 
-                          type="file" 
-                          ref={userAvatarFileInputRef} 
-                          onChange={handleProfileImageFileChange} 
-                          accept="image/*" 
-                          className="hidden" 
-                        />
-                      </div>
-
-                      {/* Paste URL */}
-                      <div className="flex flex-col justify-end">
-                        <label className="text-[12px] font-black uppercase text-slate-400 tracking-wider mb-1.5">
-                           {lang === 'en' ? 'Paste Photo URL' : 'Fotoğraf Web Adresi (URL)'}
-                        </label>
-                        <div className="flex gap-2">
-                           <input 
-                             type="url"
-                             value={avatarUrlInput}
-                             onChange={(e) => setAvatarUrlInput(e.target.value)}
-                             placeholder="https://example.com/avatar.jpg"
-                             className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-                           />
-                           <button
-                             type="button"
-                             onClick={() => {
-                                if (avatarUrlInput.trim()) {
-                                   handleUpdateProfilePicture(avatarUrlInput.trim());
-                                   setAvatarUrlInput('');
-                                }
-                             }}
-                             disabled={isUploadingAvatar || !avatarUrlInput.trim()}
-                             className="bg-slate-900 hover:bg-slate-850 disabled:opacity-50 text-white font-black text-[14px] uppercase tracking-wider px-3.5 rounded-xl transition-all"
-                           >
-                              {lang === 'en' ? 'Save' : 'Kaydet'}
-                           </button>
-                        </div>
-                      </div>
-                   </div>
-
-                   {/* Premium Curated Avatar Presets Grid */}
-                   <div className="space-y-2 border-t border-slate-50 pt-3">
-                      <span className="text-[12px] font-black uppercase text-slate-400 tracking-wider block">
-                         {lang === 'en' ? 'Or Choose A Beautiful Preset Portrait' : 'Veya Harika Bir Hazır Portre Seçin'}
-                      </span>
-                      <div className="grid grid-cols-6 gap-2">
-                         {[
-                            { name: 'CanTechGuy', url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80' },
-                            { name: 'CanTechGirl', url: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&h=120&q=80' },
-                            { name: 'GlassesGuy', url: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=120&h=120&q=80' },
-                            { name: 'HipsterWoman', url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=120&h=120&q=80' },
-                            { name: 'CreativeArtist', url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80' },
-                            { name: 'CuteSmile', url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=120&h=120&q=80' }
-                         ].map((preset) => (
-                            <button
-                              key={preset.name}
-                              type="button"
-                              onClick={() => handleUpdateProfilePicture(preset.url)}
-                              className="aspect-square rounded-xl overflow-hidden border border-slate-200 hover:border-primary hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-xs group"
-                              title={preset.name}
-                            >
-                               <img 
-                                 src={preset.url} 
-                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
-                                 alt={preset.name}
-                                 referrerPolicy="no-referrer"
-                               />
-                            </button>
-                         ))}
-                      </div>
-                   </div>
+                   <button
+                     type="button"
+                     onClick={() => userAvatarFileInputRef.current?.click()}
+                     disabled={isUploadingAvatar}
+                     className="w-full flex items-center justify-center gap-2 border border-dashed border-slate-250 hover:border-primary/50 hover:bg-primary/5 rounded-2xl p-5 text-center transition-all group cursor-pointer bg-slate-50/50"
+                   >
+                     <Upload size={22} className="text-slate-400 group-hover:text-primary transition-colors duration-200 shrink-0" />
+                     <span className="text-sm font-bold text-slate-600 group-hover:text-primary transition-colors duration-200">
+                       {isUploadingAvatar ? (lang === 'en' ? 'Processing...' : 'Yükleniyor...') : (lang === 'en' ? 'Choose File' : 'Dosya Seç')}
+                     </span>
+                   </button>
+                   <input 
+                     type="file" 
+                     ref={userAvatarFileInputRef} 
+                     onChange={handleProfileImageFileChange} 
+                     accept="image/*" 
+                     className="hidden" 
+                   />
                 </div>
              )}
           </div>
@@ -12785,7 +12659,7 @@ Designed with ❤️ for Goofind App Store Listings.
              >
                 <p className="text-lg sm:text-xl font-black text-primary leading-none mb-1">
                   {hasBusinessOwned
-                    ? businessChatMessages.length + notificationMessages.length
+                    ? businessChatMessages.length
                     : userCompanyIncomingThreads.length + userCompanyOutgoingThreads.length}
                 </p>
                 <p className="text-[12px] font-black text-slate-500 uppercase tracking-widest leading-none">{lang === 'en' ? 'Messages' : 'Mesajlar'}</p>
@@ -12859,7 +12733,7 @@ Designed with ❤️ for Goofind App Store Listings.
                             }}
                             compact
                           />
-                        ) : businessChatMessages.length === 0 && notificationMessages.length === 0 ? (
+                        ) : businessChatMessages.length === 0 ? (
                            <div className="text-center py-6 text-slate-400">
                               <MessageSquare className="mx-auto mb-2 text-slate-300" size={30} />
                               <p className="text-[14px] uppercase font-black tracking-wider">{lang === 'en' ? 'No messages found' : 'Mesaj bulunamadı'}</p>
@@ -12925,54 +12799,6 @@ Designed with ❤️ for Goofind App Store Listings.
                                 );
                               })}
 
-                              {/* Announcement Chats */}
-                              {Object.values(
-                                notificationMessages.reduce((acc: any, msg) => {
-                                  const otherId = msg.senderId === currentUser?.id ? msg.receiverId : msg.senderId;
-                                  const key = `${msg.notifId}_${otherId}`;
-                                  if (!acc[key]) {
-                                    acc[key] = {
-                                      key,
-                                      notifId: msg.notifId,
-                                      otherId: otherId,
-                                      otherName: msg.senderId === currentUser?.id ? 'User' : msg.senderName, 
-                                      lastMessage: formatChatPreviewText(msg.content, msg.type === 'image' || !!msg.imageUrl, lang),
-                                      timestamp: msg.timestamp,
-                                    };
-                                  } else if (msg.timestamp > acc[key].timestamp) {
-                                     acc[key].lastMessage = formatChatPreviewText(msg.content, msg.type === 'image' || !!msg.imageUrl, lang);
-                                     acc[key].timestamp = msg.timestamp;
-                                  }
-                                  return acc;
-                                }, {})
-                              ).map((thread: any) => {
-                                const notif = notifications.find(n => n.id === thread.notifId);
-                                return (
-                                  <button
-                                    key={thread.key}
-                                    onClick={() => {
-                                      setIsProfileOpen(false);
-                                      setIsNotifMessageModalOpen(true);
-                                      setActiveNotifMsgThread(thread.key);
-                                    }}
-                                    className="w-full flex items-center justify-between p-3 bg-white hover:bg-slate-100 rounded-xl border border-slate-100 transition-all text-left"
-                                  >
-                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden shrink-0">
-                                          {notif?.imageUrl ? <img src={notif.imageUrl} className="w-full h-full object-cover" /> : <MessageSquare size={18} className="text-slate-300" />}
-                                        </div>
-                                        <div>
-                                           <p className="text-xs font-black text-slate-800 uppercase tracking-tight truncate max-w-[150px]">{notif?.title || 'Announcement'}</p>
-                                           <p className="text-[14px] text-slate-500 font-medium line-clamp-1">{thread.lastMessage}</p>
-                                        </div>
-                                     </div>
-                                     <div className="text-right shrink-0">
-                                        <p className="text-[12px] font-black text-accent-vivid uppercase tracking-widest">{lang === 'en' ? 'POST' : 'İLAN'}</p>
-                                        <p className="text-[12px] font-bold text-slate-400">{new Date(thread.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                                     </div>
-                                  </button>
-                                );
-                              })}
                            </div>
                         )}
                      </div>
@@ -13272,32 +13098,6 @@ Designed with ❤️ for Goofind App Store Listings.
                    </div>
                 </div>
                 <ChevronRight size={22} className="text-slate-300 group-hover:text-primary transition-transform group-hover:translate-x-1" />
-             </button>
-
-             <button 
-               onClick={() => {
-                 setIsProfileOpen(false);
-                 setIsNotifMessageModalOpen(true);
-               }}
-               className="w-full flex items-center justify-between p-5 bg-white border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all group"
-             >
-                <div className="flex items-center gap-4">
-                   <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center">
-                      <MessageSquare size={26} />
-                   </div>
-                   <div className="text-left">
-                      <p className="text-[14px] font-black text-slate-400 uppercase tracking-widest mb-0.5">{lang === 'en' ? 'Inquiries' : 'Sorgular'}</p>
-                      <p className="text-sm font-bold text-slate-800">{lang === 'en' ? 'Announcement Messages' : 'İlan Mesajlarım'}</p>
-                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                   {notificationMessages.filter(m => m.receiverId === currentUser?.id && !m.read).length > 0 && (
-                      <span className="bg-primary text-white text-[12px] font-black px-2 py-0.5 rounded-full">
-                         {notificationMessages.filter(m => m.receiverId === currentUser?.id && !m.read).length}
-                      </span>
-                   )}
-                   <ChevronRight size={22} className="text-slate-300 group-hover:text-primary transition-transform group-hover:translate-x-1" />
-                </div>
              </button>
           </div>
 
@@ -15770,6 +15570,7 @@ Designed with ❤️ for Goofind App Store Listings.
         )}
       </AnimatePresence>
 
+      {!isFullScreenTabView && (
       <footer className="bg-white border-t border-slate-100 pt-16 pb-32 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-primary">
             <div className="flex flex-col items-center gap-6 mb-12">
@@ -15793,74 +15594,70 @@ Designed with ❤️ for Goofind App Store Listings.
            <p className="text-[14px] font-black text-slate-300 uppercase tracking-widest">© 2026 Goofind Canada. All Rights Reserved.</p>
         </div>
       </footer>
+      )}
 
       {/* Bottom Navigation */}
       <nav 
-        className="fixed bottom-0 left-0 right-0 px-6 sm:px-12 py-4 z-[60] flex justify-around items-center shadow-[0_-10px_60px_rgba(0,0,0,0.1)] border-t border-white/10 select-none transform-none"
+        className="fixed bottom-2 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:min-w-[19rem] sm:max-w-[22rem] px-1.5 py-1.5 z-[60] flex justify-between items-center rounded-2xl border border-white/15 select-none"
         style={{
           background: 'linear-gradient(135deg, #1D4ED8 0%, #3B82F6 55%, #60A5FA 100%)',
-          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 -10px 40px rgba(0,0,0,0.2)',
-          transform: 'translate3d(0, 0, 0)',
-          WebkitTransform: 'translate3d(0, 0, 0)'
+          boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 6px 24px rgba(29,78,216,0.35)',
         }}
       >
         <button 
           onClick={resetHome} 
-          className={`flex items-center justify-center p-2.5 rounded-full transition-all active:scale-95 ${isHomeView ? 'text-white scale-110 drop-shadow-md bg-white/10' : 'text-white/50 hover:text-white/80'}`}
-          aria-label="Home"
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-[2.4rem] px-0.5 transition-all active:scale-95 ${
+            isHomeView && homeNavSection === 'home' && !isNearbyMapOpen ? 'text-white drop-shadow-md' : 'text-white/50 hover:text-white/80'
+          }`}
+          aria-label={t.bottomNav.home}
         >
-          <Home size={28} className="sm:w-6 sm:h-6" strokeWidth={isHomeView ? 2.5 : 2} />
+          <Home size={20} strokeWidth={isHomeView && homeNavSection === 'home' && !isNearbyMapOpen ? 2.5 : 2} />
+          <span className="text-[6px] sm:text-[7px] font-bold uppercase tracking-[0.1em] text-white/90 leading-none">
+            {lang === 'tr' ? 'Ana' : 'Home'}
+          </span>
         </button>
 
-        <button 
-          onClick={() => {
-            setIsSearchOpen(true);
-          }}
-          className={`flex items-center justify-center p-2.5 rounded-full transition-all active:scale-95 ${isSearchOpen ? 'text-white scale-110 drop-shadow-md bg-white/10' : 'text-white/50 hover:text-white/80'}`}
-          aria-label="Search"
+        <button
+          type="button"
+          onClick={() => scrollToHomeSection('events')}
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-[2.4rem] px-0.5 transition-all active:scale-95 ${
+            isHomeView && homeNavSection === 'events' && !isNearbyMapOpen ? 'text-white drop-shadow-md' : 'text-white/50 hover:text-white/80'
+          }`}
+          aria-label={t.bottomNav.events}
         >
-          <Search size={28} className="sm:w-6 sm:h-6" strokeWidth={isSearchOpen ? 2.5 : 2} />
+          <Calendar size={20} strokeWidth={isHomeView && homeNavSection === 'events' && !isNearbyMapOpen ? 2.5 : 2} />
+          <span className="text-[6px] sm:text-[7px] font-bold uppercase tracking-[0.1em] text-white/90 leading-none">
+            {t.bottomNav.events}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => scrollToHomeSection('places')}
+          className={`flex flex-col items-center justify-center gap-0.5 min-w-[2.4rem] px-0.5 transition-all active:scale-95 ${
+            isHomeView && homeNavSection === 'places' && !isNearbyMapOpen ? 'text-white drop-shadow-md' : 'text-white/50 hover:text-white/80'
+          }`}
+          aria-label={lang === 'tr' ? 'Gezi' : t.bottomNav.places}
+        >
+          <Compass size={20} strokeWidth={isHomeView && homeNavSection === 'places' && !isNearbyMapOpen ? 2.5 : 2} />
+          <span className="text-[6px] sm:text-[7px] font-bold uppercase tracking-[0.1em] text-white/90 leading-none">
+            {lang === 'tr' ? 'Gezi' : t.bottomNav.places}
+          </span>
         </button>
 
         <button
           type="button"
           onClick={() => setIsNearbyMapOpen(true)}
-          className={`relative flex flex-col items-center justify-center gap-1 transition-all active:scale-95 ${
-            isNearbyMapOpen ? '-translate-y-1' : 'hover:-translate-y-0.5'
+          className={`relative flex flex-col items-center justify-center gap-0.5 min-w-[2.4rem] px-0.5 transition-all active:scale-95 ${
+            isNearbyMapOpen ? 'text-white drop-shadow-md' : 'text-white/50 hover:text-white/80'
           }`}
           aria-label={lang === 'tr' ? 'Harita' : 'Map'}
           title={lang === 'tr' ? 'Haritada yakınımdakiler' : 'Nearby on map'}
         >
           <MapNavIcon active={isNearbyMapOpen} />
-          <span className="text-[8px] font-bold uppercase tracking-[0.16em] text-white/90 leading-none">
+          <span className="text-[6px] sm:text-[7px] font-bold uppercase tracking-[0.1em] text-white/90 leading-none">
             {lang === 'tr' ? 'Harita' : 'Map'}
           </span>
-        </button>
-
-        <button 
-          onClick={() => {
-            setSelectedCategory('Blog');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className={`relative flex items-center justify-center p-2.5 rounded-full transition-all active:scale-95 ${selectedCategory === 'Blog' ? 'text-white scale-110 drop-shadow-md bg-white/10' : 'text-white/50 hover:text-white/80'}`}
-          aria-label="Weekly Flyer"
-        >
-          <Newspaper size={28} className="sm:w-6 sm:h-6 animate-pulse" strokeWidth={selectedCategory === 'Blog' ? 2.5 : 2} />
-          {/* A high-visibility badge saying "FLYER" just above/on the corner */}
-          <span className="absolute -top-2 -right-3 bg-red-500 text-[11px] font-black tracking-tight px-1.5 py-0.5 rounded-full text-white shadow-[0_2px_10px_rgba(239,68,68,0.5)] animate-bounce border border-white/25 select-none uppercase">
-            FLYER
-          </span>
-        </button>
-
-        <button 
-          onClick={() => {
-            setSelectedCategory('Favorites');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }}
-          className={`flex items-center justify-center p-2.5 rounded-full transition-all active:scale-95 ${selectedCategory === 'Favorites' ? 'text-white scale-110 drop-shadow-md bg-white/10' : 'text-white/50 hover:text-white/80'}`}
-          aria-label="Favorites"
-        >
-          <Heart size={28} className="sm:w-6 sm:h-6" strokeWidth={selectedCategory === 'Favorites' ? 2.5 : 2} />
         </button>
       </nav>
 
@@ -15876,7 +15673,7 @@ Designed with ❤️ for Goofind App Store Listings.
           setSelectedCategory('Chat');
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }}
-        className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 z-[55] w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 border border-white/20 hover:bg-primary-mid transition-all cursor-pointer group"
+        className="fixed bottom-[4.5rem] sm:bottom-[4.75rem] right-4 sm:right-6 z-[55] w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 border border-white/20 hover:bg-primary-mid transition-all cursor-pointer group"
         aria-label="Chat with Admin"
       >
         {/* Subtle pulsing background ring */}
@@ -15933,136 +15730,83 @@ Designed with ❤️ for Goofind App Store Listings.
         )}
       </AnimatePresence>
 
-      {/* High-Performance Fullscreen Inspect & Zoom Lightbox Modal */}
+      {/* Fullscreen Image Viewer */}
       <AnimatePresence>
         {lightboxIndex >= 0 && lightboxImage && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[3000] bg-slate-950/95 backdrop-blur-md flex flex-col items-center justify-between p-4 md:p-6 select-none no-lightbox"
+            className="fixed inset-0 z-[3000] bg-black/95 flex flex-col items-center justify-center select-none no-lightbox"
+            onClick={closeLightbox}
           >
-            {/* Top Bar with Controls */}
-            <div className="w-full flex items-center justify-between gap-4 max-w-5xl relative z-10 shrink-0">
-              {/* App Brand / Context Indicator */}
-              <div className="flex items-center gap-3">
-                <LogoText size="text-lg" className="text-white" />
-                <span className="hidden sm:inline-block h-3.5 w-[1px] bg-white/20" />
-                <span className="hidden sm:inline-block text-[14px] font-black uppercase tracking-wider text-slate-400">
-                  {lang === 'tr' ? `Fotoğraf ${lightboxIndex + 1} / ${lightboxImages.length}` : `Photo ${lightboxIndex + 1} / ${lightboxImages.length}`}
-                </span>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeLightbox();
+              }}
+              className="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-[3010] w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all shadow-lg border border-white/20"
+              aria-label={lang === 'tr' ? 'Kapat' : 'Close'}
+            >
+              <X size={24} strokeWidth={2.5} />
+            </button>
+
+            {lightboxImages.length > 1 && (
+              <div className="fixed top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] z-[3010] px-2.5 py-1 rounded-full bg-black/50 text-white text-[11px] font-bold">
+                {lightboxIndex + 1} / {lightboxImages.length}
               </div>
+            )}
 
-              {/* Action Toolbar */}
-              <div className="flex items-center gap-1.5 bg-slate-900/80 border border-white/10 px-4 py-2 rounded-2xl shadow-xl backdrop-blur-md">
-                {/* Zoom Out Button */}
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel(prev => Math.max(prev - 0.25, 0.5))}
-                  title={lang === 'tr' ? 'Uzaklaştır' : 'Zoom Out'}
-                  className="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  <ZoomOut size={20} strokeWidth={2.5} />
-                </button>
-
-                {/* Current Zoom Ratio */}
-                <span className="font-mono text-[14px] font-black tracking-widest text-accent-vivid min-w-[42px] text-center select-none">
-                  {Math.round(zoomLevel * 100)}%
-                </span>
-
-                {/* Zoom In Button */}
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel(prev => Math.min(prev + 0.25, 4))}
-                  title={lang === 'tr' ? 'Yakınlaştır' : 'Zoom In'}
-                  className="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  <ZoomIn size={20} strokeWidth={2.5} />
-                </button>
-
-                <span className="h-4 w-[1px] bg-white/15 mx-1" />
-
-                {/* Rotate CW Button */}
-                <button
-                  type="button"
-                  onClick={() => setRotationAngle(prev => (prev + 90) % 360)}
-                  title={lang === 'tr' ? 'Döndür' : 'Rotate'}
-                  className="p-1.5 text-slate-300 hover:text-white rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-                >
-                  <RotateCw size={18} strokeWidth={2.5} />
-                </button>
-
-                <span className="h-4 w-[1px] bg-white/15 mx-1" />
-
-                {/* Download Button */}
-                <button
-                  type="button"
-                  onClick={() => handleDownload(lightboxImage)}
-                  title={lang === 'tr' ? 'Fotoğrafı İndir' : 'Download Photo'}
-                  className="p-1.5 text-slate-300 hover:text-accent-vivid-vivid rounded-lg hover:bg-accent/10 transition-colors cursor-pointer"
-                >
-                  <Download size={19} strokeWidth={2.5} />
-                </button>
-              </div>
-
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setLightboxIndex(-1)}
-                className="w-10 h-10 rounded-full bg-white/10 border border-white/10 hover:bg-accent hover:border-transparent text-white flex items-center justify-center transition-all duration-300 shadow-lg cursor-pointer active:scale-95"
-                title={lang === 'tr' ? 'Kapat (Esc)' : 'Close (Esc)'}
-              >
-                <X size={22} strokeWidth={2.5} />
-              </button>
-            </div>
-
-            {/* Main Interactive Stage with zoom, pan wheel, touch, swiping and double click */}
-            <div 
-              className="flex-1 w-full flex items-center justify-center overflow-hidden relative my-4 md:my-6"
+            <div
+              className="relative w-full h-full flex items-center justify-center px-2 py-14"
+              onClick={(e) => e.stopPropagation()}
               onWheel={handleWheel}
             >
-              <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,rgba(255,136,91,0.05)_0%,transparent_100%)]" />
-              
-              {/* Previous Image Chevron */}
               {lightboxImages.length > 1 && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); handlePrevImage(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrevImage();
+                  }}
                   disabled={lightboxIndex === 0}
-                  className="absolute left-2 md:left-6 z-[3010] w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 hover:bg-accent hover:border-transparent text-white flex items-center justify-center transition-all duration-300 disabled:opacity-10 disabled:pointer-events-none cursor-pointer active:scale-90 shadow-xl"
-                  title={lang === 'tr' ? 'Önceki Fotoğraf' : 'Previous Photo'}
+                  className="absolute left-2 z-[3010] w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center transition-all disabled:opacity-20 active:scale-90"
+                  aria-label={lang === 'tr' ? 'Önceki' : 'Previous'}
                 >
-                  <ChevronLeft size={30} strokeWidth={2.5} />
+                  <ChevronLeft size={24} strokeWidth={2.5} />
                 </button>
               )}
 
-              {/* Next Image Chevron */}
               {lightboxImages.length > 1 && (
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); handleNextImage(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNextImage();
+                  }}
                   disabled={lightboxIndex === lightboxImages.length - 1}
-                  className="absolute right-2 md:right-6 z-[3010] w-12 h-12 rounded-full bg-slate-900/80 border border-white/10 hover:bg-accent hover:border-transparent text-white flex items-center justify-center transition-all duration-300 disabled:opacity-10 disabled:pointer-events-none cursor-pointer active:scale-90 shadow-xl"
-                  title={lang === 'tr' ? 'Sonraki Fotoğraf' : 'Next Photo'}
+                  className="absolute right-2 z-[3010] w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center transition-all disabled:opacity-20 active:scale-90"
+                  aria-label={lang === 'tr' ? 'Sonraki' : 'Next'}
                 >
-                  <ChevronRight size={30} strokeWidth={2.5} />
+                  <ChevronRight size={24} strokeWidth={2.5} />
                 </button>
               )}
 
               <motion.img
                 key={lightboxIndex}
                 src={lightboxImage}
-                alt="Zoomed"
-                initial={{ scale: 0.92, opacity: 0, x: panOffset.x > 0 ? 100 : panOffset.x < 0 ? -100 : 0 }}
-                animate={{ scale: 1, opacity: 1, x: 0 }}
-                exit={{ scale: 0.92, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className={`max-w-[85vw] max-h-[70vh] md:max-h-[76vh] object-contain rounded-2xl select-none relative z-0 ${
+                alt=""
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.2 }}
+                className={`max-w-[92vw] max-h-[80vh] object-contain select-none ${
                   zoomLevel === 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-all-scroll'
                 }`}
                 style={{
-                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel}) rotate(${rotationAngle}deg)`,
-                  transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1)'
+                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
+                  transition: isDragging ? 'none' : 'transform 0.15s ease-out',
                 }}
                 draggable={false}
                 onMouseDown={(e) => {
@@ -16073,28 +15817,18 @@ Designed with ❤️ for Goofind App Store Listings.
                 onMouseMove={(e) => {
                   if (!isDragging) return;
                   if (zoomLevel === 1) {
-                    setPanOffset({
-                      x: e.clientX - dragStart.x,
-                      y: 0
-                    });
+                    setPanOffset({ x: e.clientX - dragStart.x, y: 0 });
                   } else {
-                    setPanOffset({
-                      x: e.clientX - dragStart.x,
-                      y: e.clientY - dragStart.y
-                    });
+                    setPanOffset({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y });
                   }
                 }}
                 onMouseUp={() => {
                   if (!isDragging) return;
                   setIsDragging(false);
                   if (zoomLevel === 1) {
-                    if (panOffset.x < -68) {
-                      handleNextImage();
-                    } else if (panOffset.x > 68) {
-                      handlePrevImage();
-                    } else {
-                      setPanOffset({ x: 0, y: 0 });
-                    }
+                    if (panOffset.x < -68) handleNextImage();
+                    else if (panOffset.x > 68) handlePrevImage();
+                    else setPanOffset({ x: 0, y: 0 });
                   }
                 }}
                 onMouseLeave={() => {
@@ -16114,14 +15848,11 @@ Designed with ❤️ for Goofind App Store Listings.
                   if (!isDragging || e.touches.length !== 1) return;
                   const touch = e.touches[0];
                   if (zoomLevel === 1) {
-                    setPanOffset({
-                      x: touch.clientX - dragStart.x,
-                      y: 0
-                    });
+                    setPanOffset({ x: touch.clientX - dragStart.x, y: 0 });
                   } else {
                     setPanOffset({
                       x: touch.clientX - dragStart.x,
-                      y: touch.clientY - dragStart.y
+                      y: touch.clientY - dragStart.y,
                     });
                   }
                 }}
@@ -16129,13 +15860,9 @@ Designed with ❤️ for Goofind App Store Listings.
                   if (!isDragging) return;
                   setIsDragging(false);
                   if (zoomLevel === 1) {
-                    if (panOffset.x < -58) {
-                      handleNextImage();
-                    } else if (panOffset.x > 58) {
-                      handlePrevImage();
-                    } else {
-                      setPanOffset({ x: 0, y: 0 });
-                    }
+                    if (panOffset.x < -58) handleNextImage();
+                    else if (panOffset.x > 58) handlePrevImage();
+                    else setPanOffset({ x: 0, y: 0 });
                   }
                 }}
                 onDoubleClick={() => {
@@ -16143,47 +15870,35 @@ Designed with ❤️ for Goofind App Store Listings.
                     setZoomLevel(1);
                     setPanOffset({ x: 0, y: 0 });
                   } else {
-                    setZoomLevel(2.2);
+                    setZoomLevel(2);
                   }
                 }}
               />
             </div>
 
-            {/* Pagination dots container & guidance */}
-            <div className="w-full flex flex-col items-center gap-3 shrink-0">
-              {/* Pagination Dots */}
-              {lightboxImages.length > 1 && (
-                <div className="flex gap-2 items-center justify-center relative z-10 max-w-full overflow-x-auto py-1 px-3 bg-slate-900/40 rounded-full border border-white/5 scrollbar-none">
-                  {lightboxImages.map((_, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => {
-                        setLightboxIndex(idx);
-                        setZoomLevel(1);
-                        setPanOffset({ x: 0, y: 0 });
-                        setRotationAngle(0);
-                      }}
-                      className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                        idx === lightboxIndex 
-                          ? 'w-7 bg-[#FF885B]' 
-                          : 'w-2.5 bg-white/20 hover:bg-white/40'
-                      }`}
-                      title={lang === 'tr' ? `Fotoğraf ${idx + 1}` : `Photo ${idx + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Usability Guidance tooltip text */}
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/60 border border-white/5 text-[13px] font-black uppercase tracking-widest text-slate-400 select-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {lang === 'tr' 
-                  ? 'Görseli kaydırmak için sağa/sola sürükleyin • Farenin tekerleğiyle yakınlaşın • Sıfırlamak için Çift Tıklayın • Klavyeden yön tuşlarını kullanabilirsiniz' 
-                  : 'Drag left/right to swipe image • Mouse wheel to zoom • Double-click to reset • You can use Arrow Keys'
-                }
-              </span>
-            </div>
+            {lightboxImages.length > 1 && (
+              <div
+                className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[3010] flex gap-1.5 items-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {lightboxImages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      setLightboxIndex(idx);
+                      setZoomLevel(1);
+                      setPanOffset({ x: 0, y: 0 });
+                      setRotationAngle(0);
+                    }}
+                    className={`h-2 rounded-full transition-all ${
+                      idx === lightboxIndex ? 'w-5 bg-white' : 'w-2 bg-white/35'
+                    }`}
+                    aria-label={lang === 'tr' ? `Fotoğraf ${idx + 1}` : `Photo ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

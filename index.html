@@ -213,6 +213,11 @@
           scrollbar-width: none;
         }
 
+        /* Home: gap between Şirketler / İlanlar / Topluluk = one category pill box (6.75rem) */
+        .home-sections > * + * {
+          margin-top: 6.75rem;
+        }
+
         /* Standard content images get a zoom cursor to show they are clickable */
         img:not(.no-lightbox):not([src*="google.svg"]) {
           cursor: zoom-in;

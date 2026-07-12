@@ -257,24 +257,24 @@ export function UserCompanyMessagesQuickBox({
     <button
       type="button"
       onClick={onToggle}
-      className={`min-w-[108px] sm:min-w-[128px] px-3 sm:px-4 py-2 rounded-lg border text-left transition-all active:scale-95 shrink-0 ${
+      className={`min-w-[72px] sm:min-w-[84px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-sm border text-left transition-all active:scale-95 shrink-0 ${
         isOpen
-          ? 'bg-primary text-white border-primary shadow-lg shadow-primary/25'
+          ? 'bg-primary text-white border-primary shadow-sm shadow-primary/15'
           : 'bg-white text-slate-800 border-primary/20 hover:border-primary/40 hover:bg-primary-soft/40'
       }`}
     >
-      <div className="flex items-center gap-1.5">
-        <MessageSquare size={14} strokeWidth={2.5} className={isOpen ? 'text-white' : 'text-primary'} />
-        <span className={`text-[10px] sm:text-[11px] font-black uppercase tracking-widest ${isOpen ? 'text-white' : 'text-primary'}`}>
+      <div className="flex items-center gap-0.5">
+        <MessageSquare size={10} strokeWidth={2.5} className={isOpen ? 'text-white' : 'text-primary'} />
+        <span className={`text-[8px] sm:text-[9px] font-bold uppercase tracking-normal ${isOpen ? 'text-white' : 'text-primary'}`}>
           {lang === 'en' ? 'Messages' : 'Mesajlar'}
         </span>
         {total > 0 && (
-          <span className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-full ${isOpen ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'}`}>
+          <span className={`ml-auto text-[7px] font-black px-1 py-px rounded-full ${isOpen ? 'bg-white/20 text-white' : 'bg-primary/10 text-primary'}`}>
             {total}
           </span>
         )}
       </div>
-      <p className={`text-[9px] sm:text-[10px] font-bold mt-1 leading-tight ${isOpen ? 'text-white/80' : 'text-slate-500'}`}>
+      <p className={`text-[7px] sm:text-[8px] font-bold mt-px leading-tight ${isOpen ? 'text-white/80' : 'text-slate-500'}`}>
         {incomingCount} {lang === 'en' ? 'in' : 'gelen'} · {outgoingCount} {lang === 'en' ? 'out' : 'giden'}
       </p>
     </button>

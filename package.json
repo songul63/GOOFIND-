@@ -1,0 +1,63 @@
+{
+  "name": "goofind---canada-turkish-community-hub",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "phone:dev": "vite --host 0.0.0.0 --port 3000",
+    "phone": "npm run build && vite preview --host 0.0.0.0 --port 4173",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "app:sync": "npm run build && npx cap sync",
+    "app:generate-icons": "npx tsx generate-pngs.ts",
+    "app:open:android": "npx cap open android",
+    "app:open:ios": "npx cap open ios",
+    "deploy": "npm run build && npx firebase deploy --only hosting,functions,storage",
+    "deploy:hosting": "npx firebase deploy --only hosting",
+    "deploy:storage": "npx firebase deploy --only storage",
+    "deploy:firestore": "npx firebase deploy --only firestore",
+    "deploy:functions": "cd functions && npm run build && cd .. && npx firebase deploy --only functions:geocodeCanadianAddress",
+    "functions:build": "cd functions && npm run build",
+    "functions:install": "cd functions && npm install"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@google/genai": "^0.11.0",
+    "express": "^4.19.2",
+    "firebase": "^10.12.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.395.0",
+    "motion": "^12.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "sharp": "^0.35.2",
+    "stripe": "^15.11.0",
+    "tsx": "^4.15.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "^20.14.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.13.1",
+    "@typescript-eslint/parser": "^7.13.1",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.7",
+    "firebase-tools": "^14.9.0",
+    "jimp": "^1.6.1",
+    "typescript": "~5.4.5",
+    "vite": "^5.3.1"
+  }
+}

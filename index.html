@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Goofind - Canada Turkish Community Hub</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#2563EB">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3Cfilter id='logo-shadow' x='-30%25' y='-30%25' width='160%25' height='160%25'%3E%3CfeDropShadow dx='3' dy='6' stdDeviation='5' flood-color='%23080c18' flood-opacity='0.25'/%3E%3C/filter%3E%3ClinearGradient id='peachGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23FFA347'/%3E%3Cstop offset='50%25' stop-color='%23FF6B00'/%3E%3Cstop offset='100%25' stop-color='%23E85D00'/%3E%3C/linearGradient%3E%3ClinearGradient id='blueGrad' x1='0%25' y1='100%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%231D4ED8'/%3E%3Cstop offset='45%25' stop-color='%232563EB'/%3E%3Cstop offset='100%25' stop-color='%2393C5FD'/%3E%3C/linearGradient%3E%3ClinearGradient id='glossHighlight' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='white' stop-opacity='0.75'/%3E%3Cstop offset='100%25' stop-color='white' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='bgGrad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23FFFFFF'/%3E%3Cstop offset='100%25' stop-color='%23EFF6FF'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23bgGrad)'/%3E%3Crect x='3' y='3' width='506' height='506' rx='125' fill='none' stroke='%23E2E8F0' stroke-width='6'/%3E%3Cg transform='translate(51, 51) scale(4.1)'%3E%3Cpath d='M 70,28 A 31,31 0 1,0 70,72 L 70,52' stroke='url(%23blueGrad)' stroke-width='11.5' stroke-linecap='round' stroke-linejoin='round' fill='none' filter='url(%23logo-shadow)'/%3E%3Cg%3E%3Ccircle cx='57' cy='52' r='7.5' fill='url(%23peachGrad)' filter='url(%23logo-shadow)'/%3E%3Ccircle cx='54.8' cy='49.8' r='3' fill='url(%23glossHighlight)'/%3E%3C/g%3E%3Cg%3E%3Ccircle cx='42' cy='52' r='6' fill='url(%23peachGrad)' filter='url(%23logo-shadow)'/%3E%3Ccircle cx='40.2' cy='50.2' r='2.4' fill='url(%23glossHighlight)'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        display: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+                    },
+                    colors: {
+                        midnight: '#F8FAFC',
+                        primary: {
+                            DEFAULT: 'rgb(37 99 235 / <alpha-value>)',
+                            light: 'rgb(96 165 250 / <alpha-value>)',
+                            mid: 'rgb(59 130 246 / <alpha-value>)',
+                            dark: 'rgb(29 78 216 / <alpha-value>)',
+                            soft: 'rgb(239 246 255 / <alpha-value>)',
+                        },
+                        accent: {
+                            DEFAULT: 'rgb(255 69 0 / <alpha-value>)',
+                            vivid: 'rgb(255 58 0 / <alpha-value>)',
+                            mid: 'rgb(255 106 0 / <alpha-value>)',
+                            light: 'rgb(255 148 77 / <alpha-value>)',
+                            dark: 'rgb(230 62 0 / <alpha-value>)',
+                            soft: 'rgb(255 243 235 / <alpha-value>)',
+                        },
+                        slate: {
+                            50: '#F8F9FA',
+                            100: '#E1E4E8',
+                            200: '#D1D5DB',
+                            300: '#9AA3B0',
+                            400: '#5A6270',
+                            500: '#3F4652',
+                            600: '#2A2F38',
+                            700: '#1C2028',
+                            800: '#12151C',
+                            900: '#0A0C10',
+                        }
+                    },
+                    letterSpacing: {
+                        'brand': '0.25em',
+                        'tight-brand': '-0.04em',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html, body {
+            scrollbar-gutter: stable !important;
+        }
+
+        html {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            font-size: 125%;
+            font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+            font-optical-sizing: auto;
+            text-rendering: optimizeLegibility;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        .lucide {
+            transform: scale(1.12);
+            transform-origin: center;
+        }
+
+        .emoji-3d-glyph {
+            display: inline-block;
+            transform: scale(1.12);
+            transform-origin: center;
+        }
+
+        .announcements-zone {
+            position: relative;
+            background: linear-gradient(135deg, #FFF3EB 0%, #FFFAF6 58%, #FFF3EB 100%);
+            border: 1px solid rgba(255, 69, 0, 0.2);
+            box-shadow: 0 2px 10px rgba(255, 69, 0, 0.07);
+        }
+        .announcements-tabs {
+            background: rgba(239, 246, 255, 0.28);
+            border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        body {
+            font-family: inherit;
+            background-color: #EFF6FF;
+            color: #0A0F1A;
+            font-weight: 700;
+            line-height: 1.58;
+            letter-spacing: -0.006em;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #root,
+        button,
+        input,
+        textarea,
+        select,
+        optgroup {
+            font-family: inherit;
+            font-weight: 700;
+        }
+
+        h1, h2, h3, h4, h5, h6,
+        .font-display {
+            font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: #070B12;
+        }
+
+        p, span, li, label, td, th, a, div {
+            font-weight: 700;
+        }
+
+        .font-thin,
+        .font-extralight,
+        .font-light,
+        .font-normal {
+            font-weight: 600 !important;
+        }
+
+        .font-medium {
+            font-weight: 700 !important;
+        }
+
+        .font-semibold {
+            font-weight: 800 !important;
+        }
+
+        strong, b, .font-bold, .font-black, .font-extrabold {
+            font-weight: 800 !important;
+        }
+
+        .text-primary {
+            color: #1D4ED8 !important;
+            font-weight: 800 !important;
+        }
+
+        .text-accent,
+        .text-accent-vivid,
+        .hover\:text-accent:hover,
+        .hover\:text-accent-vivid:hover {
+            color: #FF3200;
+            font-weight: 800 !important;
+        }
+
+        .text-accent-mid {
+            color: #FF4D00;
+            font-weight: 800 !important;
+        }
+        
+        @keyframes heartbeat {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+          100% { transform: scale(1); }
+        }
+        
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        
+        .animate-heartbeat {
+          animation: heartbeat 2s ease-in-out infinite;
+        }
+
+        .animate-blink {
+          animation: blink 1s ease-in-out infinite;
+        }
+
+        ::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+          background: #F3F4F6;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+          background: #93C5FD;
+          border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+          background: #2563EB;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+
+        .no-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+
+        /* Standard content images get a zoom cursor to show they are clickable */
+        img:not(.no-lightbox):not([src*="google.svg"]) {
+          cursor: zoom-in;
+          transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+        }
+        img:not(.no-lightbox):not([src*="google.svg"]):hover {
+          transform: scale(1.02);
+          opacity: 0.95;
+        }
+        /* Tiny avatars/icons/logos should remain default */
+        img.w-11, img.w-12, img.w-10, img.w-9, img.w-8, img.w-6, img.w-5, 
+        .w-12 img, .w-10 img, .w-8 img, .w-11 img, .w-9 img, [src*="google.svg"] {
+          cursor: default !important;
+          transform: none !important;
+          opacity: 1 !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+      <div id="app-loading" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#EFF6FF;color:#2563EB;font-family:'Plus Jakarta Sans',system-ui,sans-serif;gap:12px;padding:24px;text-align:center;">
+        <div style="width:44px;height:44px;border:4px solid #BFDBFE;border-top-color:#2563EB;border-radius:50%;animation:app-spin 0.9s linear infinite;"></div>
+        <p style="margin:0;font-size:14px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Goofind yükleniyor…</p>
+        <p style="margin:0;font-size:11px;font-weight:600;color:#64748B;max-width:260px;line-height:1.5;">İlk açılış birkaç saniye sürebilir. Ekran boş kalırsa sayfayı yenileyin.</p>
+      </div>
+    </div>
+    <style>@keyframes app-spin{to{transform:rotate(360deg)}}</style>
+    <script>
+      setTimeout(function () {
+        var loading = document.getElementById('app-loading');
+        if (!loading) return;
+        var hint = loading.querySelector('p:last-child');
+        if (hint) {
+          hint.textContent = 'Yükleme uzun sürüyor. Aynı Wi-Fi ağında olduğunuzdan emin olun, sayfayı yenileyin veya bilgisayarda npm run phone komutunu tekrar çalıştırın.';
+          hint.style.color = '#DC2626';
+        }
+      }, 12000);
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

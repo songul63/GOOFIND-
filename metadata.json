@@ -1,0 +1,11 @@
+{
+  "name": "Goofind - Canada Turkish Community Hub",
+  "description": "The definitive digital ecosystem for Canada's Turkish community. Connecting excellence, culture, and opportunity through a curated, high-performance directory.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

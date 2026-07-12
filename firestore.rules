@@ -1,0 +1,173 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- PHASE 3: Primitives ---
+    function isSignedIn() { return request.auth != null; }
+    function isVerified() { return isSignedIn() && (request.auth.token.email_verified == true || (request.auth.token.email != null && (request.auth.token.email == "songululuca02@gmail.com" || request.auth.token.email == "admin@goofind.ca" || request.auth.token.email == "admin@admin.com" || request.auth.token.email == "Songululuca02@gmail.com" || request.auth.token.email == "Admin@goofind.ca" || request.auth.token.email == "Admin@admin.com"))); }
+    function isOwner(userId) { return isSignedIn() && request.auth.uid == userId; }
+    function isAdmin() { return isSignedIn() && ((request.auth.token.email != null && (request.auth.token.email == "songululuca02@gmail.com" || request.auth.token.email == "admin@goofind.ca" || request.auth.token.email == "admin@admin.com" || request.auth.token.email == "Songululuca02@gmail.com" || request.auth.token.email == "Admin@goofind.ca" || request.auth.token.email == "Admin@admin.com")) || exists(/databases/$(database)/documents/admins/$(request.auth.uid))); }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    
+    // --- PHASE 4: Entity Validation ---
+    
+    function isValidBusiness(data) {
+      return data.name is string && data.name.size() >= 1 && data.name.size() <= 200 &&
+             data.category is string && data.category.size() <= 100;
+    }
+
+    function isValidNotification(data) {
+      return data.title is string && data.title.size() <= 600;
+    }
+
+    function isValidEvent(data) {
+      return data.title is string && data.title.size() <= 600;
+    }
+
+    function isValidBanner(data) {
+       return data.imageUrl is string && data.imageUrl.size() <= 2000;
+    }
+
+    function isValidChatMessage(data) {
+      return data.content is string && data.content.size() >= 0 && data.content.size() <= 100000;
+    }
+
+    function isValidCall(data) {
+      return data.callerId is string && data.callerId.size() <= 128 &&
+             data.callerName is string && data.callerName.size() <= 600 &&
+             data.receiverId is string && data.receiverId.size() <= 128 &&
+             data.status is string && data.status.size() <= 128;
+    }
+
+    function isValidNotificationMessage(data) {
+      return data.content is string && data.content.size() >= 1 && data.content.size() <= 5000;
+    }
+
+    function isValidFlyer(data) {
+      return data.titleTr is string && data.titleTr.size() <= 600 &&
+             data.titleEn is string && data.titleEn.size() <= 600;
+    }
+
+    function isValidPlace(data) {
+      return data.name is string && data.name.size() <= 600 &&
+             data.province is string && data.province.size() <= 600;
+    }
+
+    // --- RULES ---
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId);
+      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    match /businesses/{bizId} {
+      allow get: if isValidId(bizId);
+      allow list: if true; // Public list
+      allow create: if isSignedIn()
+        && incoming().ownerId == request.auth.uid
+        && isValidBusiness(incoming());
+      allow update: if (isSignedIn() && (resource.data.ownerId == request.auth.uid || isAdmin()));
+      allow delete: if isAdmin();
+    }
+
+    match /notifications/{id} {
+      allow get: if isValidId(id);
+      allow list: if true; // Public list
+      allow create: if isVerified() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /events/{id} {
+      allow get: if isValidId(id);
+      allow list: if true; // Public list
+      allow create: if isVerified() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /banners/{id} {
+      allow get: if isValidId(id);
+      allow list: if true; // Public list
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /communities/{id} {
+      allow get: if isValidId(id);
+      allow list: if true; // Public list
+      allow create: if isAdmin();
+
+      match /messages/{msgId} {
+        allow get: if isValidId(msgId);
+        allow list: if true; // Public community chat
+        allow create: if isVerified() && isValidChatMessage(incoming());
+        allow delete: if isAdmin();
+      }
+    }
+
+    match /chat_messages/{id} {
+      allow get: if isValidId(id);
+      allow list: if true; // Public global chat
+      allow create: if isVerified() && isValidChatMessage(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /business_messages/{id} {
+      allow get: if isValidId(id) && isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || isAdmin());
+      allow create: if isVerified() && incoming().senderId == request.auth.uid;
+    }
+
+    match /notification_messages/{id} {
+      allow get: if isValidId(id) && isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || isAdmin());
+      allow create: if isVerified() && incoming().senderId == request.auth.uid && isValidNotificationMessage(incoming());
+      allow update: if isSignedIn() && resource.data.receiverId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+    }
+
+    match /calls/{callId} {
+      allow get: if isValidId(callId) && isSignedIn() && (resource.data.callerId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow list: if isSignedIn() && (resource.data.callerId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if isSignedIn() && isValidCall(incoming()) && incoming().callerId == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.callerId == request.auth.uid || resource.data.receiverId == request.auth.uid) && isValidCall(incoming());
+      allow delete: if isSignedIn() && (resource.data.callerId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+    }
+
+    match /flyers/{id} {
+      allow get: if isValidId(id);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidFlyer(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /places/{id} {
+      allow get: if isValidId(id);
+      allow list: if true;
+      allow create, update: if isAdmin() && isValidPlace(incoming());
+      allow delete: if isAdmin();
+    }
+
+    match /deletion_requests/{id} {
+      allow get: if isValidId(id) && (isAdmin() || (isSignedIn() && existing().email == request.auth.token.email));
+      allow list: if isAdmin();
+      allow create: if isValidId(id) && 
+                    incoming().email is string && incoming().email.size() >= 3 && incoming().email.size() <= 256 &&
+                    incoming().status == 'pending';
+      allow update, delete: if isAdmin();
+    }
+
+  }
+}

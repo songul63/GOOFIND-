@@ -1,0 +1,254 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Information about application users",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "owner"] },
+        "companyId": { "type": "string" },
+        "avatar": { "type": "string" },
+        "favorites": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "name", "role"]
+    },
+    "Company": {
+      "title": "Company",
+      "description": "Information about registered businesses",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "rating": { "type": "number" },
+        "reviewCount": { "type": "number" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "logo": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "gallery": { "type": "array", "items": { "type": "string" } },
+        "category": { "type": "string" },
+        "verified": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "ownerId", "category"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "User reviews and ratings for companies",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "companyId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["companyId", "userId", "rating"]
+    },
+    "ChatThread": {
+      "title": "Chat Thread",
+      "description": "A conversation between two users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userIds": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "lastUpdatedAt": { "type": "string", "format": "date-time" },
+        "participants": { "type": "object" }
+      },
+      "required": ["userIds"]
+    },
+    "Flyer": {
+      "title": "Flyer",
+      "description": "Weekly flyer with multiple sliding images",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "titleTr": { "type": "string" },
+        "titleEn": { "type": "string" },
+        "badgeTr": { "type": "string" },
+        "badgeEn": { "type": "string" },
+        "savings": { "type": "string" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "nameTr": { "type": "string" },
+              "nameEn": { "type": "string" },
+              "oldPrice": { "type": "string" },
+              "newPrice": { "type": "string" }
+            }
+          }
+        },
+        "themeColor": { "type": "string" },
+        "badgeColor": { "type": "string" },
+        "dateRangeTr": { "type": "string" },
+        "dateRangeEn": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["titleTr", "titleEn", "images"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "An individual message in a chat thread",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "threadId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["threadId", "senderId", "text"]
+    },
+    "DeletionRequest": {
+      "title": "DeletionRequest",
+      "description": "User requests for account and associated data deletion",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "reason": { "type": "string" },
+        "deleteOptions": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["pending", "processed"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["email", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users": {
+        "schema": "User",
+        "description": "A collection of users"
+    },
+    "businesses": {
+        "schema": "Company",
+        "description": "A collection of registered businesses"
+    },
+    "notifications": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "category": { "type": "string" },
+                "imageUrl": { "type": "string" },
+                "price": { "type": "string" },
+                "date": { "type": "string" },
+                "createdAt": { "type": "number" },
+                "userId": { "type": "string" },
+                "approved": { "type": "boolean" }
+            }
+        },
+        "description": "Public announcements and notifications"
+    },
+    "events": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "title": { "type": "string" },
+                "date": { "type": "string" },
+                "location": { "type": "string" },
+                "description": { "type": "string" }
+            }
+        },
+        "description": "Community events"
+    },
+    "banners": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "imageUrl": { "type": "string" },
+                "link": { "type": "string" },
+                "active": { "type": "boolean" }
+            }
+        },
+        "description": "Advertisement banners"
+    },
+    "chat_messages": {
+        "schema": "Message",
+        "description": "Public community chat messages"
+    },
+    "notification_messages": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "string" },
+                "notifId": { "type": "string" },
+                "senderId": { "type": "string" },
+                "senderName": { "type": "string" },
+                "receiverId": { "type": "string" },
+                "content": { "type": "string" },
+                "timestamp": { "type": "number" },
+                "read": { "type": "boolean" }
+            }
+        },
+        "description": "Private messages regarding specific announcements"
+    },
+    "communities": {
+        "schema": "Community",
+        "description": "Information about different communities"
+    },
+    "communities/{communityId}/messages": {
+        "schema": "Message",
+        "description": "Messages within a specific community"
+    },
+    "calls": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "string" },
+                "callerId": { "type": "string" },
+                "callerName": { "type": "string" },
+                "callerPhoto": { "type": "string" },
+                "receiverId": { "type": "string" },
+                "businessId": { "type": "string" },
+                "businessName": { "type": "string" },
+                "status": { "type": "string", "enum": ["ringing", "answered", "rejected", "ended"] },
+                "timestamp": { "type": "number" }
+            }
+        },
+        "description": "Real-time user to user audio/video calling sessions"
+    },
+    "flyers": {
+        "schema": "Flyer",
+        "description": "Weekly flyers containing sliding images"
+    },
+    "places": {
+        "schema": {
+            "type": "object",
+            "properties": {
+                "name": { "type": "string" },
+                "province": { "type": "string" },
+                "img": { "type": "string" },
+                "address": { "type": "string" },
+                "howToGet": { "type": "string" },
+                "howToGetTr": { "type": "string" },
+                "tips": { "type": "string" },
+                "tipsTr": { "type": "string" },
+                "price": { "type": "string" },
+                "priceTr": { "type": "string" },
+                "parking": { "type": "string" },
+                "parkingTr": { "type": "string" },
+                "approved": { "type": "boolean" },
+                "createdAt": { "type": "number" }
+            }
+        },
+        "description": "Places to visit and historical spots"
+    },
+    "deletion_requests": {
+        "schema": "DeletionRequest",
+        "description": "Requests from users to delete their account and data"
+    }
+  }
+}

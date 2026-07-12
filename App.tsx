@@ -181,6 +181,16 @@ import {
   countUnreadAnnouncementMessages,
   UserAnnouncementMessagesInbox,
 } from './lib/userAnnouncementMessages';
+import {
+  AdminAllBusinessesPanel,
+  AdminCommunitiesPanel,
+  AdminDashboardTab,
+  AdminOverviewPanel,
+  AdminTabBar,
+  AdminUsersPanel,
+  DeletionRequest,
+} from './lib/adminDashboard';
+import { isPlatformAdminEmail } from './lib/adminAccess';
 import { NearbyMapLoader } from './lib/NearbyMapLoader';
 import { MapBrandMark } from './lib/mapBrandMark';
 import {
@@ -1256,6 +1266,12 @@ const App: React.FC = () => {
     }
   }, [selectedCategory]);
 
+  useEffect(() => {
+    if (selectedCategory === 'Admin' && !isPlatformAdmin) {
+      setSelectedCategory('Landing');
+    }
+  }, [selectedCategory, isPlatformAdmin]);
+
   const [selectedNotificationCategory, setSelectedNotificationCategory] = useState<NotificationCategory | 'All'>('All');
   const [selectedNotificationCategoriesMulti, setSelectedNotificationCategoriesMulti] = useState<NotificationCategory[]>([]);
   const [selectedCompanyCategory, setSelectedCompanyCategory] = useState<CategoryType | 'All'>('All');
@@ -1263,6 +1279,11 @@ const App: React.FC = () => {
   const [isQuotaExceeded, setIsQuotaExceeded] = useState(false);
   const [isQuotaBannerDismissed, setIsQuotaBannerDismissed] = useState(false);
   const [adminPostSearchQuery, setAdminPostSearchQuery] = useState('');
+  const [adminDashboardTab, setAdminDashboardTab] = useState<AdminDashboardTab>('overview');
+  const [adminBusinessSearchQuery, setAdminBusinessSearchQuery] = useState('');
+  const [adminUserSearchQuery, setAdminUserSearchQuery] = useState('');
+  const [deletionRequests, setDeletionRequests] = useState<DeletionRequest[]>([]);
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
   
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [dbUsers, setDbUsers] = useState<any[]>([]);
@@ -1561,10 +1582,10 @@ const App: React.FC = () => {
   }, [chatMessages]);
 
   useEffect(() => {
-    if (userRole === 'owner' && !selectedChatUserId && activeChats.length > 0) {
+    if (isPlatformAdmin && !selectedChatUserId && activeChats.length > 0) {
       setSelectedChatUserId(activeChats[0].id);
     }
-  }, [userRole, activeChats, selectedChatUserId]);
+  }, [isPlatformAdmin, activeChats, selectedChatUserId]);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -1776,7 +1797,7 @@ const App: React.FC = () => {
   const [isEditBusinessModalOpen, setIsEditBusinessModalOpen] = useState(false);
   const [isDeleteConfirming, setIsDeleteConfirming] = useState(false);
   const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{
-    type: 'notification' | 'flyer' | 'event' | 'place' | 'banner';
+    type: 'notification' | 'flyer' | 'event' | 'place' | 'banner' | 'business';
     id: string;
     title: string;
   } | null>(null);
@@ -1786,11 +1807,11 @@ const App: React.FC = () => {
   const [selectedPlaceCategory, setSelectedPlaceCategory] = useState<PlaceCategory | 'All'>('All');
   const [placeCategory, setPlaceCategory] = useState<PlaceCategory>(PlaceCategory.CITY);
 
-  const promptDelete = (type: 'notification' | 'flyer' | 'event' | 'place' | 'banner', id: string, title: string) => {
+  const promptDelete = (type: 'notification' | 'flyer' | 'event' | 'place' | 'banner' | 'business', id: string, title: string) => {
     setDeleteConfirmTarget({ type, id, title });
   };
 
-  const executeDelete = (type: 'notification' | 'flyer' | 'event' | 'place' | 'banner', id: string) => {
+  const executeDelete = async (type: 'notification' | 'flyer' | 'event' | 'place' | 'banner' | 'business', id: string) => {
     if (type === 'notification') {
       handleDeleteNotification(id, true);
     } else if (type === 'flyer') {
@@ -1801,6 +1822,19 @@ const App: React.FC = () => {
       handleDeletePlace(id, true);
     } else if (type === 'banner') {
       handleDeleteBanner(id, true);
+    } else if (type === 'business') {
+      if (!isPlatformAdmin) return;
+      try {
+        await deleteDoc(doc(db, 'businesses', id));
+        setBusinesses((prev) => prev.filter((b) => b.id !== id));
+        if (selectedBusiness?.id === id) {
+          setSelectedBusiness(null);
+          setIsBusinessDetailModalOpen(false);
+        }
+        showToast(lang === 'en' ? 'Business deleted.' : 'İşletme silindi.', 'success');
+      } catch (err) {
+        handleFirestoreError(err, 'delete', `businesses/${id}`);
+      }
     }
   };
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
@@ -3039,10 +3073,7 @@ const App: React.FC = () => {
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         const emailLower = (user.email || '').toLowerCase();
-        const isAdmin =
-          emailLower === 'songululuca02@gmail.com' ||
-          emailLower === 'admin@goofind.ca' ||
-          emailLower === 'admin@admin.com';
+        const isAdmin = isPlatformAdminEmail(emailLower);
         const userData = {
           id: user.uid,
           name: user.displayName || 'User',
@@ -3078,11 +3109,13 @@ const App: React.FC = () => {
             .catch((err) => console.error('Error setting user document:', err));
         }
 
+        setIsPlatformAdmin(isAdmin);
         setUserRole(isAdmin ? 'owner' : 'user');
         setShowWelcome(false);
       } else {
         setCurrentUser(null);
         setUserRole('guest');
+        setIsPlatformAdmin(false);
       }
 
       finishLoading();
@@ -3210,9 +3243,7 @@ const App: React.FC = () => {
     });
 
     const currentUserEmailLower = (currentUser?.email || '').toLowerCase();
-    const isAdminUser = currentUserEmailLower === 'songululuca02@gmail.com' || 
-                        currentUserEmailLower === 'admin@goofind.ca' || 
-                        currentUserEmailLower === 'admin@admin.com';
+    const isAdminUser = isPlatformAdminEmail(currentUserEmailLower);
 
     let chatQuery;
     if (isAdminUser) {
@@ -3323,6 +3354,31 @@ const App: React.FC = () => {
        );
     }
 
+    let unsubDeletionRequests = () => {};
+    if (isPlatformAdminEmail(currentUser?.email)) {
+      unsubDeletionRequests = onSnapshot(collection(db, 'deletion_requests'), (snap) => {
+        const data = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() } as DeletionRequest))
+          .sort((a, b) => {
+            const aTime =
+              typeof a.createdAt === 'number'
+                ? a.createdAt
+                : (a.createdAt?.seconds || 0) * 1000;
+            const bTime =
+              typeof b.createdAt === 'number'
+                ? b.createdAt
+                : (b.createdAt?.seconds || 0) * 1000;
+            return bTime - aTime;
+          });
+        setDeletionRequests(data);
+      }, (err) => {
+        console.warn('Error subscribing to deletion_requests:', err);
+        setDeletionRequests([]);
+      });
+    } else {
+      setDeletionRequests([]);
+    }
+
     return () => {
       unsubBiz();
       unsubNotif();
@@ -3336,6 +3392,7 @@ const App: React.FC = () => {
       unsubBizMessages();
       unsubNotifMessages();
       unsubUserDoc();
+      unsubDeletionRequests();
     };
   }, [currentUser?.id, currentUser?.email]);
 
@@ -3644,7 +3701,7 @@ const App: React.FC = () => {
   };
 
   const handleVerifyBusiness = async (bizId: string) => {
-    if (userRole !== 'owner') return;
+    if (!isPlatformAdmin) return;
 
     // Optimistically update the state so changes are instantly reflected on screen
     setBusinesses(prev => prev.map(b => b.id === bizId ? { ...b, verified: true } : b));
@@ -3662,6 +3719,31 @@ const App: React.FC = () => {
       } else {
         handleFirestoreError(err, 'update', `businesses/${bizId}`);
       }
+    }
+  };
+
+  const handleProcessDeletionRequest = async (requestId: string, status: 'processed' | 'rejected') => {
+    if (!isPlatformAdmin) return;
+    setDeletionRequests((prev) =>
+      prev.map((r) => (r.id === requestId ? { ...r, status } : r)),
+    );
+    try {
+      await updateDoc(doc(db, 'deletion_requests', requestId), {
+        status,
+        processedAt: Date.now(),
+      });
+      showToast(
+        status === 'processed'
+          ? lang === 'en'
+            ? 'Deletion request marked as processed.'
+            : 'Silme talebi işlendi olarak işaretlendi.'
+          : lang === 'en'
+            ? 'Deletion request rejected.'
+            : 'Silme talebi reddedildi.',
+        'success',
+      );
+    } catch (err) {
+      handleFirestoreError(err, 'update', `deletion_requests/${requestId}`);
     }
   };
 
@@ -3856,7 +3938,7 @@ const App: React.FC = () => {
   };
 
   const handleApproveNotification = async (notifId: string) => {
-    if (userRole !== 'owner') return;
+    if (!isPlatformAdmin) return;
 
     // Optimistically update the state so changes are instantly reflected on screen
     setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, approved: true } : n));
@@ -4763,7 +4845,7 @@ const App: React.FC = () => {
     providerData?: FirebaseUser['providerData'],
     role: string = userRole,
   ) => {
-    if (role === 'owner') return true;
+    if (isPlatformAdminEmail(email) || role === 'owner') return true;
     if (providerData?.some((p) => p.providerId === 'google.com')) return true;
     return !!email && BUSINESS_AUTH_EXEMPT_EMAILS.has(email.toLowerCase());
   };
@@ -5006,7 +5088,6 @@ const App: React.FC = () => {
           setBusinessImageUrlPreview('');
           setBusinessGallery([]);
           setBusinessFormLocation({ address: '' });
-          setUserRole('owner');
         }, 2000);
       };
 
@@ -5514,7 +5595,7 @@ const App: React.FC = () => {
     
     // Strict email verification check
     const isGoogleUser = currentUser?.providerData?.some((p: any) => p.providerId === 'google.com');
-    const isOwnerUser = userRole === 'owner';
+    const isOwnerUser = isPlatformAdmin;
     const isVerified = currentUser?.emailVerified;
     
     if (!isVerified && !isGoogleUser && !isOwnerUser) {
@@ -5610,12 +5691,49 @@ const App: React.FC = () => {
     return (isInCategory || isFavorite) && matchesSearch;
   });
 
-  const isAdminView = selectedCategory === 'Admin';
+  const isAdminView = selectedCategory === 'Admin' && isPlatformAdmin;
   const isHomeView = selectedCategory === 'Landing';
   const isHomeLandingView = isHomeView && homeNavSection === 'home';
   const isEventsPageView = isHomeView && homeNavSection === 'events';
   const isPlacesPageView = isHomeView && homeNavSection === 'places';
   const isFullScreenTabView = isEventsPageView || isPlacesPageView;
+
+  const pendingBusinessCount = useMemo(
+    () => (businesses || []).filter((b) => b && !b.verified).length,
+    [businesses],
+  );
+  const pendingDeletionCount = useMemo(
+    () => deletionRequests.filter((r) => r.status === 'pending').length,
+    [deletionRequests],
+  );
+  const adminOverviewStats = useMemo(
+    () => ({
+      businesses: businesses.length,
+      pendingBusinesses: pendingBusinessCount,
+      notifications: notifications.length,
+      events: events.length,
+      places: places.length,
+      flyers: flyers.length,
+      banners: banners.length,
+      communities: communities.length,
+      users: dbUsers.length,
+      activeChats: activeChats.length,
+      pendingDeletions: pendingDeletionCount,
+    }),
+    [
+      businesses.length,
+      pendingBusinessCount,
+      notifications.length,
+      events.length,
+      places.length,
+      flyers.length,
+      banners.length,
+      communities.length,
+      dbUsers.length,
+      activeChats.length,
+      pendingDeletionCount,
+    ],
+  );
 
   const handleSendVerification = async () => {
     if (auth.currentUser) {
@@ -5658,7 +5776,7 @@ const App: React.FC = () => {
   }
 
   // --- Blocking Screen for Unverified Users ---
-  const isUnverifiedEmailUser = currentUser && !currentUser.emailVerified && !currentUser.providerData?.some((p: any) => p.providerId === 'google.com') && userRole !== 'owner';
+  const isUnverifiedEmailUser = currentUser && !currentUser.emailVerified && !currentUser.providerData?.some((p: any) => p.providerId === 'google.com') && !isPlatformAdmin;
 
   if (isUnverifiedEmailUser) {
     return (
@@ -6030,7 +6148,7 @@ const App: React.FC = () => {
       )}
 
       {/* Verification Banner */}
-      {currentUser && !currentUser.emailVerified && !currentUser.providerData?.some((p: any) => p.providerId === 'google.com') && userRole !== 'owner' && (
+      {currentUser && !currentUser.emailVerified && !currentUser.providerData?.some((p: any) => p.providerId === 'google.com') && !isPlatformAdmin && (
         <div className="bg-primary/10 border-b border-primary-light/20 px-4 py-2 text-center sticky top-0 z-[60] backdrop-blur-md">
           <p className="text-[14px] sm:text-xs font-bold text-primary uppercase tracking-widest flex items-center justify-center gap-2">
             <Shield className="w-3 h-3" />
@@ -6714,9 +6832,28 @@ const App: React.FC = () => {
                <div className="flex px-4 py-2 bg-primary-mid/10 text-primary rounded-full text-xs font-black uppercase tracking-widest border border-primary/20 backdrop-blur-md">{lang === 'en' ? 'Super Admin Mode' : 'Süper Yönetici Modu'}</div>
              </div>
 
-             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-           {/* Chat Management */}
-            <div className="lg:col-span-2 space-y-8">
+             <AdminTabBar
+               lang={lang}
+               activeTab={adminDashboardTab}
+               onChange={setAdminDashboardTab}
+               counts={{
+                 pendingBusinesses: pendingBusinessCount,
+                 pendingDeletions: pendingDeletionCount,
+                 activeChats: activeChats.length,
+                 totalUsers: dbUsers.length,
+               }}
+             />
+
+             {adminDashboardTab === 'overview' && (
+               <AdminOverviewPanel
+                 lang={lang}
+                 stats={adminOverviewStats}
+                 onNavigate={setAdminDashboardTab}
+               />
+             )}
+
+             {adminDashboardTab === 'support' && (
+             <div className="space-y-8">
                <div className="bg-white rounded-[3rem] border border-slate-200 shadow-2xl overflow-hidden flex flex-col h-[700px]">
                   <div className="bg-primary p-8 text-white flex items-center justify-between shrink-0">
                      <div className="flex items-center gap-4">
@@ -6813,8 +6950,10 @@ const App: React.FC = () => {
                   </div>
                </div>
             </div>
+            )}
 
-            {/* Sidebar Stats / Moderation */}
+            {adminDashboardTab === 'moderation' && (
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             <div className="space-y-8">
                <div className="bg-white p-8 md:p-10 rounded-[3rem] border border-slate-200/80 shadow-xl text-left">
                    <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-8 border-b border-slate-100 pb-4">{lang === 'en' ? 'Moderation Center' : 'Moderasyon Merkezi'}</h4>
@@ -6950,9 +7089,24 @@ const App: React.FC = () => {
 
                    </div>{/* Close Moderation inner space-y-10 container */}
                 </div>{/* Close Moderation Center card */}
-              </div>{/* Close Sidebar Stats / Moderation column */}
-            </div>{/* Close main Admin grid */}
+              </div>{/* Close Moderation Center card */}
+              <AdminAllBusinessesPanel
+                lang={lang}
+                businesses={businesses}
+                search={adminBusinessSearchQuery}
+                onSearchChange={setAdminBusinessSearchQuery}
+                onSelect={(biz) => {
+                  setSelectedBusiness(biz);
+                  setIsBusinessDetailModalOpen(true);
+                }}
+                onVerify={handleVerifyBusiness}
+                onDelete={(id, name) => promptDelete('business', id, name)}
+              />
+            </div>
+            )}
 
+            {adminDashboardTab === 'content' && (
+            <>
             {/* --- HEAVY MANAGERS PANELS ROW 1: Flyers & Events --- */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
                {/* Flyer/Brochure Management Card */}
@@ -7476,7 +7630,26 @@ const App: React.FC = () => {
 
                   </div>{/* Close Banners & Announcement Ads Card */}
                 </div>{/* Close HEAVY MANAGERS PANELS ROW 2 grid-cols-2 row */}
+            </>
+            )}
 
+            {adminDashboardTab === 'users' && (
+              <AdminUsersPanel
+                lang={lang}
+                users={dbUsers}
+                deletionRequests={deletionRequests}
+                search={adminUserSearchQuery}
+                onSearchChange={setAdminUserSearchQuery}
+                onProcessDeletion={handleProcessDeletionRequest}
+              />
+            )}
+
+            {adminDashboardTab === 'communities' && (
+              <AdminCommunitiesPanel lang={lang} communities={communities} />
+            )}
+
+            {adminDashboardTab === 'tools' && (
+            <>
                 {/* --- GOOGLE PLAY CONSOLE ASSETS & MARKETING DETAILS --- */}
                 <div className="bg-white rounded-[3rem] border border-slate-200/80 shadow-2xl overflow-hidden p-6 sm:p-8 md:p-10 animate-in fade-in duration-300 border-dashed mt-12 text-left">
                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between border-b border-slate-100 pb-6 mb-8 gap-4">
@@ -10079,7 +10252,9 @@ Designed with ❤️ for Goofind App Store Listings.
                         </div>
                       </div>
 
-                    </div>
+            </>
+            )}
+          </div>
         ) : (
           <div className="pb-32">
             {isHomeView ? (
@@ -12024,7 +12199,7 @@ Designed with ❤️ for Goofind App Store Listings.
             </div>
           )}
 
-          {currentUser && (selectedNotification?.userId === currentUser.id || userRole === 'owner') && (
+          {currentUser && (selectedNotification?.userId === currentUser.id || isPlatformAdmin) && (
             <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
               <button 
                 onClick={() => promptDelete('notification', selectedNotification.id, selectedNotification.title || '')}
@@ -13059,7 +13234,7 @@ Designed with ❤️ for Goofind App Store Listings.
                 )}
              </div>
 
-             {userRole === 'owner' && (
+             {isPlatformAdmin && (
                <button 
                  onClick={() => {
                    setIsProfileOpen(false);
@@ -14845,7 +15020,7 @@ Designed with ❤️ for Goofind App Store Listings.
             activeImage={activeBusinessImage}
             onImageChange={setActiveBusinessImage}
             currentUser={currentUser}
-            isOwner={currentUser?.id === selectedBusiness.ownerId || userRole === 'owner'}
+            isOwner={currentUser?.id === selectedBusiness.ownerId || isPlatformAdmin}
             isFavorite={favorites.includes(selectedBusiness.id)}
             isSubmittingReview={isSubmittingReview}
             reviewSuccess={reviewSuccess}

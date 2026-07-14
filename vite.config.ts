@@ -75,6 +75,7 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
         port: 4173,
         strictPort: true,
+        allowedHosts: true,
         proxy: {
           '/api/nominatim': {
             target: 'https://nominatim.openstreetmap.org',

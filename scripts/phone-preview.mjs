@@ -28,11 +28,19 @@ function portInUse(p) {
 
 const ip = getLanIp();
 const url = ip ? `http://${ip}:${port}` : `http://BILGISAYAR_IP:${port}`;
+const isHotspotIp = ip?.startsWith('172.20.10.') || ip?.startsWith('172.16.') || false;
 
 console.log('');
 console.log('📱 Telefonda test için (aynı Wi-Fi):');
 console.log(`   ${url}`);
 console.log('');
+if (isHotspotIp) {
+  console.log('⚠️  Mac şu an iPhone hotspot’una bağlı görünüyor.');
+  console.log('   Telefon çoğu zaman bu adrese Safari’den ulaşamaz.');
+  console.log('   Çözüm: Mac VE telefonu aynı ev Wi-Fi’sine bağlayın, sonra npm run phone tekrar çalıştırın.');
+  console.log('   Alternatif: npm run phone:tunnel (internet üzerinden geçici link)');
+  console.log('');
+}
 console.log('⚠️  localhost telefonda çalışmaz — yukarıdaki adresi Safari’de açın.');
 console.log('');
 

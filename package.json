@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "phone:dev": "vite --host 0.0.0.0 --port 3000",
-    "phone": "npm run build && vite preview --host 0.0.0.0 --port 4173",
+    "phone": "npm run build && node scripts/print-phone-url.mjs 4173 && vite preview --host 0.0.0.0 --port 4173",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

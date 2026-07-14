@@ -43,10 +43,10 @@ export default defineConfig(({ mode }) => {
         headers: {
           'Cache-Control': 'no-store',
         },
+        // Telefondan aynı IP ile bağlanınca HMR çalışsın (localhost yerine sayfa host'unu kullan)
         hmr: {
-          host: lanIp,
-          port,
-          protocol: 'ws',
+          clientPort: port,
+          host: lanIp !== 'localhost' ? lanIp : undefined,
         },
         proxy: {
           '/api/nominatim': {

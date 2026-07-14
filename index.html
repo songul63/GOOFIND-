@@ -246,6 +246,22 @@
     </div>
     <style>@keyframes app-spin{to{transform:rotate(360deg)}}</style>
     <script>
+      (function () {
+        if (typeof globalThis.navigator === 'undefined') {
+          globalThis.navigator = {
+            userAgent: '',
+            platform: '',
+            language: 'en',
+            onLine: true,
+            geolocation: null,
+            clipboard: null,
+            permissions: null,
+            serviceWorker: null,
+          };
+        }
+      })();
+    </script>
+    <script>
       setTimeout(function () {
         var loading = document.getElementById('app-loading');
         if (!loading) return;

@@ -25,6 +25,7 @@ import {
   TORONTO_CENTER,
 } from './geo';
 import { MapBrandMark } from './mapBrandMark';
+import { getNavigator, hasGeolocation } from './browserEnv';
 
 export type MapPlace = {
   id: string;
@@ -460,14 +461,15 @@ function NearbyMapViewInner({
 
     setLocationStatus('loading');
 
-    if (!navigator.geolocation) {
+    const geolocation = hasGeolocation() ? getNavigator()?.geolocation : null;
+    if (!geolocation) {
       void tryApproximate();
       return;
     }
 
     const opts: PositionOptions = { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 };
 
-    navigator.geolocation.getCurrentPosition(
+    geolocation.getCurrentPosition(
       (pos) => {
         applyLocation(
           { lat: pos.coords.latitude, lng: pos.coords.longitude },
@@ -482,10 +484,11 @@ function NearbyMapViewInner({
   }, []);
 
   useEffect(() => {
-    if (!navigator.permissions?.query) return;
+    const permissions = getNavigator()?.permissions;
+    if (!permissions?.query) return;
     let permissionStatus: PermissionStatus | null = null;
 
-    navigator.permissions
+    permissions
       .query({ name: 'geolocation' })
       .then((status) => {
         permissionStatus = status;

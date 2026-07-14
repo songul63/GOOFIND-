@@ -43,7 +43,12 @@ class AppErrorBoundary extends React.Component<
             <code style={{ background: '#E2E8F0', padding: '2px 6px', borderRadius: 4 }}>
               npm run phone
             </code>{' '}
-            çalıştırın, sonra telefondan Network adresini açın. Geliştirme modu yerine bu yolu kullanın.
+            çalıştırın. Terminalde çıkan{' '}
+            <strong>http://192.168.x.x:4173</strong> adresini telefon tarayıcısında açın (aynı Wi-Fi).
+            <code style={{ background: '#E2E8F0', padding: '2px 6px', borderRadius: 4, marginLeft: 4 }}>
+              localhost
+            </code>{' '}
+            telefonda çalışmaz.
           </p>
           <pre
             style={{

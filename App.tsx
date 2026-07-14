@@ -1266,12 +1266,6 @@ const App: React.FC = () => {
     }
   }, [selectedCategory]);
 
-  useEffect(() => {
-    if (selectedCategory === 'Admin' && !isPlatformAdmin) {
-      setSelectedCategory('Landing');
-    }
-  }, [selectedCategory, isPlatformAdmin]);
-
   const [selectedNotificationCategory, setSelectedNotificationCategory] = useState<NotificationCategory | 'All'>('All');
   const [selectedNotificationCategoriesMulti, setSelectedNotificationCategoriesMulti] = useState<NotificationCategory[]>([]);
   const [selectedCompanyCategory, setSelectedCompanyCategory] = useState<CategoryType | 'All'>('All');
@@ -1284,6 +1278,12 @@ const App: React.FC = () => {
   const [adminUserSearchQuery, setAdminUserSearchQuery] = useState('');
   const [deletionRequests, setDeletionRequests] = useState<DeletionRequest[]>([]);
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+
+  useEffect(() => {
+    if (selectedCategory === 'Admin' && !isPlatformAdmin) {
+      setSelectedCategory('Landing');
+    }
+  }, [selectedCategory, isPlatformAdmin]);
   
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [dbUsers, setDbUsers] = useState<any[]>([]);

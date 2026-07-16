@@ -1,7 +1,8 @@
 
 import { CategoryType, Business, NotificationCategory, Notification, Event, TravelerRecommendation, BannerAd, ChatMessage, Community, Flyer, PlaceCategory } from './types';
+import { COMMUNITY_COVER_IMAGES } from './lib/communityCoverImages';
 
-export const INITIAL_COMMUNITIES: Community[] = [
+const RAW_COMMUNITIES: Community[] = [
   {
     id: 'all',
     name: 'ALL',
@@ -94,7 +95,7 @@ export const INITIAL_COMMUNITIES: Community[] = [
     id: 'aurora',
     name: 'Aurora',
     slug: 'aurora',
-    description: 'Aurora and Newmarket Turkish community.',
+    description: 'Aurora Turkish community in York Region.',
     memberCount: 220,
     imageUrl: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=400&q=80'
   },
@@ -102,7 +103,7 @@ export const INITIAL_COMMUNITIES: Community[] = [
     id: 'oshawa',
     name: 'Oshawa',
     slug: 'oshawa',
-    description: 'Durham Region connection for Oshawa and Whitby.',
+    description: 'Durham Region connection for Oshawa residents.',
     memberCount: 190,
     imageUrl: 'https://images.unsplash.com/photo-1441260037373-ca546f393843?auto=format&fit=crop&w=400&q=80'
   },
@@ -142,11 +143,144 @@ export const INITIAL_COMMUNITIES: Community[] = [
     id: 'waterloo',
     name: 'Waterloo',
     slug: 'waterloo',
-    description: 'Kitchener-Waterloo-Cambridge connection.',
+    description: 'Waterloo city Turkish community hub.',
     memberCount: 310,
     imageUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'king',
+    name: 'King',
+    slug: 'king',
+    description: 'King Township Turkish community in York Region.',
+    memberCount: 140,
+    imageUrl: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'stouffville',
+    name: 'Stouffville',
+    slug: 'stouffville',
+    description: 'Whitchurch-Stouffville area Turkish network.',
+    memberCount: 165,
+    imageUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'newmarket',
+    name: 'Newmarket',
+    slug: 'newmarket',
+    description: 'Newmarket Turkish community in York Region.',
+    memberCount: 230,
+    imageUrl: 'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'ajax',
+    name: 'Ajax',
+    slug: 'ajax',
+    description: 'Ajax Durham Region Turkish community hub.',
+    memberCount: 195,
+    imageUrl: 'https://images.unsplash.com/photo-1441260037373-ca546f393843?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'pickering',
+    name: 'Pickering',
+    slug: 'pickering',
+    description: 'Pickering area Turkish residents group.',
+    memberCount: 210,
+    imageUrl: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'whitby',
+    name: 'Whitby',
+    slug: 'whitby',
+    description: 'Whitby Durham Region Turkish community.',
+    memberCount: 185,
+    imageUrl: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'kitchener',
+    name: 'Kitchener',
+    slug: 'kitchener',
+    description: 'Kitchener Turkish community in Waterloo Region.',
+    memberCount: 275,
+    imageUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'cambridge',
+    name: 'Cambridge',
+    slug: 'cambridge',
+    description: 'Cambridge area Turkish network and events.',
+    memberCount: 200,
+    imageUrl: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'brantford',
+    name: 'Brantford',
+    slug: 'brantford',
+    description: 'Brantford Turkish community connection.',
+    memberCount: 155,
+    imageUrl: 'https://images.unsplash.com/photo-1447933630983-ca4467f56bc9?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'st-catharines',
+    name: 'St. Catharines',
+    slug: 'st-catharines',
+    description: 'St. Catharines Niagara Region Turkish hub.',
+    memberCount: 240,
+    imageUrl: 'https://images.unsplash.com/photo-1490682143124-b7327386962b?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'milton',
+    name: 'Milton',
+    slug: 'milton',
+    description: 'Milton Halton Region Turkish community.',
+    memberCount: 220,
+    imageUrl: 'https://images.unsplash.com/photo-1551322019-335606d2003c?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'caledon',
+    name: 'Caledon',
+    slug: 'caledon',
+    description: 'Caledon Peel Region Turkish residents group.',
+    memberCount: 130,
+    imageUrl: 'https://images.unsplash.com/photo-1503424886307-b090341d25d1?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'peterborough',
+    name: 'Peterborough',
+    slug: 'peterborough',
+    description: 'Peterborough area Turkish community hub.',
+    memberCount: 145,
+    imageUrl: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'dufferin-county',
+    name: 'Dufferin County',
+    slug: 'dufferin-county',
+    description: 'Dufferin County Turkish community network.',
+    memberCount: 120,
+    imageUrl: 'https://images.unsplash.com/photo-1517090504586-fde19ea6066f?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'georgina',
+    name: 'Georgina',
+    slug: 'georgina',
+    description: 'Georgina Lake Simcoe Turkish community.',
+    memberCount: 135,
+    imageUrl: 'https://images.unsplash.com/photo-1444723121867-7a241cacace9?auto=format&fit=crop&w=400&q=80'
+  },
+  {
+    id: 'east-gwillimbury',
+    name: 'East Gwillimbury',
+    slug: 'east-gwillimbury',
+    description: 'East Gwillimbury York Region Turkish network.',
+    memberCount: 125,
+    imageUrl: 'https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?auto=format&fit=crop&w=400&q=80'
   }
 ];
+
+export const INITIAL_COMMUNITIES: Community[] = RAW_COMMUNITIES.map((community) => ({
+  ...community,
+  imageUrl: COMMUNITY_COVER_IMAGES[community.id] || community.imageUrl,
+}));
 
 export const INITIAL_CHAT_MESSAGES: ChatMessage[] = [
   {

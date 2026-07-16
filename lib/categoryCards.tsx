@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Calendar,
   MapPin,
+  Megaphone,
 } from 'lucide-react';
 import { Business, CategoryType, Notification, NotificationCategory, Event } from '../types';
 import { getIconHex, lightenHex, darkenHex } from './icon3d';
@@ -215,6 +216,7 @@ type CategoryPillProps = {
   isSelected: boolean;
   onClick: () => void;
   layout?: 'scroll' | 'grid';
+  tone?: 'primary' | 'accent';
 };
 
 /** Compact pill chips — directory / companies feel */
@@ -224,8 +226,10 @@ export function CategoryPill({
   isSelected,
   onClick,
   layout = 'scroll',
+  tone = 'primary',
 }: CategoryPillProps) {
   const isGrid = layout === 'grid';
+  const isAnnouncement = tone === 'accent' && !isGrid;
 
   return (
     <motion.button
@@ -235,10 +239,14 @@ export function CategoryPill({
       className={`flex items-center rounded-full border transition-all duration-200 outline-none ${
         isGrid
           ? 'w-full min-h-[3.25rem] flex-col justify-center gap-1 px-1.5 py-2'
-          : 'shrink-0 snap-start min-w-[6.75rem] max-w-[6.75rem] justify-center gap-1.5 px-2 py-2'
+          : isAnnouncement
+            ? 'shrink-0 snap-start w-[5.85rem] sm:w-[6.5rem] flex-col justify-center gap-1 px-1.5 py-2 min-h-[3.5rem]'
+            : 'shrink-0 snap-start min-w-[6.75rem] max-w-[6.75rem] justify-center gap-1.5 px-2 py-2'
       } ${
         isSelected
-          ? 'bg-primary text-white border-primary shadow-md shadow-primary/25'
+          ? tone === 'accent'
+            ? 'bg-accent text-white border-accent shadow-md shadow-accent/25'
+            : 'bg-primary text-white border-primary shadow-md shadow-primary/25'
           : 'bg-white/90 text-slate-600 border-slate-200/90 hover:border-primary/35 hover:bg-white'
       }`}
     >
@@ -247,7 +255,7 @@ export function CategoryPill({
       )}
       <span
         className={`text-[8px] sm:text-[9px] font-black uppercase tracking-tight text-center leading-tight ${
-          isGrid ? 'line-clamp-2' : 'truncate'
+          isGrid || isAnnouncement ? 'line-clamp-2' : 'truncate'
         }`}
       >
         {label}
@@ -351,28 +359,34 @@ export function AnnouncementMultiCategoryFilter({
 
   const activeCount = selected.length;
 
+  const panelClassName = inline
+    ? 'absolute left-0 top-full z-50 mt-2 w-[min(calc(100vw-2rem),420px)] max-h-[min(70vh,420px)] overflow-y-auto p-3 sm:p-4 rounded-xl border border-accent/20 bg-white shadow-xl shadow-accent/10 animate-in fade-in slide-in-from-top-1 duration-200'
+    : 'absolute right-0 top-full z-50 mt-2 w-[min(calc(100vw-2rem),420px)] max-h-[min(70vh,420px)] overflow-y-auto p-3 sm:p-4 rounded-xl border border-accent/20 bg-white shadow-xl shadow-accent/10 animate-in fade-in slide-in-from-top-1 duration-200';
+
   return (
-    <div className={`relative shrink-0 ${inline ? 'inline-flex align-middle' : 'inline-flex'}`}>
+    <span className={inline ? 'relative inline align-middle ann-inline-filter' : 'relative inline-flex shrink-0'}>
       <button
         type="button"
         onClick={handleTriggerClick}
         title={lang === 'en' ? 'Filter categories' : 'Kategori filtrele'}
         aria-label={lang === 'en' ? 'Filter categories' : 'Kategori filtrele'}
         aria-expanded={isOpen}
-        className={`relative inline-flex items-center justify-center rounded-md border transition-all duration-200 outline-none ${
-          inline ? 'w-5 h-5 ml-1 rounded' : compact ? 'w-7 h-7 rounded-lg' : 'w-9 h-9 sm:w-10 sm:h-10 rounded-lg'
+        className={`relative inline-flex items-center justify-center transition-all duration-200 outline-none align-middle ${
+          inline
+            ? 'ann-inline-filter-btn w-6 h-6 min-w-6 min-h-6 p-0 ml-[2px] rounded-md border-0 leading-none'
+            : `rounded-md border ${compact ? 'w-7 h-7 rounded-lg' : 'w-9 h-9 sm:w-10 sm:h-10 rounded-lg'}`
         } ${
           isOpen || activeCount > 0
             ? 'bg-primary text-white border-primary shadow-sm shadow-primary/20'
             : inline
-              ? 'bg-primary/10 text-primary border-primary/25 hover:bg-primary/15 hover:border-primary/40'
+              ? 'bg-primary/10 text-primary hover:bg-primary/18'
               : 'bg-white/90 text-primary border-primary/25 hover:border-primary/40'
         }`}
       >
         <ListFilter
-          size={inline ? 14 : compact ? 15 : 17}
-          strokeWidth={2.35}
-          className={isOpen || activeCount > 0 ? 'text-white' : 'text-primary'}
+          size={inline ? 17 : compact ? 15 : 17}
+          strokeWidth={inline ? 2.5 : 2.35}
+          className={`${isOpen || activeCount > 0 ? 'text-white' : 'text-primary'} ${inline ? 'shrink-0' : ''}`}
         />
         {!isOpen && activeCount > 0 && (
           <span
@@ -388,7 +402,10 @@ export function AnnouncementMultiCategoryFilter({
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 sm:left-auto sm:right-0 top-full z-30 mt-2 w-[min(100vw-2rem,320px)] sm:w-[min(100%,420px)] p-3 sm:p-4 rounded-xl border border-accent/20 bg-white shadow-xl shadow-accent/10 animate-in fade-in slide-in-from-top-1 duration-200">
+        <div className={panelClassName}>
+          <p className="text-[10px] font-black uppercase tracking-wider text-accent-vivid mb-2.5">
+            {lang === 'en' ? 'Filter categories' : 'Kategori filtrele'}
+          </p>
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => {
               const style = ANNOUNCEMENT_CATEGORY_STYLES[cat] || ALL_CATEGORY_STYLE;
@@ -445,7 +462,7 @@ export function AnnouncementMultiCategoryFilter({
           </div>
         </div>
       )}
-    </div>
+    </span>
   );
 }
 
@@ -593,6 +610,85 @@ export function CompanyCategoryFilterBar({
           onToggle={() => (isExpanded ? collapseCategories() : setIsExpanded(true))}
           lang={lang}
           className="-mt-1.5"
+        />
+      )}
+    </div>
+  );
+}
+
+type AnnouncementCategoryFilterBarProps = {
+  selected: NotificationCategory | 'All';
+  onSelect: (category: NotificationCategory | 'All') => void;
+  onAllSelect?: () => void;
+  onCategorySelect?: (category: NotificationCategory) => void;
+  categoryLabels: Record<string, string>;
+  lang: 'en' | 'tr';
+};
+
+const ANNOUNCEMENT_CATEGORY_PREVIEW = 6;
+
+/** Announcement category pills — scroll preview + expandable grid (matches companies UX) */
+export function AnnouncementCategoryFilterBar({
+  selected,
+  onSelect,
+  onAllSelect,
+  onCategorySelect,
+  categoryLabels,
+  lang,
+}: AnnouncementCategoryFilterBarProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const sortedCategories = Object.values(NotificationCategory).sort((a, b) => {
+    const labelA = categoryLabels[a] || a;
+    const labelB = categoryLabels[b] || b;
+    return labelA.localeCompare(labelB, lang);
+  });
+
+  const hasHiddenCategories = sortedCategories.length > ANNOUNCEMENT_CATEGORY_PREVIEW;
+  const collapseCategories = () => setIsExpanded(false);
+  const cardVariant = isExpanded ? 'grid' : 'scroll';
+
+  return (
+    <div className="relative mb-3 sm:mb-4">
+      {hasHiddenCategories && isExpanded && (
+        <CompanyCategoryExpandArrow
+          isExpanded
+          onToggle={collapseCategories}
+          lang={lang}
+          className="mb-1.5"
+        />
+      )}
+      <div
+        className={`announcements-tabs rounded-xl px-1 pt-2 pb-2 min-h-[5.5rem] ${
+          isExpanded
+            ? 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 animate-in fade-in slide-in-from-top-1 duration-200'
+            : 'flex overflow-x-auto gap-1 no-scrollbar snap-x'
+        }`}
+      >
+        <CategoryFilterCard
+          label={lang === 'en' ? 'ALL' : 'HEPSİ'}
+          style={ANNOUNCEMENT_ALL_CATEGORY_STYLE}
+          isSelected={selected === 'All'}
+          onClick={() => (onAllSelect ? onAllSelect() : onSelect('All'))}
+          variant={cardVariant}
+        />
+        {(isExpanded ? sortedCategories : sortedCategories.slice(0, ANNOUNCEMENT_CATEGORY_PREVIEW)).map((cat) => (
+          <CategoryFilterCard
+            key={cat}
+            label={categoryLabels[cat] || cat}
+            style={ANNOUNCEMENT_CATEGORY_STYLES[cat] || ALL_CATEGORY_STYLE}
+            isSelected={selected === cat}
+            onClick={() => (onCategorySelect ? onCategorySelect(cat) : onSelect(cat))}
+            variant={cardVariant}
+          />
+        ))}
+      </div>
+      {hasHiddenCategories && (
+        <CompanyCategoryExpandArrow
+          isExpanded={isExpanded}
+          onToggle={() => (isExpanded ? collapseCategories() : setIsExpanded(true))}
+          lang={lang}
+          className="mt-1"
         />
       )}
     </div>
@@ -787,6 +883,81 @@ export function FeaturedCompaniesCarousel({
   );
 }
 
+type AnnouncementCategoryPageProps = {
+  category: NotificationCategory;
+  categoryLabels: Record<string, string>;
+  lang: 'en' | 'tr';
+  notifications: Notification[];
+  contactLabel: string;
+  onSelect: (notif: Notification) => void;
+  onBack: () => void;
+  headerActions?: React.ReactNode;
+};
+
+/** Full-page view for a single announcement category */
+export function AnnouncementCategoryPage({
+  category,
+  categoryLabels,
+  lang,
+  notifications,
+  contactLabel,
+  onSelect,
+  onBack,
+  headerActions,
+}: AnnouncementCategoryPageProps) {
+  const categoryStyle = ANNOUNCEMENT_CATEGORY_STYLES[category] || ALL_CATEGORY_STYLE;
+  const categoryLabel = categoryLabels[category] || category;
+  const approved = notifications.filter((n) => n?.approved);
+  const items = approved.filter((n) => n.category === category);
+
+  return (
+    <section className="announcements-zone animate-in fade-in duration-700 rounded-[2rem] sm:rounded-[3rem] border border-accent/15 bg-gradient-to-br from-accent-soft/40 via-white to-primary-soft/30 p-5 sm:p-8 md:p-10 shadow-sm relative overflow-hidden">
+      <div className="mb-6 sm:mb-8 relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
+          <button
+            type="button"
+            onClick={onBack}
+            className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-accent/20 text-accent-vivid flex items-center justify-center shadow-sm hover:bg-accent-soft/60 hover:border-accent/35 active:scale-95 transition-all outline-none"
+            aria-label={lang === 'en' ? 'Back to all listings' : 'Tüm ilanlara dön'}
+          >
+            <ChevronLeft size={22} strokeWidth={2.5} />
+          </button>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <CategoryFlatIcon style={categoryStyle} size={22} boxSize={40} variant="badge" />
+              <h3 className="text-lg sm:text-2xl md:text-3xl font-black uppercase tracking-tight-brand text-accent-vivid font-display italic leading-tight truncate">
+                {categoryLabel}
+              </h3>
+            </div>
+            <p className="text-accent/70 text-[11px] sm:text-[13px] font-black uppercase tracking-brand">
+              {lang === 'en' ? 'Listings in this category' : 'Bu kategorideki ilanlar'}
+            </p>
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1">
+              {items.length} {lang === 'en' ? 'live posts' : 'aktif ilan'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+          {headerActions}
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-accent text-white flex items-center justify-center shadow-lg shadow-accent/25">
+            <Megaphone size={24} strokeWidth={2.5} />
+          </div>
+        </div>
+      </div>
+
+      <AnnouncementFeedList
+        notifications={approved}
+        categoryFilter={category}
+        lang={lang}
+        categoryLabels={categoryLabels}
+        contactLabel={contactLabel}
+        onSelect={onSelect}
+        variant="page"
+      />
+    </section>
+  );
+}
+
 type AnnouncementFeedListProps = {
   notifications: Notification[];
   categoryFilter: NotificationCategory | 'All';
@@ -796,6 +967,7 @@ type AnnouncementFeedListProps = {
   categoryLabels: Record<string, string>;
   contactLabel: string;
   onSelect: (notif: Notification) => void;
+  variant?: 'preview' | 'page';
 };
 
 /** Vertical classified feed — bulletin / marketplace feel */
@@ -808,7 +980,9 @@ export function AnnouncementFeedList({
   categoryLabels,
   contactLabel,
   onSelect,
+  variant = 'preview',
 }: AnnouncementFeedListProps) {
+  const isPage = variant === 'page';
   const items = notifications.filter(
     (n) =>
       n &&
@@ -818,24 +992,26 @@ export function AnnouncementFeedList({
 
   return (
     <div className="relative mt-4 group/ann-feed">
-      <div className="flex items-center justify-between mb-3 px-0.5">
-        <p className="text-[11px] sm:text-[12px] font-black uppercase tracking-wider text-accent-vivid inline-flex items-center gap-1">
+      <div className="relative mb-3 px-0.5 w-fit max-w-full">
+        <div className="inline-flex items-center gap-1 text-[11px] sm:text-[12px] font-black uppercase text-accent-vivid leading-none whitespace-nowrap">
           <span className="relative flex h-2 w-2 shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-vivid opacity-60" />
             <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-vivid" />
           </span>
-          {lang === 'en' ? 'Live Listings' : 'Canlı İlanlar'}
-          {onMultiCategoryFilterChange && (
-            <AnnouncementMultiCategoryFilter
-              inline
-              categories={Object.values(NotificationCategory)}
-              categoryLabels={categoryLabels}
-              selected={categoryFiltersMulti}
-              onChange={onMultiCategoryFilterChange}
-              lang={lang}
-            />
-          )}
-        </p>
+          <span className="inline leading-none whitespace-nowrap">
+            <span className="inline">{lang === 'en' ? 'Live Listings' : 'Canlı İlanlar'}</span>
+            {onMultiCategoryFilterChange && (
+              <AnnouncementMultiCategoryFilter
+                inline
+                categories={Object.values(NotificationCategory)}
+                categoryLabels={categoryLabels}
+                selected={categoryFiltersMulti}
+                onChange={onMultiCategoryFilterChange}
+                lang={lang}
+              />
+            )}
+          </span>
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -853,7 +1029,11 @@ export function AnnouncementFeedList({
         </div>
       ) : (
         <>
-          <div className="flex flex-col gap-2 w-full max-h-[320px] overflow-y-auto pr-1 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-primary-soft/40 [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-thumb]:rounded-full">
+          <div
+            className={`flex flex-col gap-2 w-full pr-1 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-primary-soft/40 [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-thumb]:rounded-full ${
+              isPage ? 'max-h-none' : 'max-h-[320px] overflow-y-auto'
+            }`}
+          >
             {items.map((notif) => {
               const categoryStyle = ANNOUNCEMENT_CATEGORY_STYLES[notif.category] || ALL_CATEGORY_STYLE;
 
@@ -910,7 +1090,9 @@ export function AnnouncementFeedList({
               );
             })}
           </div>
-          <div className="absolute bottom-0 left-0 right-1 h-10 bg-gradient-to-t from-primary-soft/50 via-accent-soft/20 to-transparent pointer-events-none" />
+          {!isPage && (
+            <div className="absolute bottom-0 left-0 right-1 h-10 bg-gradient-to-t from-primary-soft/50 via-accent-soft/20 to-transparent pointer-events-none" />
+          )}
         </>
       )}
     </div>

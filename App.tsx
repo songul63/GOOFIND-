@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo, useCallback } from 'react';
 import { 
   Search, 
   Grid,
@@ -146,11 +146,12 @@ import {
   CategoryBadge,
   CategoryFlatIcon,
   CategoryPill,
-  CategoryTabBar,
+  AnnouncementCategoryFilterBar,
   FeaturedCompaniesCarousel,
   CompanyCategoryFilterBar,
   CompanyCategoriesExplorerPage,
   AnnouncementFeedList,
+  AnnouncementCategoryPage,
 } from './lib/categoryCards';
 import {
   ALL_CATEGORY_STYLE,
@@ -171,8 +172,8 @@ import {
 import {
   buildUserIncomingCompanyThreads,
   buildUserOutgoingCompanyThreads,
+  CompanyHeaderActions,
   UserCompanyMessagesInbox,
-  UserCompanyMessagesQuickBox,
 } from './lib/userCompanyMessages';
 import {
   AnnouncementHeaderActions,
@@ -181,6 +182,7 @@ import {
   countUnreadAnnouncementMessages,
   UserAnnouncementMessagesInbox,
 } from './lib/userAnnouncementMessages';
+import { CommunityHeaderActions, CommunityHomeChatPanel } from './lib/communityHomeChat';
 import {
   AdminAllBusinessesPanel,
   AdminCommunitiesPanel,
@@ -203,6 +205,7 @@ import {
 import { PlaceCategory } from './types';
 import { Emoji3D } from './lib/icon3d';
 import { FONT_DISPLAY_QUOTED } from './lib/typography';
+import { StyledG, LogoIcon, LogoText, GoofindAdminMark, GoofindWordmark } from './lib/goofindLogo';
 import { dialPhoneNumber, resolveUserPhone } from './lib/phoneCall';
 import DeleteAccountPage from './DeleteAccountPage';
 import { ScreenshotOptimizerModal } from './ScreenshotOptimizerModal';
@@ -243,167 +246,6 @@ import { INITIAL_BUSINESSES, INITIAL_NOTIFICATIONS, INITIAL_EVENTS, INITIAL_BANN
 import { getLatestCanadaTurkishNews, summarizeWebsiteInfo, translatePlaceFields } from './geminiService';
 
 // --- Reusable Components ---
-const StyledG = ({ className = "" }: { className?: string }) => (
-  <svg 
-    viewBox="0 0 100 100" 
-    className={`inline-block shrink-0 ${className}`}
-    style={{ width: '1.2em', height: '1.2em', verticalAlign: 'middle', display: 'inline-block' }}
-    fill="none" 
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <style dangerouslySetInnerHTML={{ __html: `
-      @keyframes bounceBall1 {
-        0% {
-          transform: translate(90px, -20px) scale(0.3);
-          opacity: 0;
-        }
-        15% {
-          transform: translate(40px, -45px) scale(0.9);
-          opacity: 1;
-        }
-        30% {
-          transform: translate(16px, -28px) scale(1);
-          opacity: 1;
-        }
-        45% {
-          transform: translate(-3px, -44px) scale(0.95);
-          opacity: 1;
-        }
-        60% {
-          transform: translate(-18px, -28px) scale(1);
-          opacity: 1;
-        }
-        75% {
-          transform: translate(-12px, -15px) scale(0.92);
-        }
-        90% {
-          transform: translate(-3px, 3px) scale(1.08);
-        }
-        100% {
-          transform: translate(0px, 0px) scale(1);
-          opacity: 1;
-        }
-      }
-      @keyframes bounceBall2 {
-        0% {
-          transform: translate(110px, -10px) scale(0.3);
-          opacity: 0;
-        }
-        20% {
-          transform: translate(55px, -48px) scale(0.9);
-          opacity: 1;
-        }
-        35% {
-          transform: translate(31px, -28px) scale(1);
-          opacity: 1;
-        }
-        50% {
-          transform: translate(12px, -44px) scale(0.95);
-          opacity: 1;
-        }
-        65% {
-          transform: translate(-3px, -28px) scale(1);
-          opacity: 1;
-        }
-        80% {
-          transform: translate(3px, -15px) scale(0.92);
-        }
-        92% {
-          transform: translate(2px, 2px) scale(1.08);
-        }
-        100% {
-          transform: translate(0px, 0px) scale(1);
-          opacity: 1;
-        }
-      }
-      .ball-group-1 {
-        transform-origin: 57px 52px;
-        animation: bounceBall1 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        animation-delay: 0.1s;
-        opacity: 0;
-      }
-      .ball-group-2 {
-        transform-origin: 42px 52px;
-        animation: bounceBall2 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-        animation-delay: 0.35s;
-        opacity: 0;
-      }
-    `}} />
-    <defs>
-      <filter id="logo-shadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="1.5" dy="2.8" stdDeviation="2.4" floodColor="#080c18" floodOpacity="0.25" />
-      </filter>
-      
-      {/* Premium Vibrant Orange Gradient for the inside dots */}
-      <linearGradient id="peachGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#FF944D" />
-        <stop offset="50%" stopColor="#FF4500" />
-        <stop offset="100%" stopColor="#E63E00" />
-      </linearGradient>
-
-      {/* Premium Vibrant Royal Blue-Slate Brand Gradient */}
-      <linearGradient id="blueGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="#1D4ED8" />
-        <stop offset="45%" stopColor="#2563EB" />
-        <stop offset="100%" stopColor="#93C5FD" />
-      </linearGradient>
-
-      {/* Glossy overlay for the spheres */}
-      <linearGradient id="glossHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="white" stopOpacity="0.75" />
-        <stop offset="100%" stopColor="white" stopOpacity="0" />
-      </linearGradient>
-    </defs>
-    
-    {/* 1. Large, Bold, Perfectly Geometric "G" Crescent that forms the outer body */}
-    <path
-      d="M 70,28 A 31,31 0 1,0 70,72 L 70,52"
-      stroke="url(#blueGrad)"
-      strokeWidth="11.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-      filter="url(#logo-shadow)"
-    />
-
-    {/* 2. Bouncing Ball 1: Act as the first part of the crossbar of the G, representing the first "o" */}
-    <g className="ball-group-1">
-      <circle 
-        cx="57" 
-        cy="52" 
-        r="7.5" 
-        fill="url(#peachGrad)" 
-        filter="url(#logo-shadow)" 
-      />
-      {/* 3D Highlight for Ball 1 */}
-      <circle 
-         cx="54.8" 
-         cy="49.8" 
-         r="3" 
-         fill="url(#glossHighlight)" 
-      />
-    </g>
-
-    {/* 3. Bouncing Ball 2: Acts as the inner tip of the crossbar of the G, representing the second "o" */}
-    <g className="ball-group-2">
-      <circle 
-        cx="42" 
-        cy="52" 
-        r="6" 
-        fill="url(#peachGrad)" 
-        filter="url(#logo-shadow)" 
-      />
-      {/* 3D Highlight for Ball 2 */}
-      <circle 
-        cx="40.2" 
-        cy="50.2" 
-        r="2.4" 
-        fill="url(#glossHighlight)" 
-      />
-    </g>
-  </svg>
-);
-
 const StarRating = ({ rating, size = 12 }: { rating: number; size?: number }) => {
   return (
     <div className="flex items-center space-x-1">
@@ -441,137 +283,6 @@ const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-xl", fullBl
           {children}
         </div>
       </div>
-    </div>
-  );
-};
-
-const LogoIcon = ({ size = 60, className = "" }: { size?: number, className?: string }) => (
-  <div className={`relative flex items-center justify-center bg-white border-2 border-slate-100 rounded-xl sm:rounded-2xl shadow-sm overflow-hidden ${className}`} style={{ width: size, height: size }}>
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary-light/5"></div>
-    <StyledG className="relative z-10 w-4/5 h-4/5" />
-  </div>
-);
-
-const LogoText = ({ size = "text-2xl", className = "", animateOo = true, dark = false }: { size?: string, className?: string, animateOo?: boolean, dark?: boolean }) => {
-  const [keepAnimating, setKeepAnimating] = useState(true);
-
-  useEffect(() => {
-    if (!animateOo) return;
-    const timer = setTimeout(() => {
-      setKeepAnimating(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [animateOo]);
-
-  const shouldAnimate = animateOo && keepAnimating;
-
-  return (
-    <div className={`inline-flex items-center tracking-tight ${size} ${className}`}>
-      <StyledG className="mr-[-0.15em] -translate-y-[0.02em]" />
-      <span 
-        className="font-black leading-none flex items-center"
-        style={{ 
-          fontFamily: FONT_DISPLAY_QUOTED,
-          letterSpacing: '-0.04em'
-        }}
-      >
-        <span className={`${dark ? 'text-white' : 'text-slate-900'} inline-flex items-center select-none`}>
-          <motion.span 
-            className="inline-block origin-bottom mr-[0.01em]" 
-            animate={shouldAnimate ? {
-              y: [0, -4, 0.1, -1, 0],
-              scaleY: [0.96, 1.04, 0.98, 1, 1],
-              scaleX: [1.05, 0.96, 1.02, 1, 1]
-            } : {
-              y: 0,
-              scaleY: 1,
-              scaleX: 1
-            }}
-            transition={shouldAnimate ? {
-              duration: 1.1,
-              repeat: Infinity,
-              ease: "easeInOut",
-              times: [0, 0.4, 0.45, 0.75, 1]
-            } : {
-              type: "spring",
-              stiffness: 60,
-              damping: 15
-            }}
-          >
-            o
-          </motion.span>
-          <motion.span 
-            className="inline-block origin-bottom" 
-            animate={shouldAnimate ? {
-              y: [0, -4, 0.1, -1, 0],
-              scaleY: [0.96, 1.04, 0.98, 1, 1],
-              scaleX: [1.05, 0.96, 1.02, 1, 1]
-            } : {
-              y: 0,
-              scaleY: 1,
-              scaleX: 1
-            }}
-            transition={shouldAnimate ? {
-              duration: 1.1,
-              repeat: Infinity,
-              ease: "easeInOut",
-              times: [0, 0.4, 0.45, 0.75, 1],
-              delay: 0.15
-            } : {
-              type: "spring",
-              stiffness: 60,
-              damping: 15
-            }}
-          >
-            o
-          </motion.span>
-        </span>
-        <span className={`${dark ? 'text-white' : 'text-slate-900'} inline-flex items-baseline`}>f<span className="relative inline-flex items-baseline select-none" style={{ width: '0.27em' }}>ı<motion.span
-              className="absolute rounded-full"
-              style={{
-                transformOrigin: 'center',
-                top: '-0.14em',
-                left: '10%',
-                width: '0.24em',
-                height: '0.24em',
-                background: 'linear-gradient(135deg, #FFA347 0%, #FF6B00 50%, #E85D00 100%)',
-                boxShadow: '1px 1.5px 2.5px rgba(8, 12, 24, 0.22)',
-                display: 'inline-block'
-              }}
-              animate={shouldAnimate ? {
-                x: ["4.51em", "2.255em", "1.271em", "0.492em", "-0.123em", "0.123em", "0.082em", "0em"],
-                y: ["-0.41em", "-1.968em", "-1.148em", "-1.804em", "-1.148em", "-0.615em", "0.082em", "0em"],
-                scale: [0.3, 0.9, 1, 0.95, 1, 0.92, 1.08, 1],
-                opacity: [0, 1, 1, 1, 1, 1, 1, 1]
-              } : {
-                x: "0em",
-                y: "0em",
-                scale: 1,
-                opacity: 1
-              }}
-              transition={shouldAnimate ? {
-                duration: 1.8,
-                ease: [0.25, 1, 0.5, 1],
-                delay: 0.6,
-                times: [0, 0.2, 0.35, 0.5, 0.65, 0.8, 0.92, 1]
-              } : {
-                type: "spring",
-                stiffness: 60,
-                damping: 15
-              }}
-            >
-              {/* 3D Gloss Highlight */}
-              <span 
-                className="absolute rounded-full bg-white/80" 
-                style={{
-                  top: '15%',
-                  left: '15%',
-                  width: '35%',
-                  height: '35%'
-                }}
-              />
-            </motion.span></span>nd</span>
-      </span>
     </div>
   );
 };
@@ -1962,6 +1673,46 @@ const App: React.FC = () => {
     return countUnreadAnnouncementMessages(notificationMessages, currentUser.id);
   }, [notificationMessages, currentUser?.id]);
 
+  const homePreviewCommunityId = useMemo(
+    () => currentUser?.joinedCommunityId || 'toronto',
+    [currentUser?.joinedCommunityId],
+  );
+
+  const homePreviewCommunity = useMemo(() => {
+    const found = communities.find((c) => c.id === homePreviewCommunityId);
+    return found || INITIAL_COMMUNITIES.find((c) => c.id === homePreviewCommunityId) || null;
+  }, [communities, homePreviewCommunityId]);
+
+  const messageCommunityId = useMemo(() => {
+    if (selectedCommunity?.id) return selectedCommunity.id;
+    if (selectedCategory === 'Landing' && homePreviewCommunityId) return homePreviewCommunityId;
+    return null;
+  }, [selectedCommunity?.id, selectedCategory, homePreviewCommunityId]);
+
+  const activeChatCommunity = useMemo(() => {
+    if (selectedCommunity) return selectedCommunity;
+    if (selectedCategory === 'Landing') return homePreviewCommunity;
+    return null;
+  }, [selectedCommunity, selectedCategory, homePreviewCommunity]);
+
+  const isHomePreviewCommunityJoined =
+    !!currentUser?.joinedCommunityId && currentUser.joinedCommunityId === homePreviewCommunityId;
+
+  const handleOpenHomeCommunityChat = useCallback(() => {
+    if (!homePreviewCommunity) return;
+    setSelectedCategory('Communities');
+    setSelectedCommunity(homePreviewCommunity);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [homePreviewCommunity]);
+
+  const userCompanyMessageCount = useMemo(() => {
+    return userCompanyIncomingThreads.length + userCompanyOutgoingThreads.length;
+  }, [userCompanyIncomingThreads.length, userCompanyOutgoingThreads.length]);
+
+  const handleOpenCompanyMessages = useCallback(() => {
+    setIsUserCompanyMessagesModalOpen(true);
+  }, []);
+
   const handleOpenAnnouncementMessages = useCallback(() => {
     setActiveNotifMsgThread(null);
     setIsNotifMessageModalOpen(true);
@@ -2540,7 +2291,7 @@ const App: React.FC = () => {
   const [isNewsLoading, setIsNewsLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [activeDashboardTab, setActiveDashboardTab] = useState<'messages' | 'calls' | 'saved' | null>(null);
-  const [isUserCompanyMessagesOpen, setIsUserCompanyMessagesOpen] = useState(false);
+  const [isUserCompanyMessagesModalOpen, setIsUserCompanyMessagesModalOpen] = useState(false);
   const [callHistory, setCallHistory] = useState<any[]>(() => {
     const saved = localStorage.getItem('goofind_call_history');
     if (saved) {
@@ -3397,10 +3148,10 @@ const App: React.FC = () => {
   }, [currentUser?.id, currentUser?.email]);
 
   useEffect(() => {
-    if (selectedCommunity) {
+    if (messageCommunityId) {
       const unsub = onSnapshot(
         query(
-          collection(db, `communities/${selectedCommunity.id}/messages`),
+          collection(db, `communities/${messageCommunityId}/messages`),
           orderBy('timestamp', 'asc'),
           limit(100)
         ),
@@ -3415,7 +3166,7 @@ const App: React.FC = () => {
             setCommunityMessages([]);
             console.warn("Firestore quota exceeded listening to community messages.");
           } else {
-            handleFirestoreError(err, 'list', `communities/${selectedCommunity.id}/messages`);
+            handleFirestoreError(err, 'list', `communities/${messageCommunityId}/messages`);
           }
         }
       );
@@ -3423,7 +3174,7 @@ const App: React.FC = () => {
     } else {
       setCommunityMessages([]);
     }
-  }, [selectedCommunity]);
+  }, [messageCommunityId]);
 
   // --- Live News Fetching ---
   useEffect(() => {
@@ -3471,6 +3222,32 @@ const App: React.FC = () => {
 
   // --- Seeding Data (One-time check) ---
   useEffect(() => {
+    const syncCommunities = async () => {
+      try {
+        for (const community of INITIAL_COMMUNITIES) {
+          const communityRef = doc(db, 'communities', community.id);
+          const communitySnap = await getDoc(communityRef);
+          const { id, ...data } = community;
+          if (!communitySnap.exists()) {
+            await setDoc(communityRef, data);
+          } else {
+            await setDoc(
+              communityRef,
+              {
+                name: data.name,
+                slug: data.slug,
+                description: data.description,
+                imageUrl: data.imageUrl,
+              },
+              { merge: true },
+            );
+          }
+        }
+      } catch (e) {
+        console.warn('Community sync skipped or failed:', e);
+      }
+    };
+
     const seedData = async () => {
       try {
         const bizSnap = await getDocs(query(collection(db, 'businesses'), limit(1)));
@@ -3522,6 +3299,7 @@ const App: React.FC = () => {
         console.warn('Seeding skipped or failed:', e);
       }
     };
+    void syncCommunities();
     seedData();
   }, []);
 
@@ -3580,6 +3358,17 @@ const App: React.FC = () => {
     }
   }, [communityMessages, selectedCommunity]);
 
+  useLayoutEffect(() => {
+    if (selectedCategory === 'Announcements') {
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, [selectedCategory, selectedNotificationCategory]);
+
   const forceRefresh = () => {
     const url = new URL(window.location.href);
     url.searchParams.set('v', Date.now().toString());
@@ -3622,6 +3411,20 @@ const App: React.FC = () => {
     setSelectedCompanyCategory(category);
     setSearchQuery('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const openAnnouncementsPage = () => {
+    setSelectedCategory('Announcements');
+    setSelectedNotificationCategory('All');
+    setSelectedNotificationCategoriesMulti([]);
+    setSearchQuery('');
+  };
+
+  const openAnnouncementCategoryPage = (category: NotificationCategory) => {
+    setSelectedCategory('Announcements');
+    setSelectedNotificationCategory(category);
+    setSelectedNotificationCategoriesMulti([]);
+    setSearchQuery('');
   };
 
   const handleLogout = async () => {
@@ -4011,8 +3814,8 @@ const App: React.FC = () => {
       return;
     }
     
-    if ((content || communityImageSelected) && currentUser && selectedCommunity) {
-      if (currentUser.joinedCommunityId !== selectedCommunity.id) {
+    if ((content || communityImageSelected) && currentUser && activeChatCommunity) {
+      if (currentUser.joinedCommunityId !== activeChatCommunity.id) {
         showToast(
           lang === 'en' 
             ? 'You have not joined this community. Please join first.' 
@@ -4047,7 +3850,7 @@ const App: React.FC = () => {
           return;
         }
 
-        await addDoc(collection(db, `communities/${selectedCommunity.id}/messages`), newMessage);
+        await addDoc(collection(db, `communities/${activeChatCommunity.id}/messages`), newMessage);
         if (input) input.value = '';
         setCommunityImageSelected(null);
       } catch (e) {
@@ -4060,7 +3863,7 @@ const App: React.FC = () => {
           if (input) input.value = '';
           setCommunityImageSelected(null);
         } else {
-          handleFirestoreError(e, 'create', `communities/${selectedCommunity.id}/messages`);
+          handleFirestoreError(e, 'create', `communities/${activeChatCommunity.id}/messages`);
         }
       }
     }
@@ -4675,19 +4478,19 @@ const App: React.FC = () => {
       return;
     }
 
-    // 2-month (60 days) community join / switch restriction
+    // 1-week community join / switch restriction
     const lastJoinedAt = currentUser.joinedCommunityAt;
     const lastJoinedId = currentUser.lastJoinedCommunityId;
     
     if (lastJoinedAt && lastJoinedId && lastJoinedId !== communityId) {
       const elapsed = Date.now() - lastJoinedAt;
-      const TWO_MONTHS_MS = 60 * 24 * 60 * 60 * 1000; // 60 days
-      if (elapsed < TWO_MONTHS_MS) {
-        const remainingDays = Math.ceil((TWO_MONTHS_MS - elapsed) / (24 * 60 * 60 * 1000));
+      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+      if (elapsed < ONE_WEEK_MS) {
+        const remainingDays = Math.ceil((ONE_WEEK_MS - elapsed) / (24 * 60 * 60 * 1000));
         showToast(
           lang === 'en'
-            ? `You can join a different community only after 2 months. Remaining: ${remainingDays} days.`
-            : `Farklı bir topluluğa ancak 2 ayda bir katılabilirsiniz. Kalan: ${remainingDays} gün.`,
+            ? `You can join a different community only after 1 week. Remaining: ${remainingDays} days.`
+            : `Farklı bir topluluğa ancak 1 haftada bir katılabilirsiniz. Kalan: ${remainingDays} gün.`,
           'error'
         );
         return;
@@ -5769,7 +5572,7 @@ const App: React.FC = () => {
       <div className="fixed inset-0 bg-midnight z-[200] flex flex-col items-center justify-center p-8 text-center">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.08)_0%,transparent_75%)] pointer-events-none"></div>
         <div className="relative">
-          <LogoText size="text-5xl sm:text-6.5xl" className="justify-center select-none" animateOo={true} />
+          <LogoText size="text-5xl sm:text-6.5xl" className="justify-center select-none" stacked animateOo />
         </div>
       </div>
     );
@@ -5792,7 +5595,7 @@ const App: React.FC = () => {
               </div>
             </div>
             <div className="space-y-1">
-              <LogoText size="text-2xl" className="justify-center" />
+              <LogoText size="text-2xl" className="justify-center" showMark={false} />
               <p className="text-[14px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest leading-none">
                 {lang === 'en' ? 'Canada Turkish Community Hub' : 'Kanada Türk Topluluk Merkezi'}
               </p>
@@ -5887,7 +5690,7 @@ const App: React.FC = () => {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <LogoIcon size={42} />
-                <LogoText size="text-2xl" />
+                <LogoText size="text-2xl" showMark={false} />
               </div>
               <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
                 Canada Turkish Community Hub & Directory
@@ -5991,7 +5794,7 @@ const App: React.FC = () => {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <LogoIcon size={42} />
-                <LogoText size="text-2xl" />
+                <LogoText size="text-2xl" showMark={false} />
               </div>
               <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">
                 Customer Support & Help Center
@@ -7706,29 +7509,24 @@ const App: React.FC = () => {
                                     borderRadius: logoBorderRadius === 'circle' ? '50%' : logoBorderRadius === 'squircle' ? '22%' : '0'
                                   }}
                                 >
-                                  {/* Copper & Steel-blue Gradient definitions */}
+                                  {/* Brand blue-dominant gradient definitions */}
                                   <defs>
                                     <linearGradient id="adminRoseGold" x1="0%" y1="100%" x2="100%" y2="0%">
-                                      <stop offset="0%" stopColor="#8C442A" />
-                                      <stop offset="25%" stopColor="#C47953" />
-                                      <stop offset="50%" stopColor="#ECA985" />
-                                      <stop offset="75%" stopColor="#D58861" />
-                                      <stop offset="100%" stopColor="#703017" />
+                                      <stop offset="0%" stopColor="#172554" />
+                                      <stop offset="45%" stopColor="#1E3A8A" />
+                                      <stop offset="100%" stopColor="#1D4ED8" />
                                     </linearGradient>
                                     <linearGradient id="adminSteelBlue" x1="0%" y1="100%" x2="100%" y2="0%">
-                                      <stop offset="0%" stopColor="#122535" />
-                                      <stop offset="30%" stopColor="#2E4F69" />
-                                      <stop offset="60%" stopColor="#537B9A" />
-                                      <stop offset="85%" stopColor="#8AB1CE" />
-                                      <stop offset="100%" stopColor="#0F1F2B" />
+                                      <stop offset="0%" stopColor="#0F172A" />
+                                      <stop offset="50%" stopColor="#1E3A8A" />
+                                      <stop offset="100%" stopColor="#2563EB" />
                                     </linearGradient>
-                                    <radialGradient id="adminWallTexture" cx="80%" cy="20%" r="95%">
-                                      <stop offset="0%" stopColor="#FAF7F2" />
-                                      <stop offset="60%" stopColor="#EEECE6" />
-                                      <stop offset="100%" stopColor="#D6D3C9" />
+                                    <radialGradient id="adminWallTexture" cx="50%" cy="40%" r="80%">
+                                      <stop offset="0%" stopColor="#FFFFFF" />
+                                      <stop offset="100%" stopColor="#F8FAFC" />
                                     </radialGradient>
                                     <filter id="adminLogoShadow" x="-25%" y="-25%" width="150%" height="150%">
-                                      <feDropShadow dx="-10" dy="12" stdDeviation="10" floodColor="#181512" floodOpacity="0.38" />
+                                      <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#172554" floodOpacity="0.2" />
                                     </filter>
                                   </defs>
 
@@ -7747,186 +7545,22 @@ const App: React.FC = () => {
                                     filter="url(#adminLogoShadow)"
                                     className="transition-all duration-300"
                                   >
-                                    {/* 1. Copper Outer Left Segment */}
-                                    <g>
-                                      <path 
-                                        d="M 296.4 105.3 A 156 156 0 1 0 407.7 292 L 370.5 292 A 120 120 0 1 1 287.1 140.1 Z" 
-                                        fill={logoBgType === 'gradient' ? '#FFFFFF' : 'url(#adminRoseGold)'} 
-                                        style={{ opacity: logoBgType === 'gradient' ? 0.9 : 1 }}
-                                      />
-                                      {logoBgType !== 'gradient' && (
-                                        <>
-                                          <path 
-                                            d="M 296.4 105.3 A 156 156 0 1 0 407.7 292 L 370.5 292 A 120 120 0 1 1 287.1 140.1 Z" 
-                                            fill="none"
-                                            stroke="rgba(12, 10, 8, 0.55)"
-                                            strokeWidth="1.2"
-                                            transform="translate(1.2, 1.5)"
-                                          />
-                                          <path 
-                                            d="M 296.4 105.3 A 156 156 0 1 0 407.7 292 L 370.5 292 A 120 120 0 1 1 287.1 140.1 Z" 
-                                            fill="none"
-                                            stroke="rgba(255, 235, 225, 0.65)"
-                                            strokeWidth="1.2"
-                                            transform="translate(-1.2, -1.5)"
-                                          />
-                                        </>
-                                      )}
-                                    </g>
-                                    
-                                    {/* 2. Steel-Blue Outer Top-Right Segment */}
-                                    <g>
-                                      <path 
-                                        d="M 296.4 105.3 A 156 156 0 0 1 407.7 220 L 370.5 220 A 120 120 0 0 0 287.1 140.1 Z" 
-                                        fill={logoBgType === 'gradient' ? 'url(#adminRoseGold)' : 'url(#adminSteelBlue)'} 
-                                      />
-                                      {logoBgType !== 'gradient' && (
-                                        <>
-                                          <path 
-                                            d="M 296.4 105.3 A 156 156 0 0 1 407.7 220 L 370.5 220 A 120 120 0 0 0 287.1 140.1 Z" 
-                                            fill="none"
-                                            stroke="rgba(5, 12, 22, 0.6)"
-                                            strokeWidth="1.2"
-                                            transform="translate(1.2, 1.5)"
-                                          />
-                                          <path 
-                                            d="M 296.4 105.3 A 156 156 0 0 1 407.7 220 L 370.5 220 A 120 120 0 0 0 287.1 140.1 Z" 
-                                            fill="none"
-                                            stroke="rgba(230, 245, 255, 0.55)"
-                                            strokeWidth="1.2"
-                                            transform="translate(-1.2, -1.5)"
-                                          />
-                                        </>
-                                      )}
-                                    </g>
-
-                                    {/* 3. Steel-Blue Inner Left Segment */}
-                                    <g>
-                                      <path 
-                                        d="M 279.3 169.1 A 90 90 0 0 0 232.7 342.9 L 242.0 308.2 A 54 54 0 0 1 270.0 203.8 Z" 
-                                        fill={logoBgType === 'gradient' ? 'url(#adminRoseGold)' : 'url(#adminSteelBlue)'} 
-                                      />
-                                      {logoBgType !== 'gradient' && (
-                                        <>
-                                          <path 
-                                            d="M 279.3 169.1 A 90 90 0 0 0 232.7 342.9 L 242.0 308.2 A 54 54 0 0 1 270.0 203.8 Z" 
-                                            fill="none"
-                                            stroke="rgba(5, 12, 22, 0.6)"
-                                            strokeWidth="1.2"
-                                            transform="translate(1.2, 1.5)"
-                                          />
-                                          <path 
-                                            d="M 279.3 169.1 A 90 90 0 0 0 232.7 342.9 L 242.0 308.2 A 54 54 0 0 1 270.0 203.8 Z" 
-                                            fill="none"
-                                            stroke="rgba(230, 245, 255, 0.55)"
-                                            strokeWidth="1.2"
-                                            transform="translate(-1.2, -1.5)"
-                                          />
-                                        </>
-                                      )}
-                                    </g>
-
-                                    {/* 4. Copper Inner Right Segment */}
-                                    <g>
-                                      <path 
-                                        d="M 232.7 342.9 A 90 90 0 0 1 279.3 169.1 L 270.0 203.8 A 54 54 0 0 0 242.0 308.2 Z" 
-                                        fill={logoBgType === 'gradient' ? '#FFFFFF' : 'url(#adminRoseGold)'} 
-                                        style={{ opacity: logoBgType === 'gradient' ? 0.9 : 1 }}
-                                      />
-                                      {logoBgType !== 'gradient' && (
-                                        <>
-                                          <path 
-                                            d="M 232.7 342.9 A 90 90 0 0 1 279.3 169.1 L 270.0 203.8 A 54 54 0 0 0 242.0 308.2 Z" 
-                                            fill="none"
-                                            stroke="rgba(12, 10, 8, 0.55)"
-                                            strokeWidth="1.2"
-                                            transform="translate(1.2, 1.5)"
-                                          />
-                                          <path 
-                                            d="M 232.7 342.9 A 90 90 0 0 1 279.3 169.1 L 270.0 203.8 A 54 54 0 0 0 242.0 308.2 Z" 
-                                            fill="none"
-                                            stroke="rgba(255, 235, 225, 0.65)"
-                                            strokeWidth="1.2"
-                                            transform="translate(-1.2, -1.5)"
-                                          />
-                                        </>
-                                      )}
-                                    </g>
-
-                                    {/* 5. G-Bar Center Hook Segment */}
-                                    <g>
-                                      <path 
-                                        d="M 242 220 L 370 220 L 370 256 L 274 256 L 274 292 L 238 292 L 238 256 Z" 
-                                        fill={logoBgType === 'gradient' ? 'url(#adminRoseGold)' : 'url(#adminSteelBlue)'} 
-                                      />
-                                      {logoBgType !== 'gradient' && (
-                                        <>
-                                          <path 
-                                            d="M 242 220 L 370 220 L 370 256 L 274 256 L 274 292 L 238 292 L 238 256 Z" 
-                                            fill="none"
-                                            stroke="rgba(5, 12, 22, 0.6)"
-                                            strokeWidth="1.2"
-                                            transform="translate(1.2, 1.5)"
-                                          />
-                                          <path 
-                                            d="M 242 220 L 370 220 L 370 256 L 274 256 L 274 292 L 238 292 L 238 256 Z" 
-                                            fill="none"
-                                            stroke="rgba(230, 245, 255, 0.55)"
-                                            strokeWidth="1.2"
-                                            transform="translate(-1.2, -1.5)"
-                                          />
-                                        </>
-                                      )}
-                                    </g>
+                                    <GoofindAdminMark logoBgType={logoBgType} />
                                   </g>
 
                                   {/* Logo text - Brand signature */}
                                   {logoIncludeText && (
-                                    <g>
-                                      {logoBgType !== 'gradient' && (
-                                        <>
-                                          <text 
-                                            x="256" 
-                                            y="442" 
-                                            textAnchor="middle" 
-                                            fontFamily="Georgia, Cambria, 'Times New Roman', serif" 
-                                            fontWeight="800" 
-                                            fontSize="54" 
-                                            fill="rgba(12, 10, 8, 0.6)" 
-                                            letterSpacing="1"
-                                            transform="translate(1.2, 1.5)"
-                                          >
-                                            GooFind
-                                          </text>
-                                          <text 
-                                            x="256" 
-                                            y="442" 
-                                            textAnchor="middle" 
-                                            fontFamily="Georgia, Cambria, 'Times New Roman', serif" 
-                                            fontWeight="800" 
-                                            fontSize="54" 
-                                            fill="rgba(255, 235, 225, 0.5)" 
-                                            letterSpacing="1"
-                                            transform="translate(-1.2, -1.5)"
-                                          >
-                                            GooFind
-                                          </text>
-                                        </>
-                                      )}
-                                      <text 
-                                        x="256" 
-                                        y="442" 
-                                        textAnchor="middle" 
-                                        fontFamily="Georgia, Cambria, 'Times New Roman', serif" 
-                                        fontWeight="800" 
-                                        fontSize="54" 
-                                        fill={logoBgType === 'charcoal' ? '#FFFFFF' : logoBgType === 'gradient' ? '#FFFFFF' : 'url(#adminRoseGold)'} 
-                                        letterSpacing="1"
-                                        filter="url(#adminLogoShadow)"
+                                    <foreignObject x="56" y="396" width="400" height="56">
+                                      <div
+                                        xmlns="http://www.w3.org/1999/xhtml"
+                                        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
                                       >
-                                        GooFind
-                                      </text>
-                                    </g>
+                                        <GoofindWordmark
+                                          dark={logoBgType === 'charcoal' || logoBgType === 'gradient'}
+                                          className="text-[54px]"
+                                        />
+                                      </div>
+                                    </foreignObject>
                                   )}
                                 </svg>
                               </div>
@@ -9108,29 +8742,24 @@ Designed with ❤️ for Goofind App Store Listings.
                                             borderRadius: logoBorderRadius === 'circle' ? '50%' : logoBorderRadius === 'squircle' ? '22%' : '0'
                                           }}
                                         >
-                                          {/* Copper & Steel-blue Gradient definitions */}
+                                          {/* Brand blue-dominant gradient definitions */}
                                           <defs>
                                             <linearGradient id="roseGold" x1="0%" y1="100%" x2="100%" y2="0%">
-                                              <stop offset="0%" stopColor="#8C442A" />
-                                              <stop offset="25%" stopColor="#C47953" />
-                                              <stop offset="50%" stopColor="#ECA985" />
-                                              <stop offset="75%" stopColor="#D58861" />
-                                              <stop offset="100%" stopColor="#703017" />
+                                              <stop offset="0%" stopColor="#172554" />
+                                              <stop offset="45%" stopColor="#1E3A8A" />
+                                              <stop offset="100%" stopColor="#1D4ED8" />
                                             </linearGradient>
                                             <linearGradient id="steelBlue" x1="0%" y1="100%" x2="100%" y2="0%">
-                                              <stop offset="0%" stopColor="#122535" />
-                                              <stop offset="30%" stopColor="#2E4F69" />
-                                              <stop offset="60%" stopColor="#537B9A" />
-                                              <stop offset="85%" stopColor="#8AB1CE" />
-                                              <stop offset="100%" stopColor="#0F1F2B" />
+                                              <stop offset="0%" stopColor="#0F172A" />
+                                              <stop offset="50%" stopColor="#1E3A8A" />
+                                              <stop offset="100%" stopColor="#2563EB" />
                                             </linearGradient>
-                                            <radialGradient id="wallTexture" cx="80%" cy="20%" r="95%">
-                                              <stop offset="0%" stopColor="#FAF7F2" />
-                                              <stop offset="60%" stopColor="#EEECE6" />
-                                              <stop offset="100%" stopColor="#D6D3C9" />
+                                            <radialGradient id="wallTexture" cx="50%" cy="40%" r="80%">
+                                              <stop offset="0%" stopColor="#FFFFFF" />
+                                              <stop offset="100%" stopColor="#F8FAFC" />
                                             </radialGradient>
                                             <filter id="logoShadow" x="-25%" y="-25%" width="150%" height="150%">
-                                              <feDropShadow dx="-10" dy="12" stdDeviation="10" floodColor="#181512" floodOpacity="0.38" />
+                                              <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#172554" floodOpacity="0.2" />
                                             </filter>
                                           </defs>
 
@@ -9149,198 +8778,25 @@ Designed with ❤️ for Goofind App Store Listings.
                                             filter="url(#logoShadow)"
                                             className="transition-all duration-300"
                                           >
-                                            {/* 1. Copper Outer Left Segment (270-degree crescent) */}
-                                            <g>
-                                              <path 
-                                                d="M 296.4 105.3 A 156 156 0 1 0 407.7 292 L 370.5 292 A 120 120 0 1 1 287.1 140.1 Z" 
-                                                fill={logoBgType === 'gradient' ? '#FFFFFF' : 'url(#roseGold)'} 
-                                                style={{ opacity: logoBgType === 'gradient' ? 0.9 : 1 }}
-                                              />
-                                              {logoBgType !== 'gradient' && (
-                                                <>
-                                                  {/* Thin dark micro-bevel boundary */}
-                                                  <path 
-                                                    d="M 296.4 105.3 A 156 156 0 1 0 407.7 292 L 370.5 292 A 120 120 0 1 1 287.1 140.1 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(12, 10, 8, 0.55)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(1.2, 1.5)"
-                                                  />
-                                                  {/* Soft metallic highlight line */}
-                                                  <path 
-                                                    d="M 296.4 105.3 A 156 156 0 1 0 407.7 292 L 370.5 292 A 120 120 0 1 1 287.1 140.1 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(255, 235, 225, 0.65)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(-1.2, -1.5)"
-                                                  />
-                                                </>
-                                              )}
-                                            </g>
-                                            
-                                            {/* 2. Steel-Blue Outer Top-Right Segment */}
-                                            <g>
-                                              <path 
-                                                d="M 296.4 105.3 A 156 156 0 0 1 407.7 220 L 370.5 220 A 120 120 0 0 0 287.1 140.1 Z" 
-                                                fill={logoBgType === 'gradient' ? 'url(#roseGold)' : 'url(#steelBlue)'} 
-                                              />
-                                              {logoBgType !== 'gradient' && (
-                                                <>
-                                                  {/* Thin dark micro-bevel boundary */}
-                                                  <path 
-                                                    d="M 296.4 105.3 A 156 156 0 0 1 407.7 220 L 370.5 220 A 120 120 0 0 0 287.1 140.1 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(5, 12, 22, 0.6)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(1.2, 1.5)"
-                                                  />
-                                                  {/* Soft metallic highlight line */}
-                                                  <path 
-                                                    d="M 296.4 105.3 A 156 156 0 0 1 407.7 220 L 370.5 220 A 120 120 0 0 0 287.1 140.1 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(230, 245, 255, 0.55)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(-1.2, -1.5)"
-                                                  />
-                                                </>
-                                              )}
-                                            </g>
-
-                                            {/* 3. Steel-Blue Inner Left Segment (180-degree half ring) */}
-                                            <g>
-                                              <path 
-                                                d="M 279.3 169.1 A 90 90 0 0 0 232.7 342.9 L 242.0 308.2 A 54 54 0 0 1 270.0 203.8 Z" 
-                                                fill={logoBgType === 'gradient' ? 'url(#roseGold)' : 'url(#steelBlue)'} 
-                                              />
-                                              {logoBgType !== 'gradient' && (
-                                                <>
-                                                  {/* Thin dark micro-bevel boundary */}
-                                                  <path 
-                                                    d="M 279.3 169.1 A 90 90 0 0 0 232.7 342.9 L 242.0 308.2 A 54 54 0 0 1 270.0 203.8 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(5, 12, 22, 0.6)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(1.2, 1.5)"
-                                                  />
-                                                  {/* Soft metallic highlight line */}
-                                                  <path 
-                                                    d="M 279.3 169.1 A 90 90 0 0 0 232.7 342.9 L 242.0 308.2 A 54 54 0 0 1 270.0 203.8 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(230, 245, 255, 0.55)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(-1.2, -1.5)"
-                                                  />
-                                                </>
-                                              )}
-                                            </g>
-
-                                            {/* 4. Copper Inner Right Segment */}
-                                            <g>
-                                              <path 
-                                                d="M 232.7 342.9 A 90 90 0 0 1 279.3 169.1 L 270.0 203.8 A 54 54 0 0 0 242.0 308.2 Z" 
-                                                fill={logoBgType === 'gradient' ? '#FFFFFF' : 'url(#roseGold)'} 
-                                                style={{ opacity: logoBgType === 'gradient' ? 0.9 : 1 }}
-                                              />
-                                              {logoBgType !== 'gradient' && (
-                                                <>
-                                                  {/* Thin dark micro-bevel boundary */}
-                                                  <path 
-                                                    d="M 232.7 342.9 A 90 90 0 0 1 279.3 169.1 L 270.0 203.8 A 54 54 0 0 0 242.0 308.2 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(12, 10, 8, 0.55)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(1.2, 1.5)"
-                                                  />
-                                                  {/* Soft metallic highlight line */}
-                                                  <path 
-                                                    d="M 232.7 342.9 A 90 90 0 0 1 279.3 169.1 L 270.0 203.8 A 54 54 0 0 0 242.0 308.2 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(255, 235, 225, 0.65)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(-1.2, -1.5)"
-                                                  />
-                                                </>
-                                              )}
-                                            </g>
-
-                                            {/* 5. G-Bar Center Hook Segment (Steel Blue) */}
-                                            <g>
-                                              <path 
-                                                d="M 242 220 L 370 220 L 370 256 L 274 256 L 274 292 L 238 292 L 238 256 Z" 
-                                                fill={logoBgType === 'gradient' ? 'url(#roseGold)' : 'url(#steelBlue)'} 
-                                              />
-                                              {logoBgType !== 'gradient' && (
-                                                <>
-                                                  {/* Thin dark micro-bevel boundary */}
-                                                  <path 
-                                                    d="M 242 220 L 370 220 L 370 256 L 274 256 L 274 292 L 238 292 L 238 256 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(5, 12, 22, 0.6)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(1.2, 1.5)"
-                                                  />
-                                                  {/* Soft metallic highlight line */}
-                                                  <path 
-                                                    d="M 242 220 L 370 220 L 370 256 L 274 256 L 274 292 L 238 292 L 238 256 Z" 
-                                                    fill="none"
-                                                    stroke="rgba(230, 245, 255, 0.55)"
-                                                    strokeWidth="1.2"
-                                                    transform="translate(-1.2, -1.5)"
-                                                  />
-                                                </>
-                                              )}
-                                            </g>
+                                            <GoofindAdminMark
+                                              logoBgType={logoBgType}
+                                              primaryGradientId="roseGold"
+                                            />
                                           </g>
 
                                           {/* Logo text - Brand signature */}
                                           {logoIncludeText && (
-                                            <g>
-                                              {logoBgType !== 'gradient' && (
-                                                <>
-                                                  {/* Crisp dark background depth layer */}
-                                                  <text 
-                                                    x="256" 
-                                                    y="442" 
-                                                    textAnchor="middle" 
-                                                    fontFamily="Georgia, Cambria, 'Times New Roman', serif" 
-                                                    fontWeight="800" 
-                                                    fontSize="54" 
-                                                    fill="rgba(12, 10, 8, 0.6)" 
-                                                    letterSpacing="1"
-                                                    transform="translate(1.2, 1.5)"
-                                                  >
-                                                    GooFind
-                                                  </text>
-                                                  {/* Soft highlight reflection layer */}
-                                                  <text 
-                                                    x="256" 
-                                                    y="442" 
-                                                    textAnchor="middle" 
-                                                    fontFamily="Georgia, Cambria, 'Times New Roman', serif" 
-                                                    fontWeight="800" 
-                                                    fontSize="54" 
-                                                    fill="rgba(255, 235, 225, 0.5)" 
-                                                    letterSpacing="1"
-                                                    transform="translate(-1.2, -1.5)"
-                                                  >
-                                                    GooFind
-                                                  </text>
-                                                </>
-                                              )}
-                                              <text 
-                                                x="256" 
-                                                y="442" 
-                                                textAnchor="middle" 
-                                                fontFamily="Georgia, Cambria, 'Times New Roman', serif" 
-                                                fontWeight="800" 
-                                                fontSize="54" 
-                                                fill={logoBgType === 'charcoal' ? '#FFFFFF' : logoBgType === 'gradient' ? '#FFFFFF' : 'url(#roseGold)'} 
-                                                letterSpacing="1"
-                                                filter="url(#logoShadow)"
+                                            <foreignObject x="56" y="396" width="400" height="56">
+                                              <div
+                                                xmlns="http://www.w3.org/1999/xhtml"
+                                                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}
                                               >
-                                                GooFind
-                                              </text>
-                                            </g>
+                                                <GoofindWordmark
+                                                  dark={logoBgType === 'charcoal' || logoBgType === 'gradient'}
+                                                  className="text-[54px]"
+                                                />
+                                              </div>
+                                            </foreignObject>
                                           )}
                                         </svg>
                                       </div>
@@ -10298,57 +9754,29 @@ Designed with ❤️ for Goofind App Store Listings.
                           {lang === 'en' ? 'Add' : 'Ekle'}
                         </motion.button>
                       ) : (
-                        <div className="flex items-center gap-2 shrink-0">
-                          {!hasBusinessOwned && (
-                            <UserCompanyMessagesQuickBox
-                              lang={lang}
-                              incomingCount={userCompanyIncomingThreads.length}
-                              outgoingCount={userCompanyOutgoingThreads.length}
-                              isOpen={isUserCompanyMessagesOpen}
-                              onToggle={() => setIsUserCompanyMessagesOpen((prev) => !prev)}
-                            />
-                          )}
-                          <motion.button 
-                            onClick={() => {
-                              if (hasBusinessOwned) {
-                                const myBiz = businesses.find(b => b.ownerId === currentUser.id);
-                                if (myBiz) {
-                                  setSelectedBusiness(myBiz);
-                                  setIsBusinessDetailModalOpen(true);
-                                }
-                              } else {
-                                checkAuth(() => {
-                                  setBusinessFormLocation({ address: '' });
-                                  setIsBusinessRegistrationModalOpen(true);
-                                });
-                              }
-                            }}
-                            className="px-2 sm:px-3 py-1 sm:py-1.5 bg-primary text-white rounded-md font-black text-[9px] sm:text-[10px] uppercase tracking-wide shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap flex items-center gap-1 shrink-0"
-                          >
-                            {hasBusinessOwned ? <Building2 size={12} strokeWidth={2.5} /> : <Plus size={12} strokeWidth={2.5} />}
-                            {hasBusinessOwned 
-                              ? (lang === 'en' ? 'Company' : 'Şirketim')
-                              : (lang === 'en' ? 'Add' : 'Ekle')}
-                          </motion.button>
-                        </div>
+                        <CompanyHeaderActions
+                          lang={lang}
+                          messageCount={userCompanyMessageCount}
+                          hasBusinessOwned={hasBusinessOwned}
+                          onAddCompany={() => {
+                            checkAuth(() => {
+                              setBusinessFormLocation({ address: '' });
+                              setIsBusinessRegistrationModalOpen(true);
+                            });
+                          }}
+                          onOpenCompany={() => {
+                            const myBiz = businesses.find(b => b.ownerId === currentUser.id);
+                            if (myBiz) {
+                              setSelectedBusiness(myBiz);
+                              setIsBusinessDetailModalOpen(true);
+                            }
+                          }}
+                          onOpenMessages={() => checkAuth(handleOpenCompanyMessages)}
+                          variant="landing"
+                        />
                       )}
                     </div>
                   </div>
-
-                  {currentUser && !hasBusinessOwned && isUserCompanyMessagesOpen && (
-                    <div className="mb-4 sm:mb-6 animate-in slide-in-from-top-2 duration-300">
-                      <UserCompanyMessagesInbox
-                        lang={lang}
-                        incomingThreads={userCompanyIncomingThreads}
-                        outgoingThreads={userCompanyOutgoingThreads}
-                        onOpenThread={(businessId, partnerId) => {
-                          handleOpenCompanyMessageThread(businessId, partnerId);
-                          setIsUserCompanyMessagesOpen(false);
-                        }}
-                        compact
-                      />
-                    </div>
-                  )}
 
                   <CompanyCategoryFilterBar
                     selected={selectedCompanyCategory}
@@ -10397,19 +9825,16 @@ Designed with ❤️ for Goofind App Store Listings.
                     </div>
                   </div>
 
-                  <CategoryTabBar
-                    tabs={[
-                      { id: 'All', label: lang === 'en' ? 'ALL' : 'HEPSİ' },
-                      ...Object.values(NotificationCategory).map((cat) => ({
-                        id: cat,
-                        label: t.categories[cat] || cat,
-                      })),
-                    ]}
-                    selectedId={selectedNotificationCategory}
+                  <AnnouncementCategoryFilterBar
+                    selected={selectedNotificationCategory}
                     onSelect={(id) => {
                       setSelectedNotificationCategoriesMulti([]);
-                      setSelectedNotificationCategory(id as NotificationCategory | 'All');
+                      setSelectedNotificationCategory(id);
                     }}
+                    onAllSelect={openAnnouncementsPage}
+                    onCategorySelect={openAnnouncementCategoryPage}
+                    categoryLabels={t.categories}
+                    lang={lang}
                   />
 
                   <AnnouncementFeedList
@@ -10425,99 +9850,78 @@ Designed with ❤️ for Goofind App Store Listings.
                 </section>
 
                 {/* City Communities Section */}
-                <section className="rounded-[1.75rem] sm:rounded-[2.25rem] border border-primary/10 bg-white p-4 sm:p-6 shadow-sm">
-                  <div className="flex flex-row items-center justify-between mb-4 sm:mb-5 gap-2 sm:gap-4 w-full">
-                    <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-                       <div className="p-1.5 sm:p-2.5 bg-accent rounded-lg shadow-xl shadow-accent/20 shrink-0">
-                         <Users className="text-white w-3.5 h-3.5 sm:w-5 sm:h-5" size={26} />
-                       </div>
-                       <div className="text-left min-w-0">
-                         <h2 className="text-xs sm:text-xl font-black tracking-tight-brand text-primary uppercase leading-none font-display italic truncate">
-                           {lang === 'en' ? 'Join Community' : 'Topluluğa Katıl'}
-                         </h2>
-                         <p className="text-[10px] sm:text-[11px] font-bold text-accent-vivid uppercase tracking-widest mt-0.5 truncate">
-                           {lang === 'en' ? 'city community conversation' : 'Şehir Topluluk Sohbeti'}
-                         </p>
-                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-                      {currentUser?.joinedCommunityId && (
-                        (() => {
-                          const myCommObj = communities.find(c => c.id === currentUser.joinedCommunityId) || INITIAL_COMMUNITIES.find(c => c.id === currentUser.joinedCommunityId);
-                          return myCommObj ? (
-                            <button 
-                              onClick={() => {
-                                setSelectedCategory('Communities');
-                                setSelectedCommunity(myCommObj);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                              }}
-                              className="px-2 sm:px-3 py-1 sm:py-1.5 text-[9px] sm:text-[10px] font-black text-white bg-emerald-600 hover:bg-emerald-500 uppercase tracking-wide rounded-md hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-md shadow-emerald-500/20 flex items-center gap-1 group cursor-pointer shrink-0"
-                            >
-                              <span className="relative flex h-1.5 w-1.5 shrink-0">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-200"></span>
-                              </span>
-                              <span>{lang === 'en' ? 'Community' : 'Topluluğum'}</span>
-                            </button>
-                          ) : null;
-                        })()
-                      )}
-                      <button 
-                        onClick={() => setSelectedCategory('Communities')}
-                        className="text-[9px] sm:text-[10px] font-black text-primary uppercase tracking-wide hover:text-primary/70 transition-colors cursor-pointer shrink-0"
-                      >
-                        {t.buttons.viewAll}
-                      </button>
+                <section className="communities-zone animate-in fade-in duration-1000 delay-150 relative rounded-[1.75rem] sm:rounded-[2.25rem] p-4 sm:p-6">
+                  <div className="mb-4 sm:mb-5 pb-3 sm:pb-4 border-b border-primary/10">
+                    <div className="flex flex-row items-start justify-between gap-2 sm:gap-4 w-full">
+                      <div className="flex items-start gap-2 sm:gap-3 min-w-0">
+                        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/25 shrink-0">
+                          <Users size={22} strokeWidth={2.5} />
+                        </div>
+                        <div className="text-left min-w-0">
+                          <h2 className="text-base sm:text-xl font-black tracking-tight-brand text-primary uppercase leading-none font-display italic truncate">
+                            {t.sections.communities}
+                          </h2>
+                          <p className="text-[10px] sm:text-[11px] font-bold text-accent-vivid uppercase tracking-widest mt-1 truncate">
+                            {lang === 'en' ? 'Live city group chat' : 'Canlı şehir grup sohbeti'}
+                          </p>
+                        </div>
+                      </div>
+                      <CommunityHeaderActions
+                        lang={lang}
+                        isJoined={isHomePreviewCommunityJoined}
+                        onJoin={() => {
+                          checkAuth(() => {
+                            if (homePreviewCommunity && homePreviewCommunity.id !== 'all') {
+                              setSelectedCategory('Communities');
+                              setSelectedCommunity(homePreviewCommunity);
+                            } else {
+                              setSelectedCategory('Communities');
+                            }
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          });
+                        }}
+                        onOpenChat={handleOpenHomeCommunityChat}
+                        variant="landing"
+                      />
                     </div>
                   </div>
                   
                   <div className="flex gap-3 overflow-x-auto pb-2 pt-0.5 px-0.5 no-scrollbar snap-x">
-                    {INITIAL_COMMUNITIES.map(community => (
+                    {INITIAL_COMMUNITIES.filter((community) => community.id !== 'all').map(community => (
                       <motion.div 
                         whileHover={{ y: -3 }}
                         whileTap={{ scale: 0.98 }}
                         key={community.id}
                         onClick={() => { 
                           setSelectedCategory('Communities'); 
-                          if (community.id !== 'all') {
-                            const foundComm = communities.find(c => c.id === community.id) || community;
-                            setSelectedCommunity(foundComm);
-                          } else {
-                            setSelectedCommunity(null);
-                            window.scrollTo({ top: 0, behavior: 'smooth' }); 
-                          }
+                          const foundComm = communities.find(c => c.id === community.id) || community;
+                          setSelectedCommunity(foundComm);
                         }}
                         className={`
                           snap-start shrink-0 w-[132px] sm:w-[148px] rounded-2xl border shadow-sm hover:shadow-lg overflow-hidden cursor-pointer group transition-all duration-300
-                          ${community.id === 'all' 
-                            ? 'bg-gradient-to-br from-primary via-primary-mid to-primary-dark border-primary/20 shadow-primary/10' 
+                          ${community.id === currentUser?.joinedCommunityId
+                            ? 'bg-white border-primary ring-2 ring-primary/25 shadow-primary/10'
                             : 'bg-white border-primary/10 hover:border-primary/30'
                           }
                         `}
                       >
-                        <div className={`aspect-[4/3] relative overflow-hidden ${community.id === 'all' ? 'bg-white/10' : 'bg-slate-100'}`}>
-                          {community.id === 'all' ? (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Users className="text-white w-7 h-7 sm:w-8 sm:h-8" strokeWidth={2.5} />
-                            </div>
-                          ) : (
-                            <img
-                              src={community.imageUrl}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              alt={community.name}
-                            />
-                          )}
-                          <div className={`absolute bottom-1.5 right-1.5 p-1 rounded-lg shadow-sm ${community.id === 'all' ? 'bg-white/20 text-white backdrop-blur-sm' : 'bg-white/90 text-primary'}`}>
+                        <div className="aspect-[4/3] relative overflow-hidden bg-slate-100">
+                          <img
+                            src={community.imageUrl}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            alt={community.name}
+                          />
+                          <div className="absolute bottom-1.5 right-1.5 p-1 rounded-lg shadow-sm bg-white/90 text-primary">
                             <MessagesSquare size={12} strokeWidth={2.5} />
                           </div>
                         </div>
-                        <div className={`p-2.5 border-t ${community.id === 'all' ? 'border-white/15' : 'border-slate-50'}`}>
-                          <h3 className={`font-black text-[10px] sm:text-[11px] uppercase tracking-tight truncate leading-none transition-colors ${community.id === 'all' ? 'text-white' : 'text-slate-900 group-hover:text-primary'}`}>
-                            {community.id === 'all' ? (lang === 'en' ? 'ALL CITIES' : 'TÜM ŞEHİRLER') : community.name}
+                        <div className="p-2.5 border-t border-slate-50">
+                          <h3 className="font-black text-[10px] sm:text-[11px] uppercase tracking-tight truncate leading-none transition-colors text-slate-900 group-hover:text-primary">
+                            {community.name}
                           </h3>
                           <div className="flex items-center gap-1 mt-1">
-                            <span className={`w-1 h-1 rounded-full animate-pulse shrink-0 ${community.id === 'all' ? 'bg-accent' : 'bg-primary'}`} />
-                            <p className={`text-[9px] font-black uppercase tracking-wider truncate ${community.id === 'all' ? 'text-white/75' : 'text-primary'}`}>
+                            <span className="w-1 h-1 rounded-full animate-pulse shrink-0 bg-primary" />
+                            <p className="text-[9px] font-black uppercase tracking-wider truncate text-primary">
                               {community.memberCount}+ {lang === 'en' ? 'Members' : 'Üye'}
                             </p>
                           </div>
@@ -10525,6 +9929,29 @@ Designed with ❤️ for Goofind App Store Listings.
                       </motion.div>
                     ))}
                   </div>
+
+                  {homePreviewCommunity && homePreviewCommunity.id !== 'all' && (
+                    <CommunityHomeChatPanel
+                      lang={lang}
+                      community={homePreviewCommunity}
+                      messages={communityMessages}
+                      currentUserId={currentUser?.id}
+                      isJoined={isHomePreviewCommunityJoined}
+                      isLoggedIn={!!currentUser}
+                      isPreview={!isHomePreviewCommunityJoined}
+                      onOpenFullChat={handleOpenHomeCommunityChat}
+                      onJoin={() => {
+                        checkAuth(() => {
+                          setSelectedCategory('Communities');
+                          setSelectedCommunity(homePreviewCommunity);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        });
+                      }}
+                      onLogin={() => checkAuth(() => {})}
+                      onSendMessage={handleSendCommunityMessage}
+                      isUploadingImage={isUploadingCommunityImage}
+                    />
+                  )}
                 </section>
               </motion.div>
             ) : (
@@ -10532,15 +9959,69 @@ Designed with ❤️ for Goofind App Store Listings.
               <div className="animate-in fade-in duration-500">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-8 pb-4 border-b border-slate-100">
                   <button onClick={resetHome} className="hover:scale-105 transition-transform flex items-center">
-                    <LogoText size="text-2xl" />
+                    <LogoText size="text-2xl" showMark={false} />
                   </button>
                   <ChevronRight size={18} />
-                  <span className="text-slate-900 uppercase tracking-widest font-black">
-                    {selectedCategory === 'All' ? (t.categories as any).All : (t.categories[selectedCategory as keyof typeof t.categories] || selectedCategory)}
-                  </span>
+                  {selectedCategory === 'Announcements' ? (
+                    <button
+                      type="button"
+                      onClick={openAnnouncementsPage}
+                      className={`uppercase tracking-widest font-black transition-colors ${
+                        selectedNotificationCategory === 'All'
+                          ? 'text-slate-900'
+                          : 'text-slate-500 hover:text-slate-900'
+                      }`}
+                    >
+                      {t.sections.announcements}
+                    </button>
+                  ) : (
+                    <span className="text-slate-900 uppercase tracking-widest font-black">
+                      {selectedCategory === 'All'
+                        ? (t.categories as any).All
+                        : (t.categories[selectedCategory as keyof typeof t.categories] || selectedCategory)}
+                    </span>
+                  )}
+                  {selectedCategory === 'Announcements' && selectedNotificationCategory !== 'All' && (
+                    <>
+                      <ChevronRight size={18} />
+                      <span className="text-slate-900 uppercase tracking-widest font-black">
+                        {t.categories[selectedNotificationCategory as keyof typeof t.categories] || selectedNotificationCategory}
+                      </span>
+                    </>
+                  )}
                 </div>
 
-                {selectedCategory === 'Announcements' && (
+                {selectedCategory === 'Announcements' && selectedNotificationCategory !== 'All' && (
+                  <AnnouncementCategoryPage
+                    category={selectedNotificationCategory}
+                    categoryLabels={t.categories}
+                    lang={lang}
+                    notifications={(notifications || []).filter(
+                      (n) =>
+                        n &&
+                        n.approved &&
+                        (!searchQuery.trim() ||
+                          (n.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+                          (n.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+                          (n.category || '').toLowerCase().includes((searchQuery || '').toLowerCase())),
+                    )}
+                    contactLabel={t.labels.contact}
+                    onSelect={(notif) => setSelectedNotification(notif)}
+                    onBack={openAnnouncementsPage}
+                    headerActions={
+                      <AnnouncementHeaderActions
+                        lang={lang}
+                        unreadMessageCount={unreadAnnouncementMessageCount}
+                        hasOwnListings={hasPostedAnnouncement}
+                        onPostListing={() => checkAuth(() => setIsPostModalOpen(true))}
+                        onOpenMyAds={() => checkAuth(handleOpenAnnouncementMessages)}
+                        variant="page"
+                      />
+                    }
+                  />
+                )}
+
+                {selectedCategory === 'Announcements' && selectedNotificationCategory === 'All' && (
                   <section className="announcements-zone animate-in fade-in slide-in-from-bottom-4 duration-700 rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-10 relative overflow-hidden">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 relative z-10 gap-4">
                       <div className="flex items-center gap-4">
@@ -10567,19 +10048,16 @@ Designed with ❤️ for Goofind App Store Listings.
                       />
                     </div>
 
-                    <CategoryTabBar
-                      tabs={[
-                        { id: 'All', label: lang === 'en' ? 'ALL' : 'HEPSİ' },
-                        ...Object.values(NotificationCategory).map((cat) => ({
-                          id: cat,
-                          label: t.categories[cat] || cat,
-                        })),
-                      ]}
-                      selectedId={selectedNotificationCategory}
+                    <AnnouncementCategoryFilterBar
+                      selected={selectedNotificationCategory}
                       onSelect={(id) => {
                         setSelectedNotificationCategoriesMulti([]);
-                        setSelectedNotificationCategory(id as NotificationCategory | 'All');
+                        setSelectedNotificationCategory(id);
                       }}
+                      onAllSelect={openAnnouncementsPage}
+                      onCategorySelect={openAnnouncementCategoryPage}
+                      categoryLabels={t.categories}
+                      lang={lang}
                     />
 
                     <AnnouncementFeedList
@@ -10798,17 +10276,17 @@ Designed with ❤️ for Goofind App Store Listings.
 
                 {/* NEW VIEWS */}
                 {selectedCategory === 'Communities' && (
-                  <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  <section className="communities-zone animate-in fade-in slide-in-from-bottom-4 duration-700 rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-10 relative overflow-hidden">
                     <div className="flex items-center justify-between mb-8">
                       <div className="flex items-center gap-4 text-left">
-                        <div className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-200">
+                        <div className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25">
                           <Users size={30} />
                         </div>
                         <div>
-                          <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-gray-900 uppercase">
+                          <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-primary uppercase">
                             {selectedCommunity ? selectedCommunity.name : t.sections.communities}
                           </h2>
-                          <p className="text-[14px] font-black text-gray-400 uppercase tracking-widest">
+                          <p className="text-[14px] font-black text-accent-vivid uppercase tracking-widest">
                             {selectedCommunity ? t.sections.chatRoom : t.sections.joinCommunity}
                           </p>
                         </div>
@@ -10839,7 +10317,7 @@ Designed with ❤️ for Goofind App Store Listings.
                               key={community.id}
                               onClick={() => setSelectedCommunity(community)}
                               className={`bg-white/80 backdrop-blur-sm rounded-[2rem] border p-4 flex flex-col gap-3 hover:shadow-xl transition-all cursor-pointer group shadow-sm active:scale-95 ${
-                                isJoined ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-emerald-100 hover:border-emerald-200'
+                                isJoined ? 'border-primary ring-2 ring-primary/20' : 'border-primary/15 hover:border-primary/30'
                               }`}
                             >
                               <div className="flex items-center gap-4 text-left overflow-hidden">
@@ -10850,7 +10328,7 @@ Designed with ❤️ for Goofind App Store Listings.
                                    <div className="flex items-start justify-between gap-1 mb-1">
                                      <h3 className="font-black text-gray-900 uppercase tracking-tight leading-none truncate flex-1">{community.name}</h3>
                                      {isJoined && (
-                                       <span className="shrink-0 text-[12px] font-black tracking-widest text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md uppercase">
+                                       <span className="shrink-0 text-[12px] font-black tracking-widest text-primary bg-primary-soft px-1.5 py-0.5 rounded-md uppercase">
                                          {lang === 'en' ? 'Joined' : 'Katıldın'}
                                        </span>
                                      )}
@@ -10859,15 +10337,15 @@ Designed with ❤️ for Goofind App Store Listings.
                                 </div>
                               </div>
                               {isJoined ? (
-                                <button className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-emerald-700 transition-all shrink-0 shadow-lg shadow-emerald-100">
+                                <button className="w-full py-2.5 bg-primary text-white rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-primary-dark transition-all shrink-0 shadow-lg shadow-primary/15">
                                   {lang === 'en' ? 'Enter Chat (Joined)' : 'Sohbete Gir (Katıldın)'}
                                 </button>
                               ) : hasJoinedAny ? (
                                 <button className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-slate-200 transition-all shrink-0">
-                                  {lang === 'en' ? 'View (Read-Only)' : 'Görüntüle (Sadece Oku)'}
+                                  {lang === 'en' ? 'View' : 'Görüntüle'}
                                 </button>
                               ) : (
-                                <button className="w-full py-2.5 bg-emerald-600 text-white rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-emerald-700 transition-all shrink-0 shadow-lg shadow-emerald-100">
+                                <button className="w-full py-2.5 bg-accent text-white rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-accent-dark transition-all shrink-0 shadow-lg shadow-accent/15">
                                   {lang === 'en' ? 'View & Join' : 'Gör ve Katıl'}
                                 </button>
                               )}
@@ -10893,16 +10371,10 @@ Designed with ❤️ for Goofind App Store Listings.
                             </div>
                           </div>
                           <div className="flex items-center gap-3">
-                            {currentUser && (
-                              currentUser.joinedCommunityId === selectedCommunity.id ? (
-                                <span className="text-[14px] sm:text-xs font-black tracking-widest text-emerald-400 bg-white/10 border border-white/10 uppercase px-3 py-1.5 rounded-xl">
-                                  {lang === 'en' ? '★ Joined' : '★ Katıldınız'}
-                                </span>
-                              ) : (
-                                <span className="text-[14px] sm:text-xs font-black tracking-widest text-slate-300 bg-white/5 border border-white/5 uppercase px-3 py-1.5 rounded-xl">
-                                  {lang === 'en' ? '👁👁 Read Only' : '👁👁 Sadece Oku'}
-                                </span>
-                              )
+                            {currentUser?.joinedCommunityId === selectedCommunity.id && (
+                              <span className="text-[14px] sm:text-xs font-black tracking-widest text-accent-light bg-white/10 border border-white/10 uppercase px-3 py-1.5 rounded-xl">
+                                {lang === 'en' ? '★ Joined' : '★ Katıldınız'}
+                              </span>
                             )}
                             <div className="hidden md:flex p-3 bg-white/10 rounded-2xl hover:bg-white/20 cursor-pointer transition-all border border-white/5"><Info size={22} /></div>
                           </div>
@@ -11032,7 +10504,7 @@ Designed with ❤️ for Goofind App Store Listings.
                             <div className="w-full">
                               <button 
                                 onClick={() => handleJoinCommunity(selectedCommunity.id)}
-                                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-3xl shadow-xl shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
+                                className="w-full py-4 bg-accent hover:bg-accent-dark text-white font-black text-xs uppercase tracking-widest rounded-3xl shadow-xl shadow-accent/20 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
                               >
                                 {currentUser.joinedCommunityId ? (
                                   <>
@@ -11427,7 +10899,7 @@ Designed with ❤️ for Goofind App Store Listings.
             <div className="flex justify-center mb-3">
               <LogoIcon size={58} />
             </div>
-            <LogoText size="text-xl" className="justify-center" />
+            <LogoText size="text-xl" className="justify-center" showMark={false} />
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1.5">
               {lang === 'en' ? 'Canada Turkish Community Hub' : 'Kanada Türk Topluluk Merkezi'}
             </p>
@@ -12317,6 +11789,24 @@ Designed with ❤️ for Goofind App Store Listings.
         </div>
       </Modal>
 
+      <Modal
+        isOpen={isUserCompanyMessagesModalOpen}
+        onClose={() => setIsUserCompanyMessagesModalOpen(false)}
+        title={lang === 'en' ? 'My Messages' : 'Mesajlarım'}
+      >
+        <div className="space-y-4 max-h-[70vh] overflow-y-auto no-scrollbar pb-6 px-1">
+          <UserCompanyMessagesInbox
+            lang={lang}
+            incomingThreads={userCompanyIncomingThreads}
+            outgoingThreads={userCompanyOutgoingThreads}
+            onOpenThread={(businessId, partnerId) => {
+              handleOpenCompanyMessageThread(businessId, partnerId);
+              setIsUserCompanyMessagesModalOpen(false);
+            }}
+          />
+        </div>
+      </Modal>
+
       <Modal isOpen={!!selectedNews} onClose={() => setSelectedNews(null)} title="">
         <div className="space-y-8 max-h-[75vh] overflow-y-auto pr-3 custom-scrollbar text-left font-sans">
           {/* Featured Ad or News Image for general visual information context */}
@@ -12540,7 +12030,7 @@ Designed with ❤️ for Goofind App Store Listings.
                 transition={{ delay: 0.2 }}
                 className="mb-12"
               >
-                <LogoText size="text-6xl sm:text-7xl" />
+                <LogoText size="text-6xl sm:text-7xl" stacked />
               </motion.div>
 
               <motion.h1 
@@ -15749,7 +15239,7 @@ Designed with ❤️ for Goofind App Store Listings.
       <footer className="bg-white border-t border-slate-100 pt-16 pb-32 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-primary">
             <div className="flex flex-col items-center gap-6 mb-12">
-               <LogoText size="text-3xl md:text-6xl" />
+               <LogoText size="text-3xl md:text-6xl" stacked />
                <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
                  <a href="?page=support" className="text-[14px] font-black text-slate-400 hover:text-accent-vivid-vivid uppercase tracking-widest transition-colors font-mono">
                    {lang === 'en' ? 'Support / Contact' : 'Destek / İletişim'}

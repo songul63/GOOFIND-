@@ -1,0 +1,75 @@
+/** City-specific cover photos (downtown / iconic landmarks) via Wikimedia Commons */
+export const COMMUNITY_COVER_IMAGES: Record<string, string> = {
+  all:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Sunset_Toronto_Skyline_Panorama_Crop_from_Snake_Island.jpg/500px-Sunset_Toronto_Skyline_Panorama_Crop_from_Snake_Island.jpg',
+  toronto:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Toronto_-_ON_-_Skyline10.jpg/500px-Toronto_-_ON_-_Skyline10.jpg',
+  'north-york':
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Mel_Lastman_Square_in_North_York_during_filming_%2830567207887%29.jpg/500px-Mel_Lastman_Square_in_North_York_during_filming_%2830567207887%29.jpg',
+  mississauga:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Absolute_Towers_-_20191019183707.jpg/500px-Absolute_Towers_-_20191019183707.jpg',
+  brampton:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Brampton_ON_Downtown_2022-01-30.jpg/500px-Brampton_ON_Downtown_2022-01-30.jpg',
+  'richmond-hill':
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e6/Richmond_Hill_%28Nighttime%2C_2024%29.jpg/500px-Richmond_Hill_%28Nighttime%2C_2024%29.jpg',
+  markham:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Main_Street_Unionville_2.jpg/500px-Main_Street_Unionville_2.jpg',
+  oakville:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Oakville_Harbour-Laslovarga_%286%29.JPG/500px-Oakville_Harbour-Laslovarga_%286%29.JPG',
+  burlington:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/At_the_Burlington_waterfront%2C_Ontario%2C_Canada.jpg/500px-At_the_Burlington_waterfront%2C_Ontario%2C_Canada.jpg',
+  hamilton:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/Hamilton_skyline_%289044519598%29.jpg/500px-Hamilton_skyline_%289044519598%29.jpg',
+  vaughan:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Q3555074_Vaughan_Metropolitan_Centre_A02.jpg/500px-Q3555074_Vaughan_Metropolitan_Centre_A02.jpg',
+  aurora:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Aurora_Ontario_-_Canada_-_Downtown_Commercial_Building_-_Yonge_Street_-_HWY_11_-_%2851269669636%29.jpg/500px-Aurora_Ontario_-_Canada_-_Downtown_Commercial_Building_-_Yonge_Street_-_HWY_11_-_%2851269669636%29.jpg',
+  oshawa:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Downtown_Oshawa.JPG/500px-Downtown_Oshawa.JPG',
+  london:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/London_Ontario_Skyline_%2850534962908%29.jpg/500px-London_Ontario_Skyline_%2850534962908%29.jpg',
+  niagara:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Canadian_Niagara_Wonder_at_Horseshoe_Falls_%2C_Ontario_in_2017.jpg/500px-Canadian_Niagara_Wonder_at_Horseshoe_Falls_%2C_Ontario_in_2017.jpg',
+  guelph:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Guelph_%28Ontario%29_Wikivoyage_banner.jpg/500px-Guelph_%28Ontario%29_Wikivoyage_banner.jpg',
+  barrie:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Barrie%2C_Ontario%2C_Canada%3B_Waterfront_%28I0015921%29.jpg/500px-Barrie%2C_Ontario%2C_Canada%3B_Waterfront_%28I0015921%29.jpg',
+  waterloo:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Uptown_Waterloo%2C_Ontario.jpg/500px-Uptown_Waterloo%2C_Ontario.jpg',
+  king:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/KingTownship.jpg/500px-KingTownship.jpg',
+  stouffville:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Main_Street_in_Stouffville%2C_April_25_2026_%2803%29.jpg/500px-Main_Street_in_Stouffville%2C_April_25_2026_%2803%29.jpg',
+  newmarket:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Lower_Main_Street_South_Heritage_Conservation_District-Newmarket-Ontario-_OHAR58-20200905_%281%29.jpg/500px-Lower_Main_Street_South_Heritage_Conservation_District-Newmarket-Ontario-_OHAR58-20200905_%281%29.jpg',
+  ajax:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Great_Lakes_Waterfront_Trail%2C_Ajax_Ontario_01.jpg/500px-Great_Lakes_Waterfront_Trail%2C_Ajax_Ontario_01.jpg',
+  pickering:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Creeks_feeding_Frenchman%27s_Bay%2C_Pickering%2C_Ontario.jpg/500px-Creeks_feeding_Frenchman%27s_Bay%2C_Pickering%2C_Ontario.jpg',
+  whitby:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Whitby_Harbour_%2843937228%29.jpg/500px-Whitby_Harbour_%2843937228%29.jpg',
+  kitchener:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Kitchener_City_Hall_2015.jpg/500px-Kitchener_City_Hall_2015.jpg',
+  cambridge:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Central_Presbyterian_Church_and_Grand_River_%28Galt%2C_Ontario%2C_Canada%29.jpg/500px-Central_Presbyterian_Church_and_Grand_River_%28Galt%2C_Ontario%2C_Canada%29.jpg',
+  brantford:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Brantford_Montage.jpg/500px-Brantford_Montage.jpg',
+  'st-catharines':
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Downtown_St._Catharines_Skyline_2017.jpg/500px-Downtown_St._Catharines_Skyline_2017.jpg',
+  milton:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/Downtown_Milton_Streetscape%2C_Ontario.jpg/500px-Downtown_Milton_Streetscape%2C_Ontario.jpg',
+  caledon:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Caledon_East_Ontario.jpg/500px-Caledon_East_Ontario.jpg',
+  peterborough:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Peterborough_Lift_Lock%2C_2012.jpg/500px-Peterborough_Lift_Lock%2C_2012.jpg',
+  'dufferin-county':
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Downtown_Orangeville_%28Broadway%29_%282%29_Centre-ville_de_Orangeville_%28Broadway%29%2C_%282%29_%2839153602922%29.jpg/500px-Downtown_Orangeville_%28Broadway%29_%282%29_Centre-ville_de_Orangeville_%28Broadway%29%2C_%282%29_%2839153602922%29.jpg',
+  georgina:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Georgina_Church%2C_Lake_Simcoe_%28I0006359%29.tif/lossy-page1-500px-Georgina_Church%2C_Lake_Simcoe_%28I0006359%29.tif.jpg',
+  'east-gwillimbury':
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/East_Gwillimbury_ON.JPG/500px-East_Gwillimbury_ON.JPG',
+};
+
+export function getCommunityCoverImage(communityId: string, fallback?: string): string | undefined {
+  return COMMUNITY_COVER_IMAGES[communityId] || fallback;
+}

@@ -490,7 +490,7 @@ export function AdminCommunitiesPanel({ lang, communities }: AdminCommunitiesPan
   return (
     <div className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-200 shadow-xl animate-in fade-in duration-300">
       <h4 className="text-sm font-black uppercase tracking-[0.2em] text-rose-600 mb-6">
-        {lang === 'en' ? 'City Communities' : 'Şehir Toplulukları'}
+        {lang === 'en' ? 'Community' : 'Topluluk'}
       </h4>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {communities.length === 0 ? (

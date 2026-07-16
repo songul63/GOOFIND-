@@ -1,99 +1,26 @@
-<svg 
-  viewBox="0 0 512 512" 
-  width="512" 
-  height="512" 
-  fill="none" 
-  xmlns="http://www.w3.org/2000/svg"
->
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Soft modern rounded corner container shadow -->
-    <filter id="logo-shadow" x="-10%" y="-10%" width="130%" height="130%">
-      <feDropShadow dx="4" dy="8" stdDeviation="6" floodColor="#000000" floodOpacity="0.3" />
+    <linearGradient id="deep" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#172554" />
+      <stop offset="45%" stop-color="#1E3A8A" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+    <linearGradient id="blue" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="50%" stop-color="#1D4ED8" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+    <filter id="logoShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#172554" flood-opacity="0.2" />
     </filter>
-
-    <filter id="badge-shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="2" dy="5" stdDeviation="4" floodColor="#000000" floodOpacity="0.2" />
-    </filter>
-    
-    <!-- Premium Vibrant Orange Gradient (The two "o" spheres representing goofind) -->
-    <linearGradient id="peachGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="#FFA347" />
-      <stop offset="50%" stopColor="#FF6B00" />
-      <stop offset="100%" stopColor="#E85D00" />
-    </linearGradient>
-
-    <!-- Premium Vibrant Royal Blue-Slate Brand Gradient for the G -->
-    <linearGradient id="blueGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stopColor="#1D4ED8" />
-      <stop offset="45%" stopColor="#2563EB" />
-      <stop offset="100%" stopColor="#93C5FD" />
-    </linearGradient>
-
-    <!-- Glossy overlay for the spheres -->
-    <linearGradient id="glossHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="white" stopOpacity="0.8" />
-      <stop offset="100%" stopColor="white" stopOpacity="0" />
-    </linearGradient>
-
-    <!-- Elegant dark corporate blue slate gradient background -->
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stopColor="#0B0F19" />
-      <stop offset="40%" stopColor="#111827" />
-      <stop offset="100%" stopColor="#1F2937" />
-    </linearGradient>
   </defs>
-  
-  <!-- Rounded square container background - typical for modern Android / Play Store app icons -->
-  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" />
-
-  <!-- A subtle premium outer glowing accent ring -->
-  <rect x="4" y="4" width="504" height="504" rx="108" stroke="white" strokeOpacity="0.04" strokeWidth="8" />
-  
-  <!-- Center brand group: contains the G body and the orange spheres -->
-  <g transform="translate(100, 100) scale(3.12)">
-    <!-- 1. Bold, Geometric "G" body -->
-    <path
-      d="M 70,28 A 31,31 0 1,0 70,72 L 70,52"
-      stroke="url(#blueGrad)"
-      strokeWidth="11.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-      filter="url(#logo-shadow)"
-    />
-
-    <!-- 2. Ball 1 (Representative of first "o") -->
-    <g filter="url(#badge-shadow)">
-      <circle 
-        cx="57" 
-        cy="52" 
-        r="7.5" 
-        fill="url(#peachGrad)" 
-      />
-      <!-- 3D Glossy Touch -->
-      <circle 
-         cx="54.8" 
-         cy="49.8" 
-         r="3" 
-         fill="url(#glossHighlight)" 
-       />
-    </g>
-
-    <!-- 3. Ball 2 (Representative of second "o") -->
-    <g filter="url(#badge-shadow)">
-      <circle 
-        cx="42" 
-        cy="52" 
-        r="6" 
-        fill="url(#peachGrad)" 
-      />
-      <!-- 3D Glossy Touch -->
-      <circle 
-        cx="40.2" 
-        cy="50.2" 
-        r="2.4" 
-        fill="url(#glossHighlight)" 
-      />
+  <rect width="512" height="512" rx="112" fill="#FFFFFF" />
+  <rect x="4" y="4" width="504" height="504" rx="110" fill="none" stroke="#E2E8F0" stroke-width="2" />
+  <g transform="translate(256 256) scale(3.4)" filter="url(#logoShadow)">
+    <g transform="translate(-50 -50)">
+      <path fill-rule="evenodd" d="M 51 17 A 33 33 0 1 0 51 83 L 51 57 L 22 57 L 22 47 L 51 47 L 51 33 A 23 23 0 0 1 35 21 Z" fill="url(#deep)" />
+      <path fill-rule="evenodd" d="M 54 17 L 81 17 L 81 29 L 65 29 L 65 83 L 54 83 Z M 54 45 L 68 45 L 68 55 L 54 55 Z" fill="url(#blue)" />
+      <path d="M 68 46 L 72.5 46 L 72.5 54 L 68 54 Z" fill="#FF4500" />
     </g>
   </g>
 </svg>

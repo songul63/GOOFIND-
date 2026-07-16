@@ -280,3 +280,60 @@ export function UserCompanyMessagesQuickBox({
     </button>
   );
 }
+
+type CompanyHeaderActionsProps = {
+  lang: 'en' | 'tr';
+  messageCount: number;
+  hasBusinessOwned: boolean;
+  onAddCompany: () => void;
+  onOpenCompany: () => void;
+  onOpenMessages: () => void;
+  variant?: 'landing' | 'page';
+};
+
+export function CompanyHeaderActions({
+  lang,
+  messageCount,
+  hasBusinessOwned,
+  onAddCompany,
+  onOpenCompany,
+  onOpenMessages,
+  variant = 'landing',
+}: CompanyHeaderActionsProps) {
+  const isLanding = variant === 'landing';
+
+  const primaryBtnClass = isLanding
+    ? 'px-2 sm:px-3 py-1 sm:py-1.5 bg-primary text-white rounded-md font-black text-[9px] sm:text-[10px] uppercase tracking-wide shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap flex items-center gap-1 shrink-0'
+    : 'px-3 py-1.5 bg-primary text-white rounded-lg font-black text-[10px] sm:text-[11px] uppercase tracking-wide shadow-md shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap flex items-center gap-1.5 shrink-0';
+
+  const messagesBtnClass = isLanding
+    ? 'px-2 sm:px-3 py-1 sm:py-1.5 bg-accent text-white rounded-md font-black text-[9px] sm:text-[10px] uppercase tracking-wide shadow-md shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap flex items-center gap-1 shrink-0'
+    : 'px-3 py-1.5 bg-accent text-white rounded-lg font-black text-[10px] sm:text-[11px] uppercase tracking-wide shadow-md shadow-accent/20 hover:scale-[1.02] active:scale-95 transition-all whitespace-nowrap flex items-center gap-1.5 shrink-0';
+
+  if (hasBusinessOwned) {
+    return (
+      <button type="button" onClick={onOpenCompany} className={primaryBtnClass}>
+        <Building2 size={isLanding ? 12 : 14} strokeWidth={2.5} />
+        {lang === 'en' ? 'My Company' : 'Şirketim'}
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <button type="button" onClick={onAddCompany} className={primaryBtnClass}>
+        <Building2 size={isLanding ? 12 : 14} strokeWidth={2.5} />
+        {lang === 'en' ? 'Add' : 'Ekle'}
+      </button>
+      <button type="button" onClick={onOpenMessages} className={messagesBtnClass}>
+        <MessageSquare size={isLanding ? 12 : 14} strokeWidth={2.5} />
+        {lang === 'en' ? 'Messages' : 'Mesajlarım'}
+        {messageCount > 0 && (
+          <span className="bg-white text-accent text-[8px] font-black px-1 py-px rounded-full min-w-[14px] text-center leading-tight">
+            {messageCount}
+          </span>
+        )}
+      </button>
+    </div>
+  );
+}

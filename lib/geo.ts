@@ -657,43 +657,31 @@ function buildDirectionsTargets(point: MapPoint): DirectionsTargets {
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isAndroid = /Android/i.test(ua);
 
-  if (point.lat && point.lng) {
-    const coords = `${point.lat},${point.lng}`;
-    if (isIOS) {
-      return {
-        native: `maps://?daddr=${coords}&dirflg=d`,
-        web: `https://maps.apple.com/?daddr=${coords}&dirflg=d`,
-      };
-    }
-    if (isAndroid) {
-      return {
-        native: `google.navigation:q=${coords}`,
-        web: `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`,
-      };
-    }
+  const web =
+    point.lat && point.lng
+      ? `https://www.google.com/maps/dir/?api=1&destination=${point.lat},${point.lng}&travelmode=driving`
+      : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(point.addressQuery)}&travelmode=driving`;
+
+  const destination =
+    point.lat && point.lng
+      ? `${point.lat},${point.lng}`
+      : encodeURIComponent(point.addressQuery);
+
+  if (isIOS) {
     return {
-      native: null,
-      web: `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`,
+      native: `comgooglemaps://?daddr=${destination}&directionsmode=driving`,
+      web,
     };
   }
 
-  const address = encodeURIComponent(point.addressQuery);
-  if (isIOS) {
-    return {
-      native: `maps://?daddr=${address}&dirflg=d`,
-      web: `https://maps.apple.com/?daddr=${address}&dirflg=d`,
-    };
-  }
   if (isAndroid) {
     return {
-      native: `google.navigation:q=${address}`,
-      web: `https://www.google.com/maps/dir/?api=1&destination=${address}&travelmode=driving`,
+      native: `google.navigation:q=${destination}`,
+      web,
     };
   }
-  return {
-    native: null,
-    web: `https://www.google.com/maps/dir/?api=1&destination=${address}&travelmode=driving`,
-  };
+
+  return { native: null, web };
 }
 
 /** @deprecated Use openMapDirections instead. */
@@ -701,7 +689,7 @@ export function openStreetMapDirectionsUrl(point: MapPoint): string {
   return buildDirectionsTargets(point).web;
 }
 
-/** Open native maps navigation on mobile; fall back to web directions if needed. */
+/** Open Google Maps directions on mobile; fall back to web if the app is unavailable. */
 export function openMapDirections(point: MapPoint): void {
   const { native, web } = buildDirectionsTargets(point);
   const isMobile =

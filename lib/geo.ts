@@ -647,11 +647,24 @@ export function sortByDistance(
     .sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999));
 }
 
+/** Opens turn-by-turn directions in the device maps app (Apple Maps on iOS, Google Maps elsewhere). */
 export function openStreetMapDirectionsUrl(point: MapPoint): string {
+  const isIOS =
+    typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
   if (point.lat && point.lng) {
-    return `https://www.openstreetmap.org/?mlat=${point.lat}&mlon=${point.lng}#map=16/${point.lat}/${point.lng}`;
+    const coords = `${point.lat},${point.lng}`;
+    if (isIOS) {
+      return `https://maps.apple.com/?daddr=${coords}&dirflg=d`;
+    }
+    return `https://www.google.com/maps/dir/?api=1&destination=${coords}`;
   }
-  return `https://www.openstreetmap.org/search?query=${encodeURIComponent(point.addressQuery)}`;
+
+  const address = encodeURIComponent(point.addressQuery);
+  if (isIOS) {
+    return `https://maps.apple.com/?daddr=${address}&dirflg=d`;
+  }
+  return `https://www.google.com/maps/dir/?api=1&destination=${address}`;
 }
 
 /** City-level fallback when GPS permission is blocked (e.g. HTTP preview). */

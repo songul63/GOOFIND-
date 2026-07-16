@@ -552,7 +552,14 @@ function NearbyMapViewInner({
   };
 
   const openDirections = (point: MapPoint) => {
-    window.open(openStreetMapDirectionsUrl(point), '_blank', 'noopener,noreferrer');
+    const url = openStreetMapDirectionsUrl(point);
+    const isMobile =
+      typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (isMobile) {
+      window.location.assign(url);
+      return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const TypeIcon =

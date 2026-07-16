@@ -647,24 +647,87 @@ export function sortByDistance(
     .sort((a, b) => (a.distanceKm ?? 9999) - (b.distanceKm ?? 9999));
 }
 
-/** Opens turn-by-turn directions in the device maps app (Apple Maps on iOS, Google Maps elsewhere). */
-export function openStreetMapDirectionsUrl(point: MapPoint): string {
-  const isIOS =
-    typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
+type DirectionsTargets = {
+  native: string | null;
+  web: string;
+};
+
+function buildDirectionsTargets(point: MapPoint): DirectionsTargets {
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isAndroid = /Android/i.test(ua);
 
   if (point.lat && point.lng) {
     const coords = `${point.lat},${point.lng}`;
     if (isIOS) {
-      return `https://maps.apple.com/?daddr=${coords}&dirflg=d`;
+      return {
+        native: `maps://?daddr=${coords}&dirflg=d`,
+        web: `https://maps.apple.com/?daddr=${coords}&dirflg=d`,
+      };
     }
-    return `https://www.google.com/maps/dir/?api=1&destination=${coords}`;
+    if (isAndroid) {
+      return {
+        native: `google.navigation:q=${coords}`,
+        web: `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`,
+      };
+    }
+    return {
+      native: null,
+      web: `https://www.google.com/maps/dir/?api=1&destination=${coords}&travelmode=driving`,
+    };
   }
 
   const address = encodeURIComponent(point.addressQuery);
   if (isIOS) {
-    return `https://maps.apple.com/?daddr=${address}&dirflg=d`;
+    return {
+      native: `maps://?daddr=${address}&dirflg=d`,
+      web: `https://maps.apple.com/?daddr=${address}&dirflg=d`,
+    };
   }
-  return `https://www.google.com/maps/dir/?api=1&destination=${address}`;
+  if (isAndroid) {
+    return {
+      native: `google.navigation:q=${address}`,
+      web: `https://www.google.com/maps/dir/?api=1&destination=${address}&travelmode=driving`,
+    };
+  }
+  return {
+    native: null,
+    web: `https://www.google.com/maps/dir/?api=1&destination=${address}&travelmode=driving`,
+  };
+}
+
+/** @deprecated Use openMapDirections instead. */
+export function openStreetMapDirectionsUrl(point: MapPoint): string {
+  return buildDirectionsTargets(point).web;
+}
+
+/** Open native maps navigation on mobile; fall back to web directions if needed. */
+export function openMapDirections(point: MapPoint): void {
+  const { native, web } = buildDirectionsTargets(point);
+  const isMobile =
+    typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+  if (isMobile && native) {
+    window.location.href = native;
+
+    const fallbackTimer = window.setTimeout(() => {
+      if (!document.hidden) {
+        window.location.assign(web);
+      }
+    }, 1200);
+
+    const cancelFallback = () => window.clearTimeout(fallbackTimer);
+    document.addEventListener('visibilitychange', cancelFallback, { once: true });
+    window.addEventListener('pagehide', cancelFallback, { once: true });
+    return;
+  }
+
+  if (isMobile) {
+    window.location.assign(web);
+    return;
+  }
+
+  window.open(web, '_blank', 'noopener,noreferrer');
 }
 
 /** City-level fallback when GPS permission is blocked (e.g. HTTP preview). */

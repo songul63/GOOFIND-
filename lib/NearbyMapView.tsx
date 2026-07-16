@@ -19,7 +19,7 @@ import {
   fetchApproximateLocation,
   MapItemType,
   MapPoint,
-  openStreetMapDirectionsUrl,
+  openMapDirections,
   resolveMapPoints,
   sortByDistance,
   TORONTO_CENTER,
@@ -552,14 +552,7 @@ function NearbyMapViewInner({
   };
 
   const openDirections = (point: MapPoint) => {
-    const url = openStreetMapDirectionsUrl(point);
-    const isMobile =
-      typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    if (isMobile) {
-      window.location.assign(url);
-      return;
-    }
-    window.open(url, '_blank', 'noopener,noreferrer');
+    openMapDirections(point);
   };
 
   const TypeIcon =

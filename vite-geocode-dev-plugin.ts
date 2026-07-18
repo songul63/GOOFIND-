@@ -8,6 +8,7 @@ import {
   normalizeQuery,
   type GeocodeSuggestion,
 } from './functions/src/geocode';
+import { searchCanadianAddresses } from './functions/src/addressSearch';
 
 type CacheFile = Record<
   string,
@@ -95,6 +96,39 @@ async function handleGeocodeRequest(
 }
 
 function attachMiddleware(server: ViteDevServer, authToken: string) {
+  server.middlewares.use('/api/address-search', (req, res) => {
+    if (req.method !== 'GET') {
+      res.statusCode = 405;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, error: 'method_not_allowed' }));
+      return;
+    }
+
+    const url = new URL(req.url || '/', 'http://localhost');
+    const q = (url.searchParams.get('q') || '').trim();
+    const limitRaw = parseInt(url.searchParams.get('limit') || '8', 10);
+    const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 12) : 8;
+
+    if (q.length < 3) {
+      res.statusCode = 400;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ success: false, error: 'missing_query' }));
+      return;
+    }
+
+    void searchCanadianAddresses(q, limit, authToken)
+      .then((suggestions) => {
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ success: true, suggestions }));
+      })
+      .catch(() => {
+        res.statusCode = 500;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ success: false, error: 'server_error' }));
+      });
+  });
+
   server.middlewares.use('/api/geocode', (req, res) => {
     if (req.method !== 'GET') {
       res.statusCode = 405;

@@ -1,7 +1,7 @@
 {
   "name": "goofind---canada-turkish-community-hub",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "engines": {
     "node": ">=20.0.0",
@@ -18,9 +18,11 @@
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "app:sync": "npm run build && npx cap sync",
+    "app:sync:ios": "npm run build && npx cap sync ios",
     "app:generate-icons": "npx tsx generate-pngs.ts",
     "app:open:android": "npx cap open android",
     "app:open:ios": "npx cap open ios",
+    "release:check": "node scripts/release-check.mjs",
     "deploy": "npm run build && npx firebase deploy --only hosting,functions,storage",
     "deploy:hosting": "npx firebase deploy --only hosting",
     "deploy:storage": "npx firebase deploy --only storage",

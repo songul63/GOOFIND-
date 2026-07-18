@@ -90,6 +90,7 @@ type UserCompanyMessagesInboxProps = {
   incomingThreads: UserCompanyMessageThread[];
   outgoingThreads: UserCompanyMessageThread[];
   onOpenThread: (businessId: string, partnerId: string) => void;
+  onAddCompany?: () => void;
   compact?: boolean;
 };
 
@@ -98,6 +99,7 @@ export function UserCompanyMessagesInbox({
   incomingThreads,
   outgoingThreads,
   onOpenThread,
+  onAddCompany,
   compact = false,
 }: UserCompanyMessagesInboxProps) {
   const [activeBox, setActiveBox] = useState<'incoming' | 'outgoing'>('incoming');
@@ -117,6 +119,7 @@ export function UserCompanyMessagesInbox({
       emptyOutgoing:
         lang === 'en' ? 'You have not messaged any company yet.' : 'Henüz bir işletmeye mesaj göndermediniz.',
       open: lang === 'en' ? 'Open' : 'Aç',
+      addCompany: lang === 'en' ? 'Add Your Company' : 'Şirketini Ekle',
     }),
     [lang],
   );
@@ -232,6 +235,19 @@ export function UserCompanyMessagesInbox({
           )}
         </div>
       </div>
+
+      {onAddCompany && (
+        <div className="px-3 pb-3 pt-0">
+          <button
+            type="button"
+            onClick={onAddCompany}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white font-black text-[10px] sm:text-[11px] uppercase tracking-wide shadow-md shadow-primary/20 hover:scale-[1.01] active:scale-95 transition-all"
+          >
+            <Building2 size={14} strokeWidth={2.5} />
+            {labels.addCompany}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -285,20 +301,26 @@ type CompanyHeaderActionsProps = {
   lang: 'en' | 'tr';
   messageCount: number;
   hasBusinessOwned: boolean;
+  hasCompanyMessages: boolean;
   onAddCompany: () => void;
   onOpenCompany: () => void;
   onOpenMessages: () => void;
   variant?: 'landing' | 'page';
+  canParticipate?: boolean;
+  onParticipationBlocked?: () => void;
 };
 
 export function CompanyHeaderActions({
   lang,
   messageCount,
   hasBusinessOwned,
+  hasCompanyMessages,
   onAddCompany,
   onOpenCompany,
   onOpenMessages,
   variant = 'landing',
+  canParticipate = true,
+  onParticipationBlocked,
 }: CompanyHeaderActionsProps) {
   const isLanding = variant === 'landing';
 
@@ -319,21 +341,37 @@ export function CompanyHeaderActions({
     );
   }
 
-  return (
-    <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-      <button type="button" onClick={onAddCompany} className={primaryBtnClass}>
-        <Building2 size={isLanding ? 12 : 14} strokeWidth={2.5} />
-        {lang === 'en' ? 'Add' : 'Ekle'}
-      </button>
+  if (hasCompanyMessages) {
+    return (
       <button type="button" onClick={onOpenMessages} className={messagesBtnClass}>
         <MessageSquare size={isLanding ? 12 : 14} strokeWidth={2.5} />
-        {lang === 'en' ? 'Messages' : 'Mesajlarım'}
+        {lang === 'en' ? 'My Messages' : 'Mesajlarım'}
         {messageCount > 0 && (
           <span className="bg-white text-accent text-[8px] font-black px-1 py-px rounded-full min-w-[14px] text-center leading-tight">
             {messageCount}
           </span>
         )}
       </button>
-    </div>
+    );
+  }
+
+  if (!canParticipate) {
+    return (
+      <button
+        type="button"
+        onClick={onParticipationBlocked || onAddCompany}
+        className={`${primaryBtnClass} opacity-85`}
+      >
+        <Building2 size={isLanding ? 12 : 14} strokeWidth={2.5} />
+        {lang === 'en' ? 'Add' : 'Ekle'}
+      </button>
+    );
+  }
+
+  return (
+    <button type="button" onClick={onAddCompany} className={primaryBtnClass}>
+      <Building2 size={isLanding ? 12 : 14} strokeWidth={2.5} />
+      {lang === 'en' ? 'Add' : 'Ekle'}
+    </button>
   );
 }

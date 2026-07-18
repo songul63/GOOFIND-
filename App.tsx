@@ -100,6 +100,10 @@ import {
   Building2,
   Gift,
   HandHelping,
+  PawPrint,
+  BookOpen,
+  HeartHandshake,
+  Stamp,
   HelpCircle,
   Apple,
   Eye,
@@ -114,7 +118,8 @@ import {
   Sun,
   Moon,
   ExternalLink,
-  Loader2
+  Loader2,
+  Menu,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -132,11 +137,12 @@ import {
   Community,
   CommunityMessage,
   Flyer,
-  FlyerItem
+  FlyerItem,
+  PlaceToVisit,
 } from './types';
 import { Language, translations } from './translations';
 import { db, auth, handleFirestoreError } from './lib/firebase';
-import { resolveBusinessMediaForSave, DEFAULT_BUSINESS_IMAGE } from './lib/businessImageStorage';
+import { resolveBusinessMediaForSave, uploadProfileAvatar, DEFAULT_BUSINESS_IMAGE } from './lib/businessImageStorage';
 import { compressChatImageFile, buildChatMessagePayload, formatChatPreviewText } from './lib/chatImageUtils';
 import {
   ChatMessageBody,
@@ -151,7 +157,7 @@ import {
   CompanyCategoryFilterBar,
   CompanyCategoriesExplorerPage,
   AnnouncementFeedList,
-  AnnouncementCategoryPage,
+  AnnouncementsListingsPage,
 } from './lib/categoryCards';
 import {
   ALL_CATEGORY_STYLE,
@@ -161,10 +167,20 @@ import {
   ANNOUNCEMENT_CATEGORY_STYLES,
 } from './lib/categoryStyles';
 import { BusinessProfileTemplate } from './lib/BusinessProfileTemplate';
+import { BusinessSocialLinksForm, sanitizeBusinessSocialLinks, type BusinessSocialLinks, BusinessSocialLinksBar } from './lib/businessSocialMedia';
 import { EventsExplorePage, PlacesExplorePage } from './lib/explorePages';
 import { BusinessAddressMapPickerLoader } from './lib/BusinessAddressMapPickerLoader';
 import type { BusinessLocationValue } from './lib/BusinessAddressMapPicker';
 import { getMediaDevices, getNavigator, getPlatform, getUserAgent } from './lib/browserEnv';
+import {
+  appleAuthIssueMessage,
+  appleIncompleteSignupMessage,
+  getAppleAuthIssue,
+  isAppleIncompleteSignupError,
+  isIosStandalone,
+  LEGACY_WEB_APP_HOST,
+} from './lib/appleAuthEnv';
+import { AppleStandaloneSignIn } from './lib/AppleStandaloneSignIn';
 import {
   buildOwnerIncomingThreads,
   buildOwnerOutgoingThreads,
@@ -192,8 +208,52 @@ import {
   AdminUsersPanel,
   DeletionRequest,
 } from './lib/adminDashboard';
+import {
+  AdminRegionBadge,
+  AdminRegionFilterBar,
+  AdminRegionsPanel,
+  computeAdminRegionStats,
+  filterBusinessesForAdmin,
+  filterCommunitiesForAdmin,
+  filterEventsForAdmin,
+  filterNotificationsForAdmin,
+  filterPlacesForAdmin,
+  filterUsersForAdmin,
+  type AdminRegionFilter,
+} from './lib/adminRegions';
 import { isPlatformAdminEmail } from './lib/adminAccess';
 import { NearbyMapLoader } from './lib/NearbyMapLoader';
+import { RegionSwitcher } from './lib/RegionSwitcher';
+import {
+  type CanadianRegion,
+  DEFAULT_COMMUNITY_BY_REGION,
+  ALL_CANADIAN_REGIONS,
+  regionButtonActiveClasses,
+  regionProfileActiveClasses,
+  filterBusinessesByRegion,
+  filterCommunitiesByRegion,
+  filterEventsByRegion,
+  filterNotificationsByRegion,
+  filterPlacesByRegion,
+  getCommunityRegion,
+  resolveRegionForSave,
+  resolveBusinessRegion,
+  resolveNotificationRegion,
+  resolveEventRegion,
+  resolvePlaceRegion,
+  isCanadianRegion,
+  isHomeRegionSetupComplete,
+  readStoredUserHomeRegion,
+  persistUserHomeRegion,
+  regionLabel,
+  canChangeHomeRegion,
+  formatCooldownRemaining,
+  getHomeRegionChangeCooldownRemaining,
+  getCommunitySwitchCooldownRemaining,
+  isBrowsingOutsideHomeRegion,
+  canParticipateInRegion,
+  resolveUserHomeRegion,
+} from './lib/regions';
 import { MapBrandMark } from './lib/mapBrandMark';
 import {
   PlaceCategoryFilterBar,
@@ -205,7 +265,7 @@ import {
 import { PlaceCategory } from './types';
 import { Emoji3D } from './lib/icon3d';
 import { FONT_DISPLAY_QUOTED } from './lib/typography';
-import { StyledG, LogoIcon, LogoText, GoofindAdminMark, GoofindWordmark } from './lib/goofindLogo';
+import { StyledG, LogoIcon, LogoText, LogoSplash, GoofindAdminMark, GoofindWordmark } from './lib/goofindLogo';
 import { dialPhoneNumber, resolveUserPhone } from './lib/phoneCall';
 import DeleteAccountPage from './DeleteAccountPage';
 import { ScreenshotOptimizerModal } from './ScreenshotOptimizerModal';
@@ -237,12 +297,15 @@ import {
   sendPasswordResetEmail,
   reload,
   GoogleAuthProvider,
+  OAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   setPersistence,
   browserLocalPersistence,
   User as FirebaseUser
 } from 'firebase/auth';
-import { INITIAL_BUSINESSES, INITIAL_NOTIFICATIONS, INITIAL_EVENTS, INITIAL_BANNERS, INITIAL_CHAT_MESSAGES, INITIAL_COMMUNITIES, INITIAL_FLYERS, INITIAL_PLACES } from './constants';
+import { INITIAL_BUSINESSES, INITIAL_NOTIFICATIONS, INITIAL_EVENTS, INITIAL_BANNERS, INITIAL_CHAT_MESSAGES, INITIAL_COMMUNITIES, INITIAL_FLYERS, INITIAL_PLACES, hydrateCommunity, mergeCommunitiesWithSeed } from './constants';
 import { getLatestCanadaTurkishNews, summarizeWebsiteInfo, translatePlaceFields } from './geminiService';
 
 // --- Reusable Components ---
@@ -265,10 +328,10 @@ const MapNavIcon = ({ active = false }: { active?: boolean }) => (
   <MapBrandMark size={22} active={active} className={active ? 'scale-105' : ''} />
 );
 
-const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-xl", fullBleed = false, fullscreen = false }: { isOpen: boolean, onClose: () => void, title: string, children?: React.ReactNode, maxWidth?: string, fullBleed?: boolean, fullscreen?: boolean }) => {
+const Modal = ({ isOpen, onClose, title, children, maxWidth = "max-w-xl", fullBleed = false, fullscreen = false, elevated = false }: { isOpen: boolean, onClose: () => void, title: string, children?: React.ReactNode, maxWidth?: string, fullBleed?: boolean, fullscreen?: boolean, elevated?: boolean }) => {
   if (!isOpen) return null;
   return (
-    <div className={`fixed inset-0 z-[1500] flex ${fullscreen ? 'p-0 items-stretch' : 'items-center justify-center p-4 sm:p-6'}`}>
+    <div className={`fixed inset-0 ${elevated ? 'z-[1700]' : 'z-[1500]'} flex ${fullscreen ? 'p-0 items-stretch' : 'items-center justify-center p-4 sm:p-6'}`}>
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
       <div className={`bg-white w-full ${fullscreen ? 'h-full max-h-none max-w-none rounded-none border-0 shadow-none' : maxWidth} ${!fullscreen ? 'rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.15)] border border-slate-100' : ''} relative z-10 overflow-hidden animate-in fade-in zoom-in duration-300 flex flex-col ${fullBleed && !fullscreen ? 'max-h-[92vh]' : ''}`}>
         {!fullBleed && (
@@ -970,6 +1033,33 @@ const App: React.FC = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'All' | 'Landing' | 'Admin' | 'Announcements'>('Landing');
   const [homeNavSection, setHomeNavSection] = useState<'home' | 'events' | 'places'>('home');
+  const [selectedRegion, setSelectedRegion] = useState<CanadianRegion>('ON');
+
+  const resetBrowseView = useCallback((options?: { resetView?: boolean }) => {
+    if (options?.resetView === false) return;
+    setSelectedCommunity(null);
+    setSelectedCategory('Landing');
+    setHomeNavSection('home');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
+  /** Header ≡ menu only — temporary browse, does not change permanent home province. */
+  const applyBrowseRegion = useCallback(
+    (region: CanadianRegion) => {
+      setSelectedRegion(region);
+      resetBrowseView();
+    },
+    [resetBrowseView],
+  );
+
+  /** Permanent home province — signup, first app open, profile change, login. */
+  const applyHomeRegionView = useCallback(
+    (region: CanadianRegion, options?: { resetView?: boolean }) => {
+      setSelectedRegion(region);
+      resetBrowseView(options);
+    },
+    [resetBrowseView],
+  );
 
   useEffect(() => {
     if (selectedCategory === 'Admin') {
@@ -985,6 +1075,8 @@ const App: React.FC = () => {
   const [isQuotaBannerDismissed, setIsQuotaBannerDismissed] = useState(false);
   const [adminPostSearchQuery, setAdminPostSearchQuery] = useState('');
   const [adminDashboardTab, setAdminDashboardTab] = useState<AdminDashboardTab>('overview');
+  const [adminRegionFilter, setAdminRegionFilter] = useState<AdminRegionFilter>('ALL');
+  const [isSyncingCommunities, setIsSyncingCommunities] = useState(false);
   const [adminBusinessSearchQuery, setAdminBusinessSearchQuery] = useState('');
   const [adminUserSearchQuery, setAdminUserSearchQuery] = useState('');
   const [deletionRequests, setDeletionRequests] = useState<DeletionRequest[]>([]);
@@ -1023,6 +1115,7 @@ const App: React.FC = () => {
   const [eventOrganizer, setEventOrganizer] = useState<string>('');
   const [eventImageUrl, setEventImageUrl] = useState<string>('');
   const [eventImageSelected, setEventImageSelected] = useState<string | null>(null);
+  const [eventRegion, setEventRegion] = useState<CanadianRegion>('ON');
   const [isUploadingEventImg, setIsUploadingEventImg] = useState<boolean>(false);
   const eventImageInputRef = useRef<HTMLInputElement>(null);
   const [adminBannersTab, setAdminBannersTab] = useState<'active' | 'suggested'>('active');
@@ -1299,6 +1392,7 @@ const App: React.FC = () => {
   }, [isPlatformAdmin, activeChats, selectedChatUserId]);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [triggerAppleLoginFromSafari, setTriggerAppleLoginFromSafari] = useState(false);
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isNotifMessageModalOpen, setIsNotifMessageModalOpen] = useState(false);
   const [activeNotifMsgThread, setActiveNotifMsgThread] = useState<string | null>(null);
@@ -1336,8 +1430,10 @@ const App: React.FC = () => {
     }
   ], [lang]);
   const [showPostSuccess, setShowPostSuccess] = useState(false);
+  const [isSubmittingListing, setIsSubmittingListing] = useState(false);
   const [businessImageUrlPreview, setBusinessImageUrlPreview] = useState('');
   const [businessFormLocation, setBusinessFormLocation] = useState<BusinessLocationValue>({ address: '' });
+  const [businessSocialLinks, setBusinessSocialLinks] = useState<BusinessSocialLinks>({});
   const [noticeImages, setNoticeImages] = useState<string[]>([]);
   const [businessGallery, setBusinessGallery] = useState<string[]>([]);
   const [reviewImages, setReviewImages] = useState<string[]>([]);
@@ -1594,9 +1690,9 @@ const App: React.FC = () => {
   const [chatPartnerUser, setChatPartnerUser] = useState<any | null>(null);
   const [profileUser, setProfileUser] = useState<any | null>(null);
   const [isUserProfileModalOpen, setIsUserProfileModalOpen] = useState(false);
-  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isEditingProfileDetails, setIsEditingProfileDetails] = useState(false);
+  const [isProfileRegionPickerOpen, setIsProfileRegionPickerOpen] = useState(false);
   const [editNameInput, setEditNameInput] = useState('');
   const [editPhoneInput, setEditPhoneInput] = useState('');
 
@@ -1612,6 +1708,7 @@ const App: React.FC = () => {
   const [editNotifDescription, setEditNotifDescription] = useState<string>('');
   const [editNotifPrice, setEditNotifPrice] = useState<string>('');
   const [editNotifImages, setEditNotifImages] = useState<string[]>([]);
+  const [editNotifRegion, setEditNotifRegion] = useState<CanadianRegion>('ON');
 
   const ownerCompanyIncomingThreads = useMemo(() => {
     if (!currentUser || !selectedBusiness || selectedBusiness.ownerId !== currentUser.id) return [];
@@ -1673,10 +1770,18 @@ const App: React.FC = () => {
     return countUnreadAnnouncementMessages(notificationMessages, currentUser.id);
   }, [notificationMessages, currentUser?.id]);
 
-  const homePreviewCommunityId = useMemo(
-    () => currentUser?.joinedCommunityId || 'toronto',
-    [currentUser?.joinedCommunityId],
-  );
+  const homePreviewCommunityId = useMemo(() => {
+    const defaultId = DEFAULT_COMMUNITY_BY_REGION[selectedRegion];
+    if (currentUser?.joinedCommunityId) {
+      const joined =
+        communities.find((c) => c.id === currentUser.joinedCommunityId) ||
+        INITIAL_COMMUNITIES.find((c) => c.id === currentUser.joinedCommunityId);
+      if (joined && getCommunityRegion(joined) === selectedRegion) {
+        return currentUser.joinedCommunityId;
+      }
+    }
+    return defaultId;
+  }, [currentUser?.joinedCommunityId, selectedRegion, communities]);
 
   const homePreviewCommunity = useMemo(() => {
     const found = communities.find((c) => c.id === homePreviewCommunityId);
@@ -1697,6 +1802,97 @@ const App: React.FC = () => {
 
   const isHomePreviewCommunityJoined =
     !!currentUser?.joinedCommunityId && currentUser.joinedCommunityId === homePreviewCommunityId;
+
+  const userHomeRegion = useMemo(
+    (): CanadianRegion | null =>
+      resolveUserHomeRegion(currentUser?.id, currentUser?.homeRegion ?? null),
+    [currentUser?.id, currentUser?.homeRegion],
+  );
+
+  const isForeignRegionBrowse = useMemo(
+    () => isBrowsingOutsideHomeRegion(userHomeRegion, selectedRegion),
+    [userHomeRegion, selectedRegion],
+  );
+
+  const canParticipateInSelectedRegion = !isForeignRegionBrowse;
+
+  const homeRegionChangeCooldownRemaining = useMemo(
+    () => getHomeRegionChangeCooldownRemaining(currentUser?.homeRegionChangedAt),
+    [currentUser?.homeRegionChangedAt],
+  );
+
+  const canChangeHomeRegionNow = homeRegionChangeCooldownRemaining <= 0;
+
+  const regionBusinesses = useMemo(
+    () => filterBusinessesByRegion(businesses || [], selectedRegion),
+    [businesses, selectedRegion],
+  );
+  const regionNotifications = useMemo(
+    () => filterNotificationsByRegion(notifications || [], selectedRegion),
+    [notifications, selectedRegion],
+  );
+  const regionEvents = useMemo(
+    () => filterEventsByRegion(events || [], selectedRegion),
+    [events, selectedRegion],
+  );
+  const regionPlaces = useMemo(
+    () => filterPlacesByRegion(places || [], selectedRegion),
+    [places, selectedRegion],
+  );
+  const catalogCommunities = useMemo(
+    () => mergeCommunitiesWithSeed(communities),
+    [communities],
+  );
+  const regionCommunities = useMemo(
+    () => filterCommunitiesByRegion(catalogCommunities, selectedRegion),
+    [catalogCommunities, selectedRegion],
+  );
+
+  const hasBusinessOwnedInRegion = useMemo(
+    () => !!currentUser && regionBusinesses.some((b) => b.ownerId === currentUser.id),
+    [currentUser?.id, regionBusinesses],
+  );
+  const myBusinessInRegion = useMemo(
+    () => (currentUser ? regionBusinesses.find((b) => b.ownerId === currentUser.id) || null : null),
+    [currentUser?.id, regionBusinesses],
+  );
+  const myBusinessesInRegion = useMemo(
+    () => (currentUser ? regionBusinesses.filter((b) => b.ownerId === currentUser.id) : []),
+    [currentUser?.id, regionBusinesses],
+  );
+
+  const userCompanyIncomingThreadsInRegion = useMemo(() => {
+    if (!currentUser || hasBusinessOwnedInRegion) return [];
+    return buildUserIncomingCompanyThreads(
+      businessChatMessages,
+      currentUser.id,
+      regionBusinesses,
+      lang,
+    );
+  }, [businessChatMessages, currentUser, regionBusinesses, lang, hasBusinessOwnedInRegion]);
+
+  const userCompanyOutgoingThreadsInRegion = useMemo(() => {
+    if (!currentUser || hasBusinessOwnedInRegion) return [];
+    return buildUserOutgoingCompanyThreads(
+      businessChatMessages,
+      currentUser.id,
+      regionBusinesses,
+      lang,
+    );
+  }, [businessChatMessages, currentUser, regionBusinesses, lang, hasBusinessOwnedInRegion]);
+
+  const userCompanyMessageCountInRegion = useMemo(
+    () => userCompanyIncomingThreadsInRegion.length + userCompanyOutgoingThreadsInRegion.length,
+    [userCompanyIncomingThreadsInRegion.length, userCompanyOutgoingThreadsInRegion.length],
+  );
+
+  const hasCompanyMessagesInRegion = userCompanyMessageCountInRegion > 0;
+
+  useEffect(() => {
+    if (selectedCommunity && getCommunityRegion(selectedCommunity) !== selectedRegion) {
+      setSelectedCommunity(null);
+    }
+  }, [selectedRegion, selectedCommunity]);
 
   const handleOpenHomeCommunityChat = useCallback(() => {
     if (!homePreviewCommunity) return;
@@ -2030,11 +2226,18 @@ const App: React.FC = () => {
     startOutgoingRingtone
   ]);
   const [authView, setAuthView] = useState<'login' | 'register' | 'forgot_password'>('login');
+  const [signupHomeRegion, setSignupHomeRegion] = useState<CanadianRegion>('ON');
+  const [isHomeRegionSetupOpen, setIsHomeRegionSetupOpen] = useState(false);
+  const [pendingHomeRegion, setPendingHomeRegion] = useState<CanadianRegion>('ON');
+  const [isHomeRegionConfirmOpen, setIsHomeRegionConfirmOpen] = useState(false);
+  const [pendingProfileHomeRegion, setPendingProfileHomeRegion] = useState<CanadianRegion | null>(null);
+  const [isUserDocHydrated, setIsUserDocHydrated] = useState(false);
   const [showPasswordLogin, setShowPasswordLogin] = useState(false);
   const [showPasswordRegister, setShowPasswordRegister] = useState(false);
   const [showConfirmPasswordRegister, setShowConfirmPasswordRegister] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isAppMenuOpen, setIsAppMenuOpen] = useState(false);
   const [selectedNews, setSelectedNews] = useState<any>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState<boolean>(false);
@@ -2218,6 +2421,15 @@ const App: React.FC = () => {
     };
   }, [lightboxIndex, selectedBusiness, selectedNotification, activeNotificationImage]);
 
+  useEffect(() => {
+    if (!isAppMenuOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsAppMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isAppMenuOpen]);
+
   // Comprehensive active modal state check to prevent layout shift and double scrollbar bugs
   const isAnyModalOpen = !!(
     isAuthModalOpen ||
@@ -2227,6 +2439,8 @@ const App: React.FC = () => {
     isNotifMessageModalOpen ||
     selectedNews ||
     isProfileOpen ||
+    isHomeRegionSetupOpen ||
+    isHomeRegionConfirmOpen ||
     isBusinessRegistrationModalOpen ||
     isEditBusinessModalOpen ||
     isAddFlyerOpen ||
@@ -2793,6 +3007,229 @@ const App: React.FC = () => {
     }, 4000);
   };
 
+  const warnForeignProvinceWrite = useCallback(() => {
+    showToast(
+      lang === 'en'
+        ? 'You cannot add a company or post a listing in another province.'
+        : 'Başka eyalette şirket ekleyemez veya ilan veremezsiniz.',
+      'error',
+    );
+  }, [lang]);
+
+  const warnForeignProvinceJoin = useCallback(() => {
+    showToast(
+      lang === 'en'
+        ? 'You cannot join a community in another province.'
+        : 'Başka eyalette topluluğa katılamazsınız.',
+      'error',
+    );
+  }, [lang]);
+
+  const assertRegionalParticipation = useCallback(
+    (targetRegion?: CanadianRegion): boolean => {
+      if (!currentUser?.id || currentUser.id === 'mock_demo_reviewer_id') return true;
+      if (!userHomeRegion) return true;
+
+      if (isForeignRegionBrowse) {
+        if (targetRegion && targetRegion === userHomeRegion) {
+          return true;
+        }
+        showToast(
+          lang === 'en'
+            ? `You are browsing ${regionLabel(selectedRegion, lang)} in read-only mode. Switch to ${regionLabel(userHomeRegion, lang)} (your home province) to add companies, post listings, or join communities.`
+            : `${regionLabel(selectedRegion, lang)} eyaletini salt okunur modda inceliyorsunuz. Şirket eklemek, ilan vermek veya topluluğa katılmak için ana eyaletinize (${regionLabel(userHomeRegion, lang)}) dönün.`,
+          'error',
+        );
+        return false;
+      }
+
+      if (targetRegion && !canParticipateInRegion(userHomeRegion, targetRegion)) {
+        showToast(
+          lang === 'en'
+            ? `You can only do this in your home province (${regionLabel(userHomeRegion, lang)}).`
+            : `Bu işlemi yalnızca ana eyaletinizde (${regionLabel(userHomeRegion, lang)}) yapabilirsiniz.`,
+          'error',
+        );
+        return false;
+      }
+
+      return true;
+    },
+    [currentUser?.id, userHomeRegion, isForeignRegionBrowse, selectedRegion, lang],
+  );
+
+  const openBusinessRegistration = useCallback(() => {
+    if (isForeignRegionBrowse) {
+      warnForeignProvinceWrite();
+      return;
+    }
+    const participationRegion = userHomeRegion || selectedRegion;
+    if (!assertRegionalParticipation(participationRegion)) return;
+    if (!userHomeRegion) {
+      setPendingHomeRegion(selectedRegion);
+      setIsHomeRegionSetupOpen(true);
+      showToast(
+        lang === 'en' ? 'Choose your home province before adding a company.' : 'Şirket eklemeden önce ana eyaletinizi seçin.',
+        'info',
+      );
+      return;
+    }
+    setBusinessFormLocation({ address: '' });
+    setBusinessSocialLinks({});
+    setIsBusinessRegistrationModalOpen(true);
+  }, [assertRegionalParticipation, userHomeRegion, selectedRegion, isForeignRegionBrowse, warnForeignProvinceWrite, lang]);
+
+  const openPostListingModal = useCallback(() => {
+    if (isForeignRegionBrowse) {
+      warnForeignProvinceWrite();
+      return;
+    }
+    const participationRegion = userHomeRegion || selectedRegion;
+    if (!assertRegionalParticipation(participationRegion)) return;
+    if (!userHomeRegion) {
+      setPendingHomeRegion(selectedRegion);
+      setIsHomeRegionSetupOpen(true);
+      showToast(
+        lang === 'en' ? 'Choose your home province before posting a listing.' : 'İlan vermeden önce ana eyaletinizi seçin.',
+        'info',
+      );
+      return;
+    }
+    setIsPostModalOpen(true);
+  }, [assertRegionalParticipation, userHomeRegion, selectedRegion, isForeignRegionBrowse, warnForeignProvinceWrite, lang]);
+
+  useEffect(() => {
+    if (!isForeignRegionBrowse) return;
+    if (isPostModalOpen) {
+      setIsPostModalOpen(false);
+      warnForeignProvinceWrite();
+    }
+    if (isBusinessRegistrationModalOpen) {
+      setIsBusinessRegistrationModalOpen(false);
+      setBusinessFormLocation({ address: '' });
+      setBusinessGallery([]);
+      setBusinessSocialLinks({});
+      warnForeignProvinceWrite();
+    }
+  }, [
+    isForeignRegionBrowse,
+    isPostModalOpen,
+    isBusinessRegistrationModalOpen,
+    warnForeignProvinceWrite,
+  ]);
+
+  const saveUserHomeRegion = useCallback(async (region: CanadianRegion, options?: { recordChange?: boolean }) => {
+    if (!currentUser?.id || currentUser.id === 'mock_demo_reviewer_id') return;
+    const payload: Record<string, unknown> = { homeRegion: region };
+    const changedAt = options?.recordChange ? Date.now() : undefined;
+    if (changedAt) payload.homeRegionChangedAt = changedAt;
+    await setDoc(doc(db, 'users', currentUser.id), payload, { merge: true });
+    setCurrentUser((prev: any) =>
+      prev
+        ? {
+            ...prev,
+            homeRegion: region,
+            ...(changedAt ? { homeRegionChangedAt: changedAt } : {}),
+          }
+        : prev,
+    );
+    persistUserHomeRegion(currentUser.id, region);
+  }, [currentUser?.id]);
+
+  const handleProfileHomeRegionChange = useCallback(async (region: CanadianRegion) => {
+    applyHomeRegionView(region);
+    try {
+      const joinedId = currentUser?.joinedCommunityId;
+      if (joinedId) {
+        const joined =
+          catalogCommunities.find((c) => c.id === joinedId) ||
+          INITIAL_COMMUNITIES.find((c) => c.id === joinedId);
+        if (joined && getCommunityRegion(joined) !== region) {
+          await setDoc(doc(db, 'users', currentUser!.id), { joinedCommunityId: null }, { merge: true });
+          setCurrentUser((prev: any) => (prev ? { ...prev, joinedCommunityId: null } : prev));
+        }
+      }
+      await saveUserHomeRegion(region, { recordChange: true });
+      setIsHomeRegionConfirmOpen(false);
+      setPendingProfileHomeRegion(null);
+      showToast(
+        lang === 'en' ? 'Home province updated.' : 'Ana eyalet güncellendi.',
+        'success',
+      );
+    } catch (err) {
+      console.error('Could not save home region', err);
+      showToast(lang === 'en' ? 'Could not save province.' : 'Eyalet kaydedilemedi.', 'error');
+    }
+  }, [applyHomeRegionView, saveUserHomeRegion, lang, currentUser?.joinedCommunityId, currentUser?.id, catalogCommunities]);
+
+  const requestProfileHomeRegionChange = useCallback((region: CanadianRegion) => {
+    const currentHome = isCanadianRegion(currentUser?.homeRegion)
+      ? currentUser.homeRegion
+      : selectedRegion;
+    if (region === currentHome) return;
+    if (!canChangeHomeRegion(currentUser?.homeRegionChangedAt)) {
+      showToast(
+        lang === 'en'
+          ? `You can change your home province at most once every 2 months. Try again in ${formatCooldownRemaining(homeRegionChangeCooldownRemaining, lang)}.`
+          : `Ana eyaletinizi 2 ayda en fazla bir kez değiştirebilirsiniz. ${formatCooldownRemaining(homeRegionChangeCooldownRemaining, lang)} sonra tekrar deneyin.`,
+        'error',
+      );
+      return;
+    }
+    setPendingProfileHomeRegion(region);
+    setIsHomeRegionConfirmOpen(true);
+  }, [currentUser?.homeRegion, currentUser?.homeRegionChangedAt, selectedRegion, lang, homeRegionChangeCooldownRemaining]);
+
+  const completeHomeRegionSetup = useCallback(async (region: CanadianRegion) => {
+    applyHomeRegionView(region);
+    try {
+      await saveUserHomeRegion(region, { recordChange: true });
+      setIsHomeRegionSetupOpen(false);
+      showToast(
+        lang === 'en' ? 'Welcome! Your province is set.' : 'Hoş geldiniz! Eyaletiniz ayarlandı.',
+        'success',
+      );
+    } catch (err) {
+      console.error('Could not save home region during setup', err);
+      showToast(lang === 'en' ? 'Could not save province.' : 'Eyalet kaydedilemedi.', 'error');
+    }
+  }, [applyHomeRegionView, saveUserHomeRegion, lang]);
+
+  useEffect(() => {
+    if (!currentUser?.id || isCanadianRegion(currentUser.homeRegion)) return;
+    const stored = readStoredUserHomeRegion(currentUser.id);
+    if (stored) {
+      setCurrentUser((prev: any) => (prev ? { ...prev, homeRegion: stored } : prev));
+    }
+  }, [currentUser?.id, currentUser?.homeRegion]);
+
+  useEffect(() => {
+    if (!currentUser?.id) return;
+    if (isCanadianRegion(currentUser.homeRegion)) {
+      applyHomeRegionView(currentUser.homeRegion, { resetView: false });
+    }
+  }, [currentUser?.id, currentUser?.homeRegion, applyHomeRegionView]);
+
+  useEffect(() => {
+    setIsUserDocHydrated(false);
+  }, [currentUser?.id]);
+
+  useEffect(() => {
+    if (
+      !currentUser?.id ||
+      currentUser.id === 'mock_demo_reviewer_id' ||
+      !isUserDocHydrated ||
+      isCanadianRegion(currentUser.homeRegion) ||
+      isHomeRegionSetupComplete(currentUser.id) ||
+      readStoredUserHomeRegion(currentUser.id)
+    ) {
+      setIsHomeRegionSetupOpen(false);
+      return;
+    }
+    setPendingHomeRegion('ON');
+    setIsHomeRegionSetupOpen(true);
+  }, [currentUser?.id, currentUser?.homeRegion, isUserDocHydrated]);
+
   useEffect(() => {
     if (selectedNotification) {
       setTimeout(() => {
@@ -2812,19 +3249,71 @@ const App: React.FC = () => {
 
   // --- Auth bootstrap (isolated so loading timeout is never reset by listener re-runs) ---
   useEffect(() => {
-    setPersistence(auth, browserLocalPersistence).catch(console.error);
+    if (typeof window === 'undefined' || isIosStandalone()) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('appleAuth') !== '1') return;
+
+    params.delete('appleAuth');
+    const qs = params.toString();
+    window.history.replaceState(
+      {},
+      '',
+      `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`,
+    );
+    setAuthView('login');
+    setIsAuthModalOpen(true);
+    setTriggerAppleLoginFromSafari(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      document.getElementById('app-loading')?.remove();
+    }
+  }, [isLoading]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await setPersistence(auth, browserLocalPersistence);
+        const result = await getRedirectResult(auth);
+        if (cancelled) return;
+        if (result?.user) {
+          setIsAuthModalOpen(false);
+          setIsOwnerLoginOpen(false);
+          setError(null);
+        }
+      } catch (error: any) {
+        if (cancelled) return;
+        if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/user-cancelled') return;
+        const message = error?.message || String(error);
+        console.error('Apple redirect sign-in failed:', error);
+        const toastMessage = isAppleIncompleteSignupError(message)
+          ? appleIncompleteSignupMessage(lang)
+          : lang === 'en'
+            ? `Apple Sign-in: ${message}`
+            : `Apple girişi: ${message}`;
+        showToast(toastMessage, 'error');
+      }
+    })().catch(console.error);
 
     let loadingFinished = false;
+    let finishTimer: ReturnType<typeof setTimeout> | null = null;
     const finishLoading = () => {
-      if (loadingFinished) return;
-      loadingFinished = true;
-      setIsLoading(false);
+      if (loadingFinished || finishTimer) return;
+      finishTimer = setTimeout(() => {
+        if (loadingFinished) return;
+        loadingFinished = true;
+        setIsLoading(false);
+      }, 1000);
     };
 
     const unsubAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         const emailLower = (user.email || '').toLowerCase();
         const isAdmin = isPlatformAdminEmail(emailLower);
+        const cachedHomeRegion = readStoredUserHomeRegion(user.uid);
         const userData = {
           id: user.uid,
           name: user.displayName || 'User',
@@ -2834,8 +3323,12 @@ const App: React.FC = () => {
             `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || 'User')}&background=random`,
           emailVerified: user.emailVerified,
           providerData: user.providerData,
+          ...(cachedHomeRegion ? { homeRegion: cachedHomeRegion } : {}),
         };
         setCurrentUser(userData);
+        if (cachedHomeRegion) {
+          applyHomeRegionView(cachedHomeRegion, { resetView: false });
+        }
 
         const presenceKey = `presence_${user.uid}`;
         const lastWriteTime = localStorage.getItem(presenceKey);
@@ -2867,6 +3360,7 @@ const App: React.FC = () => {
         setCurrentUser(null);
         setUserRole('guest');
         setIsPlatformAdmin(false);
+        setSelectedRegion('ON');
       }
 
       finishLoading();
@@ -2875,10 +3369,11 @@ const App: React.FC = () => {
     const safetyTimeout = setTimeout(() => {
       console.warn('Loading timed out, forcing app start.');
       finishLoading();
-    }, 4000);
+    }, 5000);
 
     return () => {
       clearTimeout(safetyTimeout);
+      if (finishTimer) clearTimeout(finishTimer);
       unsubAuth();
     };
   }, []);
@@ -2918,7 +3413,8 @@ const App: React.FC = () => {
           rating: typeof item.rating === 'number' ? item.rating : 5,
           ratingCount: typeof item.ratingCount === 'number' ? item.ratingCount : 0,
           verified: !!item.verified,
-          ...item
+          ...item,
+          region: resolveBusinessRegion({ ...(item as Business), id: doc.id } as Business),
         } as Business;
       });
       setBusinesses(data);
@@ -2933,7 +3429,8 @@ const App: React.FC = () => {
           description: item.description || '',
           category: item.category || 'All',
           approved: !!item.approved,
-          ...item
+          ...item,
+          region: resolveNotificationRegion({ ...(item as Notification), id: doc.id } as Notification),
         } as Notification;
       });
       setNotifications(data);
@@ -2947,7 +3444,8 @@ const App: React.FC = () => {
           title: item.title || '',
           description: item.description || '',
           approved: !!item.approved,
-          ...item
+          ...item,
+          region: resolveEventRegion({ ...(item as Event), id: doc.id } as Event),
         } as Event;
       });
       setEvents(data);
@@ -2971,7 +3469,8 @@ const App: React.FC = () => {
           parking: item.parking || '',
           parkingTr: item.parkingTr || '',
           approved: typeof item.approved === 'boolean' ? item.approved : true,
-          ...item
+          ...item,
+          region: resolvePlaceRegion({ ...(item as PlaceToVisit), id: doc.id } as PlaceToVisit),
         };
       });
       setPlaces(data.length === 0 ? INITIAL_PLACES : data);
@@ -3012,14 +3511,16 @@ const App: React.FC = () => {
     }, (err) => handleOnSnapshotError(err, 'chat_messages', INITIAL_CHAT_MESSAGES));
 
     const unsubCommunities = onSnapshot(collection(db, 'communities'), (snap) => {
-      const data = snap.docs.map(doc => {
-        const item = doc.data() || {};
-        return {
-          id: doc.id,
+      const data = snap.docs.map((docSnap) => {
+        const item = docSnap.data() || {};
+        return hydrateCommunity({
+          id: docSnap.id,
           name: item.name || '',
+          slug: item.slug || docSnap.id,
           description: item.description || '',
-          ...item
-        } as Community;
+          memberCount: item.memberCount || 0,
+          ...item,
+        } as Community);
       });
       setCommunities(data);
     }, (err) => handleOnSnapshotError(err, 'communities', INITIAL_COMMUNITIES));
@@ -3056,13 +3557,31 @@ const App: React.FC = () => {
     let unsubUserDoc = () => {};
     if (currentUser?.id) {
        unsubUserDoc = onSnapshot(doc(db, 'users', currentUser.id), (snap) => {
+          setIsUserDocHydrated(true);
           if (snap.exists()) {
-             const userData = snap.data();
+             let userData = snap.data();
+             if (
+               isCanadianRegion(userData.homeRegion) &&
+               !userData.homeRegionChangedAt &&
+               currentUser.id
+             ) {
+               const backfillAt =
+                 typeof userData.lastActive === 'number' ? userData.lastActive : Date.now();
+               void setDoc(
+                 doc(db, 'users', currentUser.id),
+                 { homeRegionChangedAt: backfillAt },
+                 { merge: true },
+               );
+               userData = { ...userData, homeRegionChangedAt: backfillAt };
+             }
              if (userData.favorites) {
                 setFavorites(userData.favorites);
              }
              setCurrentUser((prev: any) => {
                 if (!prev) return prev;
+                if (isCanadianRegion(userData.homeRegion)) {
+                  persistUserHomeRegion(prev.id, userData.homeRegion);
+                }
                 return {
                    ...prev,
                    name: userData.name || prev.name,
@@ -3071,11 +3590,16 @@ const App: React.FC = () => {
                    phone: userData.phone || prev.phone,
                    joinedCommunityId: userData.joinedCommunityId || null,
                    joinedCommunityAt: userData.joinedCommunityAt || null,
-                   lastJoinedCommunityId: userData.lastJoinedCommunityId || null
+                   lastJoinedCommunityId: userData.lastJoinedCommunityId || null,
+                   homeRegion: isCanadianRegion(userData.homeRegion) ? userData.homeRegion : prev.homeRegion || null,
+                   homeRegionChangedAt: userData.homeRegionChangedAt || prev.homeRegionChangedAt || null,
                 };
              });
           }
-       }, (err) => handleOnSnapshotError(err, `users/${currentUser.id}`));
+       }, (err) => {
+          setIsUserDocHydrated(true);
+          handleOnSnapshotError(err, `users/${currentUser.id}`);
+       });
 
        // Secure listeners using server-side filters (sorting in memory to avoid index requirements)
        unsubBizMessages = onSnapshot(
@@ -3238,6 +3762,8 @@ const App: React.FC = () => {
                 slug: data.slug,
                 description: data.description,
                 imageUrl: data.imageUrl,
+                region: data.region,
+                memberCount: data.memberCount,
               },
               { merge: true },
             );
@@ -3376,6 +3902,11 @@ const App: React.FC = () => {
   };
 
   const resetHome = () => {
+    if (isCanadianRegion(currentUser?.homeRegion)) {
+      setSelectedRegion(currentUser.homeRegion);
+    } else {
+      setSelectedRegion('ON');
+    }
     setSelectedCategory('Landing');
     setSelectedCompanyCategory('All');
     setSelectedNotificationCategory('All');
@@ -3418,6 +3949,7 @@ const App: React.FC = () => {
     setSelectedNotificationCategory('All');
     setSelectedNotificationCategoriesMulti([]);
     setSearchQuery('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const openAnnouncementCategoryPage = (category: NotificationCategory) => {
@@ -3425,6 +3957,7 @@ const App: React.FC = () => {
     setSelectedNotificationCategory(category);
     setSelectedNotificationCategoriesMulti([]);
     setSearchQuery('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleLogout = async () => {
@@ -3550,6 +4083,89 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAdminSetUserHomeRegion = async (userId: string, region: CanadianRegion) => {
+    if (!isPlatformAdmin) return;
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        homeRegion: region,
+        homeRegionChangedAt: Date.now(),
+      });
+      setDbUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, homeRegion: region } : u)));
+      showToast(
+        lang === 'en' ? `User home province set to ${region}` : `Kullanıcı ana eyaleti ${region} olarak güncellendi`,
+        'success',
+      );
+    } catch (err) {
+      handleFirestoreError(err, 'update', `users/${userId}`);
+    }
+  };
+
+  const handleAdminSetBusinessRegion = async (bizId: string, region: CanadianRegion) => {
+    if (!isPlatformAdmin) return;
+    try {
+      await updateDoc(doc(db, 'businesses', bizId), { region });
+      setBusinesses((prev) => prev.map((b) => (b.id === bizId ? { ...b, region } : b)));
+      showToast(
+        lang === 'en' ? `Business province updated to ${region}` : `İşletme eyaleti ${region} olarak güncellendi`,
+        'success',
+      );
+    } catch (err) {
+      handleFirestoreError(err, 'update', `businesses/${bizId}`);
+    }
+  };
+
+  const handleAdminUpdateCommunity = async (
+    communityId: string,
+    updates: { region?: CanadianRegion; memberCount?: number; description?: string },
+  ) => {
+    if (!isPlatformAdmin) return;
+    try {
+      await setDoc(doc(db, 'communities', communityId), updates, { merge: true });
+      setCommunities((prev) =>
+        prev.map((c) => (c.id === communityId ? { ...c, ...updates } : c)),
+      );
+      showToast(lang === 'en' ? 'Community updated!' : 'Topluluk güncellendi!', 'success');
+    } catch (err) {
+      handleFirestoreError(err, 'update', `communities/${communityId}`);
+    }
+  };
+
+  const handleAdminSyncCommunities = async () => {
+    if (!isPlatformAdmin) return;
+    setIsSyncingCommunities(true);
+    try {
+      for (const community of INITIAL_COMMUNITIES) {
+        const communityRef = doc(db, 'communities', community.id);
+        const communitySnap = await getDoc(communityRef);
+        const { id, ...data } = community;
+        if (!communitySnap.exists()) {
+          await setDoc(communityRef, data);
+        } else {
+          await setDoc(
+            communityRef,
+            {
+              name: data.name,
+              slug: data.slug,
+              description: data.description,
+              imageUrl: data.imageUrl,
+              region: data.region,
+              memberCount: data.memberCount,
+            },
+            { merge: true },
+          );
+        }
+      }
+      showToast(
+        lang === 'en' ? 'All communities synced to Firestore!' : 'Tüm topluluklar Firestore\'a senkronize edildi!',
+        'success',
+      );
+    } catch (err) {
+      handleFirestoreError(err, 'update', 'communities');
+    } finally {
+      setIsSyncingCommunities(false);
+    }
+  };
+
   const handleUpdateNotification = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingNotification) return;
@@ -3565,6 +4181,7 @@ const App: React.FC = () => {
       price: editNotifPrice.trim(),
       imageUrl: editNotifImages.length > 0 ? editNotifImages[0] : '',
       gallery: editNotifImages,
+      region: editNotifRegion,
     };
 
     try {
@@ -3815,6 +4432,9 @@ const App: React.FC = () => {
     }
     
     if ((content || communityImageSelected) && currentUser && activeChatCommunity) {
+      const communityRegion = getCommunityRegion(activeChatCommunity);
+      if (!assertRegionalParticipation(communityRegion)) return;
+
       if (currentUser.joinedCommunityId !== activeChatCommunity.id) {
         showToast(
           lang === 'en' 
@@ -4161,6 +4781,7 @@ const App: React.FC = () => {
     }
 
     try {
+      const resolvedRegion = resolveRegionForSave(eventLocation.trim(), eventRegion);
       const newEvent: Omit<Event, 'id'> = {
         title: eventTitle.trim(),
         date: eventDate.trim(),
@@ -4168,7 +4789,8 @@ const App: React.FC = () => {
         description: eventDescription.trim(),
         organizer: eventOrganizer.trim() || (lang === 'en' ? 'Community Committee' : 'Topluluk Komitesi'),
         imageUrl: finalUrl,
-        approved: true
+        approved: true,
+        region: resolvedRegion,
       };
 
       if (editingEvent) {
@@ -4189,6 +4811,7 @@ const App: React.FC = () => {
       setEventOrganizer('');
       setEventImageUrl('');
       setEventImageSelected(null);
+      setEventRegion(adminRegionFilter !== 'ALL' ? adminRegionFilter : selectedRegion);
       setEditingEvent(null);
       setIsAddEventOpen(false);
     } catch (err) {
@@ -4478,19 +5101,23 @@ const App: React.FC = () => {
       return;
     }
 
-    // 1-week community join / switch restriction
+    const community =
+      communities.find((c) => c.id === communityId) ||
+      INITIAL_COMMUNITIES.find((c) => c.id === communityId);
+    const communityRegion = community ? getCommunityRegion(community) : selectedRegion;
+    if (!assertRegionalParticipation(communityRegion)) return;
+
+    // 1-month community join / switch restriction
     const lastJoinedAt = currentUser.joinedCommunityAt;
     const lastJoinedId = currentUser.lastJoinedCommunityId;
     
     if (lastJoinedAt && lastJoinedId && lastJoinedId !== communityId) {
-      const elapsed = Date.now() - lastJoinedAt;
-      const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-      if (elapsed < ONE_WEEK_MS) {
-        const remainingDays = Math.ceil((ONE_WEEK_MS - elapsed) / (24 * 60 * 60 * 1000));
+      const remaining = getCommunitySwitchCooldownRemaining(lastJoinedAt);
+      if (remaining > 0) {
         showToast(
           lang === 'en'
-            ? `You can join a different community only after 1 week. Remaining: ${remainingDays} days.`
-            : `Farklı bir topluluğa ancak 1 haftada bir katılabilirsiniz. Kalan: ${remainingDays} gün.`,
+            ? `You can join a different community at most once per month. Remaining: ${formatCooldownRemaining(remaining, lang)}.`
+            : `Farklı bir topluluğa ayda en fazla bir kez katılabilirsiniz. Kalan: ${formatCooldownRemaining(remaining, lang)}.`,
           'error'
         );
         return;
@@ -4552,6 +5179,9 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!currentUser || !editingBusiness || isUpdatingBusiness) return;
 
+    const businessRegion = resolveBusinessRegion(editingBusiness);
+    if (!assertRegionalParticipation(businessRegion)) return;
+
     const formData = new FormData(e.currentTarget);
 
     setIsUpdatingBusiness(true);
@@ -4571,6 +5201,7 @@ const App: React.FC = () => {
         description: formData.get('description') as string,
         imageUrl: resolvedMedia.imageUrl,
         gallery: resolvedMedia.gallery,
+        socialLinks: sanitizeBusinessSocialLinks(businessSocialLinks),
         ...(typeof businessFormLocation.latitude === 'number' && typeof businessFormLocation.longitude === 'number'
           ? {
               latitude: businessFormLocation.latitude,
@@ -4649,7 +5280,7 @@ const App: React.FC = () => {
     role: string = userRole,
   ) => {
     if (isPlatformAdminEmail(email) || role === 'owner') return true;
-    if (providerData?.some((p) => p.providerId === 'google.com')) return true;
+    if (providerData?.some((p) => p.providerId === 'google.com' || p.providerId === 'apple.com')) return true;
     return !!email && BUSINESS_AUTH_EXEMPT_EMAILS.has(email.toLowerCase());
   };
 
@@ -4850,6 +5481,15 @@ const App: React.FC = () => {
       return;
     }
 
+    const addressPreview = businessFormLocation.address.trim();
+    const home = userHomeRegion || selectedRegion;
+    if (addressPreview) {
+      const targetRegion = resolveRegionForSave(addressPreview, home);
+      if (!assertRegionalParticipation(targetRegion)) return;
+    } else if (!assertRegionalParticipation(home)) {
+      return;
+    }
+
     registerBusinessLockRef.current = true;
     setIsRegisteringBusiness(true);
 
@@ -4873,6 +5513,9 @@ const App: React.FC = () => {
         return;
       }
 
+      const businessRegion = resolveRegionForSave(address, userHomeRegion || selectedRegion);
+      if (!assertRegionalParticipation(businessRegion)) return;
+
       const finishBusinessRegistration = (businessWithId: Business) => {
         setBusinesses((prev) => {
           const exists = prev.some(
@@ -4891,6 +5534,7 @@ const App: React.FC = () => {
           setBusinessImageUrlPreview('');
           setBusinessGallery([]);
           setBusinessFormLocation({ address: '' });
+          setBusinessSocialLinks({});
         }, 2000);
       };
 
@@ -4950,6 +5594,8 @@ const App: React.FC = () => {
         addedBy: 'user' as const,
         ownerId,
         gallery: businessGallery,
+        socialLinks: sanitizeBusinessSocialLinks(businessSocialLinks),
+        region: resolveRegionForSave(address, userHomeRegion || selectedRegion),
         ...(typeof businessFormLocation.latitude === 'number' && typeof businessFormLocation.longitude === 'number'
           ? {
               latitude: businessFormLocation.latitude,
@@ -5087,16 +5733,48 @@ const App: React.FC = () => {
     if (!currentUser?.id) return;
     setIsUploadingAvatar(true);
     try {
+      let finalUrl = imageUrl;
+      if (imageUrl.startsWith('data:image/')) {
+        finalUrl = await uploadProfileAvatar(currentUser.id, imageUrl);
+      }
+
       await setDoc(doc(db, 'users', currentUser.id), {
-        photoUrl: imageUrl,
-        lastActive: Date.now()
+        photoUrl: finalUrl,
+        lastActive: Date.now(),
       }, { merge: true });
-      setIsEditingAvatar(false);
+
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { photoURL: finalUrl });
+      }
+
+      setCurrentUser((prev: any) => (prev ? { ...prev, photoUrl: finalUrl } : null));
+      setDbUsers((prev) =>
+        prev.map((u) => (u.id === currentUser.id ? { ...u, photoUrl: finalUrl } : u)),
+      );
+
+      showToast(
+        lang === 'en' ? 'Profile photo updated!' : 'Profil fotoğrafı güncellendi!',
+        'success',
+      );
     } catch (err) {
-      console.error("Error updating profile picture", err);
+      console.error('Error updating profile picture', err);
+      showToast(
+        lang === 'en' ? 'Could not upload profile photo.' : 'Profil fotoğrafı yüklenemedi.',
+        'error',
+      );
     } finally {
       setIsUploadingAvatar(false);
     }
+  };
+
+  const openProfilePhotoPicker = () => {
+    userAvatarFileInputRef.current?.click();
+  };
+
+  const openProfileEditor = () => {
+    setEditNameInput(currentUser?.name || '');
+    setEditPhoneInput(currentUser?.phone || '');
+    setIsEditingProfileDetails(true);
   };
 
   const handleUpdateProfileDetails = async (name: string, phone: string) => {
@@ -5203,14 +5881,30 @@ const App: React.FC = () => {
   const handleProfileImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !currentUser?.id) return;
-    
+
+    if (!file.type.startsWith('image/')) {
+      showToast(lang === 'en' ? 'Please choose an image file.' : 'Lütfen bir görsel dosyası seçin.', 'error');
+      e.target.value = '';
+      return;
+    }
+
     setIsUploadingAvatar(true);
     const reader = new FileReader();
+    reader.onerror = () => {
+      setIsUploadingAvatar(false);
+      showToast(lang === 'en' ? 'Could not read image.' : 'Görsel okunamadı.', 'error');
+      e.target.value = '';
+    };
     reader.onload = (event) => {
       const img = new Image();
+      img.onerror = () => {
+        setIsUploadingAvatar(false);
+        showToast(lang === 'en' ? 'Invalid image.' : 'Geçersiz görsel.', 'error');
+        e.target.value = '';
+      };
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const maxDim = 150;
+        const maxDim = 512;
         let width = img.width;
         let height = img.height;
         if (width > height) {
@@ -5218,18 +5912,18 @@ const App: React.FC = () => {
             height = Math.round((height * maxDim) / width);
             width = maxDim;
           }
-        } else {
-          if (height > maxDim) {
-            width = Math.round((width * maxDim) / height);
-            height = maxDim;
-          }
+        } else if (height > maxDim) {
+          width = Math.round((width * maxDim) / height);
+          height = maxDim;
         }
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        handleUpdateProfilePicture(dataUrl);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        handleUpdateProfilePicture(dataUrl).finally(() => {
+          e.target.value = '';
+        });
       };
       img.src = event.target?.result as string;
     };
@@ -5348,6 +6042,129 @@ const App: React.FC = () => {
     }
   };
 
+  const handleAppleLogin = async () => {
+    if (typeof location !== 'undefined' && location.hostname === LEGACY_WEB_APP_HOST) {
+      location.replace(
+        `${location.protocol}//gen-lang-client-0422005049.firebaseapp.com${location.pathname}${location.search}${location.hash}`,
+      );
+      return;
+    }
+
+    const authIssue = getAppleAuthIssue();
+    if (authIssue) {
+      const msg = appleAuthIssueMessage(authIssue, lang);
+      setError(msg);
+      showToast(msg, 'error');
+      return;
+    }
+
+    const provider = new OAuthProvider('apple.com');
+    provider.addScope('email');
+
+    const ua = getUserAgent();
+    const isMobileApple = /iPhone|iPad|iPod|Android/i.test(ua);
+    const tryPopupFirst = /iPhone|iPad|iPod/i.test(ua) && !isIosStandalone();
+
+    setLoading(true);
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+
+      if (tryPopupFirst) {
+        try {
+          await signInWithPopup(auth, provider);
+          setIsAuthModalOpen(false);
+          setIsOwnerLoginOpen(false);
+          setError(null);
+          return;
+        } catch (popupError: any) {
+          const popupCode = popupError?.code as string | undefined;
+          if (popupCode === 'auth/popup-closed-by-user' || popupCode === 'auth/user-cancelled') {
+            return;
+          }
+          if (popupCode !== 'auth/popup-blocked') {
+            throw popupError;
+          }
+        }
+      }
+
+      if (isMobileApple) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
+      await signInWithPopup(auth, provider);
+      setIsAuthModalOpen(false);
+      setIsOwnerLoginOpen(false);
+      setError(null);
+    } catch (e: any) {
+      const code = e?.code as string | undefined;
+      const errorMessage = e?.message || String(e);
+      console.error('Apple sign-in failed:', code, errorMessage, e);
+
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/user-cancelled') {
+        return;
+      }
+
+      if (code === 'auth/popup-blocked') {
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectError: any) {
+          const redirectMessage = redirectError?.message || String(redirectError);
+          setError(redirectMessage);
+          showToast(
+            lang === 'en'
+              ? `Apple Sign-in: ${redirectMessage}`
+              : `Apple girişi: ${redirectMessage}`,
+            'error',
+          );
+          return;
+        }
+      }
+
+      if (code === 'auth/operation-not-allowed') {
+        const msg =
+          lang === 'en'
+            ? 'Apple is not fully enabled in Firebase. Open Authentication → Sign-in method → Apple → Enable, then fill OAuth code flow (Services ID, Team ID, Key ID, .p8 key) and Save.'
+            : 'Firebase\'de Apple tam açılmamış. Authentication → Sign-in method → Apple → Enable; OAuth code flow alanına Services ID, Team ID, Key ID ve .p8 key gir → Save.';
+        setError(msg);
+        showToast(msg, 'error');
+        return;
+      }
+
+      if (code === 'auth/unauthorized-domain') {
+        const msg =
+          lang === 'en'
+            ? 'This domain is not authorized for sign-in. Add it in Firebase Authentication settings.'
+            : 'Bu alan adı giriş için yetkili değil. Firebase Authentication ayarlarına ekleyin.';
+        setError(msg);
+        showToast(msg, 'error');
+        return;
+      }
+
+      if (isAppleIncompleteSignupError(errorMessage)) {
+        const msg = appleIncompleteSignupMessage(lang);
+        setError(msg);
+        showToast(msg, 'error');
+        return;
+      }
+
+      setError(errorMessage);
+      showToast(
+        lang === 'en' ? `Apple Sign-in: ${errorMessage}` : `Apple girişi: ${errorMessage}`,
+        'error',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!triggerAppleLoginFromSafari || !isAuthModalOpen || currentUser) return;
+    setTriggerAppleLoginFromSafari(false);
+    void handleAppleLogin();
+  }, [triggerAppleLoginFromSafari, isAuthModalOpen, currentUser]);
+
   const handleReviewerLogin = async () => {
     setLoading(true);
     const email = 'demo@goofind.ca';
@@ -5397,11 +6214,13 @@ const App: React.FC = () => {
     }
     
     // Strict email verification check
-    const isGoogleUser = currentUser?.providerData?.some((p: any) => p.providerId === 'google.com');
+    const isOAuthUser = currentUser?.providerData?.some(
+      (p: any) => p.providerId === 'google.com' || p.providerId === 'apple.com',
+    );
     const isOwnerUser = isPlatformAdmin;
     const isVerified = currentUser?.emailVerified;
     
-    if (!isVerified && !isGoogleUser && !isOwnerUser) {
+    if (!isVerified && !isOAuthUser && !isOwnerUser) {
       showToast(
         lang === 'en' 
           ? 'Please verify your email address to perform this action. Check the banner at the top!' 
@@ -5413,6 +6232,37 @@ const App: React.FC = () => {
     
     action();
   };
+
+  const tryAddCompany = useCallback(() => {
+    if (currentUser?.id && isForeignRegionBrowse) {
+      warnForeignProvinceWrite();
+      return;
+    }
+    checkAuth(openBusinessRegistration);
+  }, [currentUser?.id, isForeignRegionBrowse, warnForeignProvinceWrite, openBusinessRegistration]);
+
+  const tryPostListing = useCallback(() => {
+    if (currentUser?.id && isForeignRegionBrowse) {
+      warnForeignProvinceWrite();
+      return;
+    }
+    checkAuth(openPostListingModal);
+  }, [currentUser?.id, isForeignRegionBrowse, warnForeignProvinceWrite, openPostListingModal]);
+
+  const tryJoinCommunityFlow = useCallback(
+    (communityId?: string) => {
+      if (currentUser?.id && isForeignRegionBrowse) {
+        warnForeignProvinceJoin();
+        return;
+      }
+      checkAuth(() => {
+        if (communityId) {
+          void handleJoinCommunity(communityId);
+        }
+      });
+    },
+    [currentUser?.id, isForeignRegionBrowse, warnForeignProvinceJoin, handleJoinCommunity],
+  );
 
   const CATEGORY_META: Record<string, { icon: any, color: string, bg: string }> = {
     [CategoryType.HEALTH]: { icon: Stethoscope, color: 'text-primary-light', bg: 'bg-primary/10' },
@@ -5469,6 +6319,13 @@ const App: React.FC = () => {
     [NotificationCategory.LOST_FOUND]: { icon: HelpCircle, color: 'text-primary-light', bg: 'bg-primary/10' },
     [NotificationCategory.NEWCOMER_HELP]: { icon: HandHelping, color: 'text-primary-light', bg: 'bg-primary/10' },
     [NotificationCategory.ANNOUNCEMENTS]: { icon: Bell, color: 'text-primary-light', bg: 'bg-primary/10' },
+    [NotificationCategory.SECOND_HAND]: { icon: ShoppingBasket, color: 'text-primary-light', bg: 'bg-primary/10' },
+    [NotificationCategory.EDUCATION_LESSONS]: { icon: BookOpen, color: 'text-primary-light', bg: 'bg-primary/10' },
+    [NotificationCategory.MOM_BABY_KIDS]: { icon: Baby, color: 'text-primary-light', bg: 'bg-primary/10' },
+    [NotificationCategory.PETS]: { icon: PawPrint, color: 'text-primary-light', bg: 'bg-primary/10' },
+    [NotificationCategory.MUTUAL_AID]: { icon: HeartHandshake, color: 'text-primary-light', bg: 'bg-primary/10' },
+    [NotificationCategory.TRAVEL_VISA]: { icon: Plane, color: 'text-primary-light', bg: 'bg-primary/10' },
+    [NotificationCategory.IMMIGRATION]: { icon: Stamp, color: 'text-primary-light', bg: 'bg-primary/10' },
   };
 
   const COMMUNITY_CITIES: Record<string, string> = {
@@ -5484,7 +6341,7 @@ const App: React.FC = () => {
     'oakville': t.cities.oakville,
   };
 
-  const filteredBusinesses = businesses.filter(b => {
+  const filteredBusinesses = regionBusinesses.filter(b => {
     if (!b) return false;
     const isInCategory = (selectedCategory === 'All' || b.category === selectedCategory);
     const isFavorite = selectedCategory === 'Favorites' && favorites.includes(b.id);
@@ -5510,32 +6367,78 @@ const App: React.FC = () => {
     [deletionRequests],
   );
   const adminOverviewStats = useMemo(
-    () => ({
-      businesses: businesses.length,
-      pendingBusinesses: pendingBusinessCount,
-      notifications: notifications.length,
-      events: events.length,
-      places: places.length,
-      flyers: flyers.length,
-      banners: banners.length,
-      communities: communities.length,
-      users: dbUsers.length,
-      activeChats: activeChats.length,
-      pendingDeletions: pendingDeletionCount,
-    }),
+    () => {
+      const scopedBusinesses = filterBusinessesForAdmin(businesses, adminRegionFilter);
+      const scopedNotifications = filterNotificationsForAdmin(notifications, adminRegionFilter);
+      const scopedEvents = filterEventsForAdmin(events, adminRegionFilter);
+      const scopedPlaces = filterPlacesForAdmin(places, adminRegionFilter);
+      const scopedCommunities = filterCommunitiesForAdmin(catalogCommunities, adminRegionFilter);
+      const scopedUsers = filterUsersForAdmin(dbUsers, adminRegionFilter);
+      return {
+        businesses: scopedBusinesses.length,
+        pendingBusinesses: scopedBusinesses.filter((b) => !b.verified).length,
+        notifications: scopedNotifications.length,
+        events: scopedEvents.length,
+        places: scopedPlaces.length,
+        flyers: flyers.length,
+        banners: banners.length,
+        communities: scopedCommunities.length,
+        users: scopedUsers.length,
+        activeChats: activeChats.length,
+        pendingDeletions: pendingDeletionCount,
+      };
+    },
     [
-      businesses.length,
-      pendingBusinessCount,
-      notifications.length,
-      events.length,
-      places.length,
+      businesses,
+      notifications,
+      events,
+      places,
       flyers.length,
       banners.length,
-      communities.length,
-      dbUsers.length,
+      catalogCommunities,
+      dbUsers,
       activeChats.length,
       pendingDeletionCount,
+      adminRegionFilter,
     ],
+  );
+
+  const adminRegionStats = useMemo(
+    () =>
+      computeAdminRegionStats({
+        businesses,
+        notifications,
+        events,
+        places,
+        communities: catalogCommunities,
+        users: dbUsers,
+      }),
+    [businesses, notifications, events, places, catalogCommunities, dbUsers],
+  );
+
+  const adminFilteredBusinesses = useMemo(
+    () => filterBusinessesForAdmin(businesses, adminRegionFilter),
+    [businesses, adminRegionFilter],
+  );
+  const adminFilteredNotifications = useMemo(
+    () => filterNotificationsForAdmin(notifications, adminRegionFilter),
+    [notifications, adminRegionFilter],
+  );
+  const adminFilteredEvents = useMemo(
+    () => filterEventsForAdmin(events, adminRegionFilter),
+    [events, adminRegionFilter],
+  );
+  const adminFilteredPlaces = useMemo(
+    () => filterPlacesForAdmin(places, adminRegionFilter),
+    [places, adminRegionFilter],
+  );
+  const adminFilteredCommunities = useMemo(
+    () => filterCommunitiesForAdmin(catalogCommunities, adminRegionFilter),
+    [catalogCommunities, adminRegionFilter],
+  );
+  const adminFilteredUsers = useMemo(
+    () => filterUsersForAdmin(dbUsers, adminRegionFilter),
+    [dbUsers, adminRegionFilter],
   );
 
   const handleSendVerification = async () => {
@@ -5568,18 +6471,11 @@ const App: React.FC = () => {
     !currentUser.emailVerified;
 
   if (isLoading) {
-    return (
-      <div className="fixed inset-0 bg-midnight z-[200] flex flex-col items-center justify-center p-8 text-center">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.08)_0%,transparent_75%)] pointer-events-none"></div>
-        <div className="relative">
-          <LogoText size="text-5xl sm:text-6.5xl" className="justify-center select-none" stacked animateOo />
-        </div>
-      </div>
-    );
+    return <LogoSplash tagline={lang === 'en' ? 'Canada Turkish Community' : 'Kanada Türk Topluluğu'} />;
   }
 
   // --- Blocking Screen for Unverified Users ---
-  const isUnverifiedEmailUser = currentUser && !currentUser.emailVerified && !currentUser.providerData?.some((p: any) => p.providerId === 'google.com') && !isPlatformAdmin;
+  const isUnverifiedEmailUser = currentUser && !currentUser.emailVerified && !currentUser.providerData?.some((p: any) => p.providerId === 'google.com' || p.providerId === 'apple.com') && !isPlatformAdmin;
 
   if (isUnverifiedEmailUser) {
     return (
@@ -5597,7 +6493,7 @@ const App: React.FC = () => {
             <div className="space-y-1">
               <LogoText size="text-2xl" className="justify-center" showMark={false} />
               <p className="text-[14px] sm:text-xs font-semibold text-slate-400 uppercase tracking-widest leading-none">
-                {lang === 'en' ? 'Canada Turkish Community Hub' : 'Kanada Türk Topluluk Merkezi'}
+                {lang === 'en' ? 'Canada Turkish Community' : 'Kanada Türk Topluluğu'}
               </p>
             </div>
           </div>
@@ -6187,7 +7083,7 @@ const App: React.FC = () => {
                   <div className="space-y-6">
                     {/* Businesses matching */}
                     {(() => {
-                      const matches = businesses.filter(b => 
+                      const matches = regionBusinesses.filter(b => 
                         b && (
                           (b.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
                           (b.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
@@ -6244,7 +7140,7 @@ const App: React.FC = () => {
 
                     {/* Events matching */}
                     {(() => {
-                      const matches = events.filter(e => 
+                      const matches = regionEvents.filter(e => 
                         e && (
                           (e.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
                           (e.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
@@ -6295,7 +7191,7 @@ const App: React.FC = () => {
 
                     {/* Announcements matching */}
                     {(() => {
-                      const matches = notifications.filter(n => 
+                      const matches = regionNotifications.filter(n => 
                         n && (
                           (n.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
                           (n.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
@@ -6384,7 +7280,7 @@ const App: React.FC = () => {
 
                     {/* Communities matching */}
                     {(() => {
-                      const matches = communities.filter(c => 
+                      const matches = regionCommunities.filter(c => 
                         c && (
                           (c.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
                           (c.description || '').toLowerCase().includes((searchQuery || '').toLowerCase())
@@ -6429,16 +7325,16 @@ const App: React.FC = () => {
                     {/* No matches at all */}
                     {(() => {
                       const hasAnyMatch = 
-                        (businesses || []).some(b => b && ((b.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (b.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (b.province || '').toLowerCase().includes((searchQuery || '').toLowerCase()))) ||
-                        (events || []).some(e => e && ((e.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (e.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (e.location || '').toLowerCase().includes((searchQuery || '').toLowerCase()))) ||
-                        (notifications || []).some(n => n && ((n.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (n.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()))) ||
+                        regionBusinesses.some(b => b && ((b.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (b.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (b.province || '').toLowerCase().includes((searchQuery || '').toLowerCase()))) ||
+                        regionEvents.some(e => e && ((e.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (e.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (e.location || '').toLowerCase().includes((searchQuery || '').toLowerCase()))) ||
+                        regionNotifications.some(n => n && ((n.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (n.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()))) ||
                         (flyers || []).some(f => f && (
                           (f.titleTr || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || 
                           (f.titleEn || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
                           (f.badgeTr || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
                           (f.badgeEn || '').toLowerCase().includes((searchQuery || '').toLowerCase())
                         )) ||
-                        (communities || []).some(c => c && ((c.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (c.description || '').toLowerCase().includes((searchQuery || '').toLowerCase())));
+                        (communities || []).some(c => c && getCommunityRegion(c) === selectedRegion && ((c.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) || (c.description || '').toLowerCase().includes((searchQuery || '').toLowerCase())));
 
                       if (hasAnyMatch) return null;
                       return (
@@ -6464,11 +7360,81 @@ const App: React.FC = () => {
           <header className={`${isHeaderTransparent ? 'absolute top-0 left-0 right-0 z-50 bg-transparent border-transparent text-white' : 'sticky top-0 z-50 backdrop-blur-md border-b bg-primary-soft/90 border-primary/15 text-slate-900 shadow-sm'} transition-all duration-300`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
-                <div className="flex items-center gap-2 sm:gap-3 cursor-pointer group" onClick={resetHome}>
-                  <LogoText size="text-xl sm:text-3xl" dark={isHeaderTransparent} />
+                <div className="flex items-center gap-0 min-w-0">
+                  <div className="relative shrink-0">
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setIsAppMenuOpen((open) => !open);
+                      }}
+                      className={`region-menu-btn active:scale-95 transition-transform ${
+                        isAppMenuOpen ? 'is-open' : ''
+                      }`}
+                      title={lang === 'en' ? 'Browse other provinces' : 'Diğer eyaletleri gez'}
+                      aria-label={lang === 'en' ? 'Browse other provinces' : 'Diğer eyaletleri gez'}
+                      aria-expanded={isAppMenuOpen}
+                    >
+                      <Menu size={20} strokeWidth={3} />
+                    </button>
+
+                    {isAppMenuOpen && (
+                      <>
+                        <button
+                          type="button"
+                          aria-label={lang === 'en' ? 'Close' : 'Kapat'}
+                          className="fixed inset-0 z-[45] cursor-default"
+                          onClick={() => setIsAppMenuOpen(false)}
+                        />
+                        <div
+                          className="region-menu-panel absolute left-0 top-full mt-2 z-[55] animate-in fade-in slide-in-from-top-2 duration-200"
+                          role="listbox"
+                          aria-label={lang === 'en' ? 'Browse provinces' : 'Eyaletleri gez'}
+                        >
+                          <p className="region-menu-panel-title">
+                            {lang === 'en' ? 'Browse only' : 'Sadece gezinti'}
+                          </p>
+                          {ALL_CANADIAN_REGIONS.map((region) => {
+                            const isActive = selectedRegion === region;
+                            const isHome = userHomeRegion === region;
+                            return (
+                              <button
+                                key={region}
+                                type="button"
+                                role="option"
+                                aria-selected={isActive}
+                                onClick={() => {
+                                  applyBrowseRegion(region);
+                                  setIsAppMenuOpen(false);
+                                }}
+                                className={`min-w-[2.5rem] px-2.5 py-2 rounded-lg font-black text-[10px] sm:text-[11px] uppercase tracking-wide transition-all ${
+                                  isActive
+                                    ? regionButtonActiveClasses(region)
+                                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                                }`}
+                              >
+                                <span className="inline-flex items-center gap-1">
+                                  {region}
+                                  {isHome && (
+                                    <span className="text-[8px] opacity-80 normal-case tracking-normal">
+                                      {lang === 'en' ? 'home' : 'ana'}
+                                    </span>
+                                  )}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="cursor-pointer group shrink-0 -ml-1 sm:-ml-0.5" onClick={resetHome}>
+                    <LogoText size="text-2xl sm:text-[1.85rem]" variant="header" dark={isHeaderTransparent} />
+                  </div>
                 </div>
 
-                <div className="flex flex-col items-center gap-1 shrink-0">
+                <div className="flex items-center shrink-0">
                   {currentUser ? (
                     <button
                       onClick={() => setIsProfileOpen(true)}
@@ -6490,20 +7456,22 @@ const App: React.FC = () => {
                       <User size={16} className="text-primary" strokeWidth={2.5} />
                     </button>
                   )}
-
-                  <button
-                    onClick={() => setLang(lang === 'tr' ? 'en' : 'tr')}
-                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white border border-primary/20 text-primary flex items-center justify-center hover:bg-primary-soft/40 active:scale-95 transition-all"
-                    title={lang === 'tr' ? 'Switch to English' : 'Türkçe\'ye Geç'}
-                  >
-                    <Globe size={13} strokeWidth={2.5} />
-                  </button>
                 </div>
               </div>
             </div>
           </header>
         );
       })()}
+
+      {isForeignRegionBrowse && userHomeRegion && (
+        <div className="bg-amber-50 border-b border-amber-200/80 px-4 py-2.5">
+          <p className="max-w-7xl mx-auto text-center text-[11px] sm:text-xs font-bold text-amber-900 leading-snug">
+            {lang === 'en'
+              ? `You are browsing ${regionLabel(selectedRegion, lang)} in read-only mode. Switch to ${regionLabel(userHomeRegion, lang)} to add companies, post listings, or join communities.`
+              : `${regionLabel(selectedRegion, lang)} eyaletini salt okunur modda inceliyorsunuz. Şirket eklemek, ilan vermek veya topluluğa katılmak için ${regionLabel(userHomeRegion, lang)} eyaletine dönün.`}
+          </p>
+        </div>
+      )}
 
       {/* Hero Section — matches news detail page layout */}
       {isHomeLandingView && !isAdminView && (
@@ -6574,6 +7542,16 @@ const App: React.FC = () => {
                               </div>
                             )}
                           </div>
+
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-20">
+                            <motion.div
+                              key={currentBannerIndex}
+                              initial={{ width: 0 }}
+                              animate={{ width: '100%' }}
+                              transition={{ duration: 8, ease: 'linear' }}
+                              className="h-full bg-gradient-to-r from-primary via-primary-mid to-accent"
+                            />
+                          </div>
                         </div>
                       </motion.article>
                     );
@@ -6585,17 +7563,6 @@ const App: React.FC = () => {
                 </div>
               )}
 
-              {combinedBannerItems.length > 0 && (
-                <div className="mt-4 h-0.5 bg-slate-200 overflow-hidden rounded-full">
-                  <motion.div
-                    key={currentBannerIndex}
-                    initial={{ width: 0 }}
-                    animate={{ width: '100%' }}
-                    transition={{ duration: 8, ease: 'linear' }}
-                    className="h-full bg-gradient-to-r from-primary via-primary-mid to-accent"
-                  />
-                </div>
-              )}
             </div>
           </section>
       )}
@@ -6603,7 +7570,7 @@ const App: React.FC = () => {
 
       {isEventsPageView && (
         <EventsExplorePage
-          events={events}
+          events={regionEvents}
           lang={lang}
           onSelect={(evt) => setSelectedEventForModal(evt)}
         />
@@ -6611,7 +7578,7 @@ const App: React.FC = () => {
 
       {isPlacesPageView && (
         <PlacesExplorePage
-          places={places}
+          places={regionPlaces}
           lang={lang}
           selectedCategory={selectedPlaceCategory}
           onCategoryChange={setSelectedPlaceCategory}
@@ -6646,6 +7613,46 @@ const App: React.FC = () => {
                  totalUsers: dbUsers.length,
                }}
              />
+
+             {adminDashboardTab !== 'regions' && (
+               <AdminRegionFilterBar
+                 lang={lang}
+                 filter={adminRegionFilter}
+                 onChange={setAdminRegionFilter}
+               />
+             )}
+
+             {adminRegionFilter !== 'ALL' && adminDashboardTab !== 'regions' && (
+               <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-100 rounded-2xl">
+                 <AdminRegionBadge region={adminRegionFilter} lang={lang} />
+                 <p className="text-xs font-bold text-amber-800">
+                   {lang === 'en'
+                     ? `Showing data for ${regionLabel(adminRegionFilter, lang)} only`
+                     : `Yalnızca ${regionLabel(adminRegionFilter, lang)} verileri gösteriliyor`}
+                 </p>
+                 <button
+                   type="button"
+                   onClick={() => setAdminRegionFilter('ALL')}
+                   className="ml-auto text-[10px] font-black uppercase text-amber-700 hover:text-amber-900"
+                 >
+                   {lang === 'en' ? 'Clear filter' : 'Filtreyi kaldır'}
+                 </button>
+               </div>
+             )}
+
+             {adminDashboardTab === 'regions' && (
+               <AdminRegionsPanel
+                 lang={lang}
+                 stats={adminRegionStats}
+                 activeFilter={adminRegionFilter}
+                 onSelectRegion={(region) => {
+                   setAdminRegionFilter(region);
+                 }}
+                 onNavigate={setAdminDashboardTab}
+                 onSyncCommunities={handleAdminSyncCommunities}
+                 isSyncing={isSyncingCommunities}
+               />
+             )}
 
              {adminDashboardTab === 'overview' && (
                <AdminOverviewPanel
@@ -6766,14 +7773,14 @@ const App: React.FC = () => {
                       <div className="flex items-center justify-between mb-4">
                         <h5 className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Business Verification' : 'İşletme Onayları'}</h5>
                         <div className="bg-amber-100 text-accent-vivid text-[12px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
-                          {(businesses || []).filter(b => b && !b.verified).length} {lang === 'en' ? 'Pending' : 'Bekleyen'}
+                          {adminFilteredBusinesses.filter(b => b && !b.verified).length} {lang === 'en' ? 'Pending' : 'Bekleyen'}
                         </div>
                       </div>
                       <div className="space-y-3">
-                        {((businesses || []).filter(b => b && !b.verified)).length === 0 ? (
+                        {adminFilteredBusinesses.filter(b => b && !b.verified).length === 0 ? (
                           <div className="text-[14px] font-bold text-slate-300 italic py-2 text-center">{lang === 'en' ? 'All businesses verified' : 'Tüm işletmeler onaylı'}</div>
                         ) : (
-                          (businesses || []).filter(b => b && !b.verified).slice(0, 5).map(biz => (
+                          adminFilteredBusinesses.filter(b => b && !b.verified).slice(0, 5).map(biz => (
                             <div 
                               key={biz.id} 
                               onClick={() => {
@@ -6810,7 +7817,7 @@ const App: React.FC = () => {
                           {lang === 'en' ? 'Manage Posts' : 'Gönderi / Duyuru Yönetimi'}
                         </h5>
                         <div className="bg-rose-100 text-rose-600 text-[12px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest">
-                          {notifications.length} {lang === 'en' ? 'Total' : 'Toplam'}
+                          {adminFilteredNotifications.length} {lang === 'en' ? 'Total' : 'Toplam'}
                         </div>
                       </div>
 
@@ -6827,7 +7834,7 @@ const App: React.FC = () => {
 
                       <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1 custom-scrollbar">
                         {(() => {
-                          const filtered = (notifications || []).filter(n => 
+                          const filtered = (adminFilteredNotifications || []).filter(n => 
                             n && (
                               (n.title || '').toLowerCase().includes((adminPostSearchQuery || '').toLowerCase()) || 
                               ((n.category || '').toLowerCase().includes((adminPostSearchQuery || '').toLowerCase())) ||
@@ -6848,7 +7855,8 @@ const App: React.FC = () => {
                               <div className="flex items-center justify-between gap-3 text-left">
                                 <div className="min-w-0 flex-1">
                                   <p className="text-xs font-black text-slate-900 truncate uppercase tracking-tight">{notif.title}</p>
-                                  <div className="flex items-center gap-2 mt-1">
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    <AdminRegionBadge region={resolveNotificationRegion(notif)} lang={lang} compact />
                                     <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider bg-slate-200/50 px-1.5 py-0.5 rounded">
                                       {notif.category}
                                     </span>
@@ -6868,6 +7876,7 @@ const App: React.FC = () => {
                                       setEditNotifDescription(notif.description || '');
                                       setEditNotifPrice(notif.price || '');
                                       setEditNotifImages(notif.gallery || (notif.imageUrl ? [notif.imageUrl] : []));
+                                      setEditNotifRegion(resolveNotificationRegion(notif));
                                       setIsEditNotificationOpen(true);
                                     }}
                                     className="w-8 h-8 bg-primary/5 text-primary hover:bg-primary hover:text-white rounded-lg flex items-center justify-center shadow-md shadow-primary/10 hover:scale-110 active:scale-95 transition-all cursor-pointer shrink-0"
@@ -6895,7 +7904,7 @@ const App: React.FC = () => {
               </div>{/* Close Moderation Center card */}
               <AdminAllBusinessesPanel
                 lang={lang}
-                businesses={businesses}
+                businesses={adminFilteredBusinesses}
                 search={adminBusinessSearchQuery}
                 onSearchChange={setAdminBusinessSearchQuery}
                 onSelect={(biz) => {
@@ -6904,6 +7913,7 @@ const App: React.FC = () => {
                 }}
                 onVerify={handleVerifyBusiness}
                 onDelete={(id, name) => promptDelete('business', id, name)}
+                onChangeRegion={handleAdminSetBusinessRegion}
               />
             </div>
             )}
@@ -7017,6 +8027,7 @@ const App: React.FC = () => {
                             setEventOrganizer('');
                             setEventImageUrl('');
                             setEventImageSelected(null);
+                            setEventRegion(adminRegionFilter !== 'ALL' ? adminRegionFilter : selectedRegion);
                             setIsAddEventOpen(true);
                           }}
                           className="bg-primary hover:bg-primary/90 text-white text-[13px] font-black uppercase px-3 py-1.5 rounded-xl tracking-widest flex items-center gap-1 hover:scale-105 active:scale-95 transition-all shadow-md shadow-primary/10 cursor-pointer shrink-0"
@@ -7027,17 +8038,18 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                        {events.length === 0 ? (
+                        {adminFilteredEvents.length === 0 ? (
                           <div className="text-[14px] font-bold text-slate-400 italic py-4 text-center">
                             {lang === 'en' ? 'No events found' : 'Etkinlik bulunamadı'}
                           </div>
                         ) : (
-                          events.map(evt => (
+                          adminFilteredEvents.map(evt => (
                             <div key={evt.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group hover:border-slate-200 transition-all text-left">
                               <div className="flex items-center justify-between gap-3">
                                 <div className="min-w-0 flex-1">
                                   <p className="text-xs font-black text-slate-900 truncate uppercase tracking-tight">{evt.title}</p>
-                                  <div className="flex items-center gap-2 mt-1">
+                                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                    <AdminRegionBadge region={resolveEventRegion(evt)} lang={lang} compact />
                                     <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider bg-slate-200/50 px-1.5 py-0.5 rounded">
                                       {evt.date}
                                     </span>
@@ -7068,6 +8080,7 @@ const App: React.FC = () => {
                                       setEventOrganizer(evt.organizer || '');
                                       setEventImageUrl(evt.imageUrl || '');
                                       setEventImageSelected(evt.imageUrl || null);
+                                      setEventRegion(resolveEventRegion(evt));
                                       setIsAddEventOpen(true);
                                     }}
                                     className="w-7 h-7 bg-primary/5 hover:bg-primary/50 text-primary hover:text-white rounded-lg flex items-center justify-center shadow-md shadow-primary/10 hover:scale-110 active:scale-95 transition-all cursor-pointer shrink-0"
@@ -7130,12 +8143,12 @@ const App: React.FC = () => {
                       </div>
 
                       <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                        {places.length === 0 ? (
+                        {adminFilteredPlaces.length === 0 ? (
                           <div className="text-[14px] font-bold text-slate-400 italic py-4 text-center">
                             {lang === 'en' ? 'No places found' : 'Gezilecek yer bulunamadı'}
                           </div>
                         ) : (
-                          places.map(place => (
+                          adminFilteredPlaces.map(place => (
                             <div key={place.id} className="bg-slate-50 p-3 rounded-2xl border border-slate-100 group hover:border-slate-200 transition-all text-left">
                               <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -7144,7 +8157,10 @@ const App: React.FC = () => {
                                   )}
                                   <div className="min-w-0">
                                     <p className="text-xs font-black text-slate-900 truncate uppercase tracking-tight">{place.name}</p>
-                                    <p className="text-[12px] font-black text-slate-400 uppercase tracking-wider">{place.province}</p>
+                                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                      <AdminRegionBadge region={resolvePlaceRegion(place)} lang={lang} compact />
+                                      <p className="text-[12px] font-black text-slate-400 uppercase tracking-wider">{place.province}</p>
+                                    </div>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
@@ -7439,16 +8455,22 @@ const App: React.FC = () => {
             {adminDashboardTab === 'users' && (
               <AdminUsersPanel
                 lang={lang}
-                users={dbUsers}
+                users={adminFilteredUsers}
                 deletionRequests={deletionRequests}
                 search={adminUserSearchQuery}
                 onSearchChange={setAdminUserSearchQuery}
                 onProcessDeletion={handleProcessDeletionRequest}
+                onChangeHomeRegion={handleAdminSetUserHomeRegion}
               />
             )}
 
             {adminDashboardTab === 'communities' && (
-              <AdminCommunitiesPanel lang={lang} communities={communities} />
+              <AdminCommunitiesPanel
+                lang={lang}
+                communities={adminFilteredCommunities}
+                regionFilter={adminRegionFilter}
+                onUpdateCommunity={handleAdminUpdateCommunity}
+              />
             )}
 
             {adminDashboardTab === 'tools' && (
@@ -9714,25 +10736,25 @@ Designed with ❤️ for Goofind App Store Listings.
         ) : (
           <div className="pb-32">
             {isHomeView ? (
+              <>
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 mb-4 bg-white border border-primary/15 rounded-lg text-left hover:border-primary/30 hover:bg-primary-soft/30 transition-all active:scale-[0.99] shadow-sm"
+              >
+                <Search size={16} className="text-primary shrink-0" strokeWidth={2.5} />
+                <span className="text-[13px] font-semibold text-slate-400 truncate">
+                  {t.hero.searchPlaceholder}
+                </span>
+              </button>
+
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="home-sections"
               >
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsSearchOpen(true)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 bg-white border border-primary/15 rounded-lg text-left hover:border-primary/30 hover:bg-primary-soft/30 transition-all active:scale-[0.99] shadow-sm"
-                  >
-                    <Search size={16} className="text-primary shrink-0" strokeWidth={2.5} />
-                    <span className="text-[13px] font-semibold text-slate-400 truncate">
-                      {t.hero.searchPlaceholder}
-                    </span>
-                  </button>
-
                 {/* --- COMPANIES: Directory zone (blue) --- */}
-                <section className="animate-in fade-in duration-1000 relative rounded-[1.75rem] sm:rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-primary-soft via-white to-primary-soft/30 p-4 sm:p-6 shadow-sm shadow-primary/5">
+                <section className="animate-in fade-in duration-1000 relative rounded-[1.75rem] sm:rounded-[2.25rem] border border-primary/15 bg-gradient-to-br from-primary-soft via-white to-primary-soft/30 p-4 sm:p-6 shadow-sm shadow-primary/5 min-w-0 overflow-visible">
                   <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-primary/10">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
@@ -9756,27 +10778,30 @@ Designed with ❤️ for Goofind App Store Listings.
                       ) : (
                         <CompanyHeaderActions
                           lang={lang}
-                          messageCount={userCompanyMessageCount}
-                          hasBusinessOwned={hasBusinessOwned}
-                          onAddCompany={() => {
-                            checkAuth(() => {
-                              setBusinessFormLocation({ address: '' });
-                              setIsBusinessRegistrationModalOpen(true);
-                            });
-                          }}
+                          messageCount={userCompanyMessageCountInRegion}
+                          hasBusinessOwned={hasBusinessOwnedInRegion}
+                          hasCompanyMessages={hasCompanyMessagesInRegion}
+                          onAddCompany={tryAddCompany}
                           onOpenCompany={() => {
-                            const myBiz = businesses.find(b => b.ownerId === currentUser.id);
-                            if (myBiz) {
-                              setSelectedBusiness(myBiz);
+                            if (myBusinessInRegion) {
+                              setSelectedBusiness(myBusinessInRegion);
                               setIsBusinessDetailModalOpen(true);
                             }
                           }}
                           onOpenMessages={() => checkAuth(handleOpenCompanyMessages)}
+                          canParticipate={canParticipateInSelectedRegion}
                           variant="landing"
                         />
                       )}
                     </div>
                   </div>
+                  {currentUser && isForeignRegionBrowse && userHomeRegion && (
+                    <p className="mb-3 text-[10px] sm:text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 leading-snug">
+                      {lang === 'en'
+                        ? 'You cannot add a company in another province.'
+                        : 'Başka eyalette şirket ekleyemezsiniz.'}
+                    </p>
+                  )}
 
                   <CompanyCategoryFilterBar
                     selected={selectedCompanyCategory}
@@ -9788,7 +10813,7 @@ Designed with ❤️ for Goofind App Store Listings.
                   />
 
                   <FeaturedCompaniesCarousel
-                    businesses={businesses}
+                    businesses={regionBusinesses}
                     categoryFilter={selectedCompanyCategory}
                     lang={lang}
                     categoryLabels={t.categories}
@@ -9798,10 +10823,9 @@ Designed with ❤️ for Goofind App Store Listings.
                     }}
                   />
                 </section>
-                </div>
 
                 {/* --- ANNOUNCEMENTS: warm orange panel + light blue harmony --- */}
-                <section className="announcements-zone animate-in fade-in duration-1000 delay-100 relative rounded-[1.75rem] sm:rounded-[2.25rem] p-4 sm:p-6">
+                <section className="announcements-zone animate-in fade-in duration-1000 delay-100 relative rounded-[1.75rem] sm:rounded-[2.25rem] p-4 sm:p-6 min-w-0 overflow-visible">
                   <div className="mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-accent/12 relative">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-start gap-3 min-w-0">
@@ -9818,12 +10842,20 @@ Designed with ❤️ for Goofind App Store Listings.
                         lang={lang}
                         unreadMessageCount={unreadAnnouncementMessageCount}
                         hasOwnListings={hasPostedAnnouncement}
-                        onPostListing={() => checkAuth(() => setIsPostModalOpen(true))}
+                        onPostListing={tryPostListing}
                         onOpenMyAds={() => checkAuth(handleOpenAnnouncementMessages)}
+                        canParticipate={canParticipateInSelectedRegion}
                         variant="landing"
                       />
                     </div>
                   </div>
+                  {currentUser && isForeignRegionBrowse && userHomeRegion && (
+                    <p className="mb-3 text-[10px] sm:text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 leading-snug">
+                      {lang === 'en'
+                        ? 'You cannot post a listing in another province.'
+                        : 'Başka eyalette ilan veremezsiniz.'}
+                    </p>
+                  )}
 
                   <AnnouncementCategoryFilterBar
                     selected={selectedNotificationCategory}
@@ -9838,7 +10870,7 @@ Designed with ❤️ for Goofind App Store Listings.
                   />
 
                   <AnnouncementFeedList
-                    notifications={notifications}
+                    notifications={regionNotifications}
                     categoryFilter={selectedNotificationCategory}
                     categoryFiltersMulti={selectedNotificationCategoriesMulti}
                     onMultiCategoryFilterChange={setSelectedNotificationCategoriesMulti}
@@ -9869,7 +10901,13 @@ Designed with ❤️ for Goofind App Store Listings.
                       <CommunityHeaderActions
                         lang={lang}
                         isJoined={isHomePreviewCommunityJoined}
+                        participationAllowed={canParticipateInSelectedRegion}
+                        onParticipationBlocked={warnForeignProvinceJoin}
                         onJoin={() => {
+                          if (currentUser?.id && isForeignRegionBrowse) {
+                            warnForeignProvinceJoin();
+                            return;
+                          }
                           checkAuth(() => {
                             if (homePreviewCommunity && homePreviewCommunity.id !== 'all') {
                               setSelectedCategory('Communities');
@@ -9887,7 +10925,7 @@ Designed with ❤️ for Goofind App Store Listings.
                   </div>
                   
                   <div className="flex gap-3 overflow-x-auto pb-2 pt-0.5 px-0.5 no-scrollbar snap-x">
-                    {INITIAL_COMMUNITIES.filter((community) => community.id !== 'all').map(community => (
+                    {regionCommunities.map(community => (
                       <motion.div 
                         whileHover={{ y: -3 }}
                         whileTap={{ scale: 0.98 }}
@@ -9907,9 +10945,10 @@ Designed with ❤️ for Goofind App Store Listings.
                       >
                         <div className="aspect-[4/3] relative overflow-hidden bg-slate-100">
                           <img
-                            src={community.imageUrl}
+                            src={community.imageUrl || `https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80`}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             alt={community.name}
+                            referrerPolicy="no-referrer"
                           />
                           <div className="absolute bottom-1.5 right-1.5 p-1 rounded-lg shadow-sm bg-white/90 text-primary">
                             <MessagesSquare size={12} strokeWidth={2.5} />
@@ -9939,8 +10978,14 @@ Designed with ❤️ for Goofind App Store Listings.
                       isJoined={isHomePreviewCommunityJoined}
                       isLoggedIn={!!currentUser}
                       isPreview={!isHomePreviewCommunityJoined}
+                      participationAllowed={canParticipateInSelectedRegion}
+                      onParticipationBlocked={warnForeignProvinceJoin}
                       onOpenFullChat={handleOpenHomeCommunityChat}
                       onJoin={() => {
+                        if (currentUser?.id && isForeignRegionBrowse) {
+                          warnForeignProvinceJoin();
+                          return;
+                        }
                         checkAuth(() => {
                           setSelectedCategory('Communities');
                           setSelectedCommunity(homePreviewCommunity);
@@ -9954,9 +10999,11 @@ Designed with ❤️ for Goofind App Store Listings.
                   )}
                 </section>
               </motion.div>
+              </>
             ) : (
               /* BUSINESS DIRECTORY / SEARCH RESULTS VIEW */
               <div className="animate-in fade-in duration-500">
+                {selectedCategory !== 'Announcements' && (
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400 mb-8 pb-4 border-b border-slate-100">
                   <button onClick={resetHome} className="hover:scale-105 transition-transform flex items-center">
                     <LogoText size="text-2xl" showMark={false} />
@@ -9990,13 +11037,11 @@ Designed with ❤️ for Goofind App Store Listings.
                     </>
                   )}
                 </div>
+                )}
 
-                {selectedCategory === 'Announcements' && selectedNotificationCategory !== 'All' && (
-                  <AnnouncementCategoryPage
-                    category={selectedNotificationCategory}
-                    categoryLabels={t.categories}
-                    lang={lang}
-                    notifications={(notifications || []).filter(
+                {selectedCategory === 'Announcements' && (
+                  <AnnouncementsListingsPage
+                    notifications={regionNotifications.filter(
                       (n) =>
                         n &&
                         n.approved &&
@@ -10005,80 +11050,29 @@ Designed with ❤️ for Goofind App Store Listings.
                           (n.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
                           (n.category || '').toLowerCase().includes((searchQuery || '').toLowerCase())),
                     )}
-                    contactLabel={t.labels.contact}
+                    categoryLabels={t.categories}
+                    lang={lang}
                     onSelect={(notif) => setSelectedNotification(notif)}
-                    onBack={openAnnouncementsPage}
+                    onBack={
+                      selectedNotificationCategory === 'All' ? resetHome : openAnnouncementsPage
+                    }
+                    category={
+                      selectedNotificationCategory === 'All'
+                        ? undefined
+                        : selectedNotificationCategory
+                    }
                     headerActions={
                       <AnnouncementHeaderActions
                         lang={lang}
                         unreadMessageCount={unreadAnnouncementMessageCount}
                         hasOwnListings={hasPostedAnnouncement}
-                        onPostListing={() => checkAuth(() => setIsPostModalOpen(true))}
+                        onPostListing={tryPostListing}
                         onOpenMyAds={() => checkAuth(handleOpenAnnouncementMessages)}
+                        canParticipate={canParticipateInSelectedRegion}
                         variant="page"
                       />
                     }
                   />
-                )}
-
-                {selectedCategory === 'Announcements' && selectedNotificationCategory === 'All' && (
-                  <section className="announcements-zone animate-in fade-in slide-in-from-bottom-4 duration-700 rounded-[2rem] sm:rounded-[3rem] p-5 sm:p-10 relative overflow-hidden">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 relative z-10 gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-accent text-white flex items-center justify-center shadow-lg shadow-accent/20 ring-1 ring-primary/15 shrink-0">
-                          <Megaphone size={26} strokeWidth={2.5} />
-                        </div>
-                        <div>
-                          <h3 className="text-2xl sm:text-3xl font-black tracking-tight-brand text-accent-vivid uppercase leading-none font-display italic">
-                            {t.sections.announcements}
-                          </h3>
-                          <p className="text-[10px] sm:text-[11px] font-black text-slate-400 uppercase tracking-wider mt-2">
-                            {(notifications || []).filter((n) => n?.approved).length}{' '}
-                            {lang === 'en' ? 'live posts' : 'aktif ilan'}
-                          </p>
-                        </div>
-                      </div>
-                      <AnnouncementHeaderActions
-                        lang={lang}
-                        unreadMessageCount={unreadAnnouncementMessageCount}
-                        hasOwnListings={hasPostedAnnouncement}
-                        onPostListing={() => checkAuth(() => setIsPostModalOpen(true))}
-                        onOpenMyAds={() => checkAuth(handleOpenAnnouncementMessages)}
-                        variant="page"
-                      />
-                    </div>
-
-                    <AnnouncementCategoryFilterBar
-                      selected={selectedNotificationCategory}
-                      onSelect={(id) => {
-                        setSelectedNotificationCategoriesMulti([]);
-                        setSelectedNotificationCategory(id);
-                      }}
-                      onAllSelect={openAnnouncementsPage}
-                      onCategorySelect={openAnnouncementCategoryPage}
-                      categoryLabels={t.categories}
-                      lang={lang}
-                    />
-
-                    <AnnouncementFeedList
-                      notifications={(notifications || []).filter(
-                        (n) =>
-                          n &&
-                          n.approved &&
-                          (!searchQuery.trim() ||
-                            (n.title || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-                            (n.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-                            (n.category || '').toLowerCase().includes((searchQuery || '').toLowerCase())),
-                      )}
-                      categoryFilter={selectedNotificationCategory}
-                      categoryFiltersMulti={selectedNotificationCategoriesMulti}
-                      onMultiCategoryFilterChange={setSelectedNotificationCategoriesMulti}
-                      lang={lang}
-                      categoryLabels={t.categories}
-                      contactLabel={t.labels.contact}
-                      onSelect={(notif) => setSelectedNotification(notif)}
-                    />
-                  </section>
                 )}
 
                 {selectedCategory === 'All' && (
@@ -10162,6 +11156,13 @@ Designed with ❤️ for Goofind App Store Listings.
                                           <StarRating rating={biz.rating} size={12} />
                                           <span className="text-[11px] sm:text-[12px] font-black text-primary/80 ml-0.5 uppercase tracking-tighter">{biz.rating}</span>
                                       </div>
+                                      <BusinessSocialLinksBar
+                                        links={biz.socialLinks}
+                                        lang={lang}
+                                        size="sm"
+                                        className="mb-2"
+                                        onLinkClick={(e) => e.stopPropagation()}
+                                      />
                                       <div className="mt-auto pt-1.5 sm:pt-2 border-t border-slate-50">
                                          <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-1 text-slate-400 font-black text-[11px] sm:text-[12px] uppercase tracking-widest truncate max-w-[80%]">
@@ -10262,7 +11263,7 @@ Designed with ❤️ for Goofind App Store Listings.
                       <CompanyCategoriesExplorerPage
                         categoryLabels={t.categories}
                         lang={lang}
-                        businessCount={(businesses || []).length}
+                        businessCount={regionBusinesses.length}
                         onBack={resetHome}
                         onSelectCategory={(cat) => {
                           setSelectedCategory(cat);
@@ -10304,7 +11305,7 @@ Designed with ❤️ for Goofind App Store Listings.
                     {!selectedCommunity ? (
                       /* Compact Community Grid */
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
-                        {INITIAL_COMMUNITIES.filter(c => c && c.id !== 'all').filter(c => c && (
+                        {regionCommunities.filter(c => c && (
                           !searchQuery.trim() ||
                           (c.name || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
                           ((c.description || '').toLowerCase().includes((searchQuery || '').toLowerCase()))
@@ -10322,7 +11323,7 @@ Designed with ❤️ for Goofind App Store Listings.
                             >
                               <div className="flex items-center gap-4 text-left overflow-hidden">
                                 <div className="w-14 h-14 rounded-2xl overflow-hidden shadow-sm border border-gray-100 shrink-0">
-                                   <img src={community.imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={community.name} />
+                                   <img src={community.imageUrl || `https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={community.name} referrerPolicy="no-referrer" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                    <div className="flex items-start justify-between gap-1 mb-1">
@@ -10340,9 +11341,18 @@ Designed with ❤️ for Goofind App Store Listings.
                                 <button className="w-full py-2.5 bg-primary text-white rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-primary-dark transition-all shrink-0 shadow-lg shadow-primary/15">
                                   {lang === 'en' ? 'Enter Chat (Joined)' : 'Sohbete Gir (Katıldın)'}
                                 </button>
-                              ) : hasJoinedAny ? (
-                                <button className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-slate-200 transition-all shrink-0">
-                                  {lang === 'en' ? 'View' : 'Görüntüle'}
+                              ) : hasJoinedAny || !canParticipateInSelectedRegion ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!canParticipateInSelectedRegion) {
+                                      warnForeignProvinceJoin();
+                                    }
+                                  }}
+                                  className="w-full py-2.5 bg-slate-100 text-slate-500 rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-slate-200 transition-all shrink-0"
+                                >
+                                  {lang === 'en' ? 'View only' : 'Salt okunur'}
                                 </button>
                               ) : (
                                 <button className="w-full py-2.5 bg-accent text-white rounded-xl font-black text-[14px] uppercase tracking-widest hover:bg-accent-dark transition-all shrink-0 shadow-lg shadow-accent/15">
@@ -10360,7 +11370,7 @@ Designed with ❤️ for Goofind App Store Listings.
                         <div className="bg-primary p-6 md:p-8 text-white flex items-center justify-between shrink-0">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 shadow-xl">
-                              <img src={selectedCommunity.imageUrl} className="w-full h-full object-cover" />
+                              <img src={selectedCommunity.imageUrl || `https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80`} className="w-full h-full object-cover" alt={selectedCommunity.name} referrerPolicy="no-referrer" />
                             </div>
                             <div>
                               <h3 className="font-black text-xl tracking-tight uppercase leading-none mb-1">{selectedCommunity.name} Community</h3>
@@ -10475,6 +11485,18 @@ Designed with ❤️ for Goofind App Store Listings.
                                    {t.auth.signIn}
                                 </button>
                              </div>
+                          ) : !canParticipateInSelectedRegion ? (
+                            <button
+                              type="button"
+                              onClick={warnForeignProvinceJoin}
+                              className="w-full text-center p-4 bg-amber-50 rounded-3xl border border-amber-200 hover:bg-amber-100 transition-colors"
+                            >
+                              <p className="text-xs font-black text-amber-900 uppercase tracking-widest leading-relaxed">
+                                {lang === 'en'
+                                  ? 'Join — not available in another province'
+                                  : 'Katıl — başka eyalette mümkün değil'}
+                              </p>
+                            </button>
                           ) : currentUser.joinedCommunityId === selectedCommunity.id ? (
                             <div className="space-y-4">
                               <ChatMessageComposer
@@ -10503,7 +11525,7 @@ Designed with ❤️ for Goofind App Store Listings.
                           ) : (
                             <div className="w-full">
                               <button 
-                                onClick={() => handleJoinCommunity(selectedCommunity.id)}
+                                onClick={() => tryJoinCommunityFlow(selectedCommunity.id)}
                                 className="w-full py-4 bg-accent hover:bg-accent-dark text-white font-black text-xs uppercase tracking-widest rounded-3xl shadow-xl shadow-accent/20 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2"
                               >
                                 {currentUser.joinedCommunityId ? (
@@ -10606,6 +11628,13 @@ Designed with ❤️ for Goofind App Store Listings.
                                   <StarRating rating={biz.rating} size={12} />
                                   <span className="text-[11px] sm:text-[12px] font-black text-primary/80 ml-0.5 uppercase tracking-tighter">{biz.rating}</span>
                               </div>
+                              <BusinessSocialLinksBar
+                                links={biz.socialLinks}
+                                lang={lang}
+                                size="sm"
+                                className="mb-2"
+                                onLinkClick={(e) => e.stopPropagation()}
+                              />
                               <div className="mt-auto pt-1.5 sm:pt-2 border-t border-slate-50">
                                  <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-1 text-slate-400 font-black text-[11px] sm:text-[12px] uppercase tracking-widest truncate max-w-[80%]">
@@ -10866,6 +11895,13 @@ Designed with ❤️ for Goofind App Store Listings.
                                 <StarRating rating={biz.rating} size={12} />
                                 <span className="text-[11px] sm:text-[12px] font-black text-primary/80 ml-0.5 uppercase tracking-tighter">{biz.rating}</span>
                             </div>
+                            <BusinessSocialLinksBar
+                              links={biz.socialLinks}
+                              lang={lang}
+                              size="sm"
+                              className="mb-2"
+                              onLinkClick={(e) => e.stopPropagation()}
+                            />
                             <div className="mt-auto pt-1.5 sm:pt-2 border-t border-slate-50">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-1 text-slate-400 font-black text-[11px] sm:text-[12px] uppercase tracking-widest truncate max-w-[80%]">
@@ -10901,7 +11937,7 @@ Designed with ❤️ for Goofind App Store Listings.
             </div>
             <LogoText size="text-xl" className="justify-center" showMark={false} />
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1.5">
-              {lang === 'en' ? 'Canada Turkish Community Hub' : 'Kanada Türk Topluluk Merkezi'}
+              {lang === 'en' ? 'Canada Turkish Community' : 'Kanada Türk Topluluğu'}
             </p>
           </div>
 
@@ -10921,7 +11957,7 @@ Designed with ❤️ for Goofind App Store Listings.
               </button>
               <button
                 type="button"
-                onClick={() => { setAuthView('register'); setError(null); }}
+                onClick={() => { setAuthView('register'); setSignupHomeRegion('ON'); setError(null); }}
                 className={`flex-1 py-2.5 text-center text-xs font-black uppercase tracking-wider rounded-xl transition-all ${
                   authView === 'register'
                     ? 'bg-white text-primary shadow-sm scale-100'
@@ -11092,19 +12128,36 @@ Designed with ❤️ for Goofind App Store Listings.
                   
                   // Persist user record to Firestore DB immediately to guarantee existence in queries
                   const finalPhotoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`;
+                  const setupTimestamp = Date.now();
                   await setDoc(doc(db, 'users', userCred.user.uid), {
                     id: userCred.user.uid,
                     name: name,
                     email: email,
                     photoUrl: finalPhotoUrl,
-                    lastActive: Date.now()
+                    homeRegion: signupHomeRegion,
+                    homeRegionChangedAt: setupTimestamp,
+                    lastActive: setupTimestamp,
                   }, { merge: true });
+
+                  applyHomeRegionView(signupHomeRegion);
+                  persistUserHomeRegion(userCred.user.uid, signupHomeRegion);
 
                   setCurrentUser((prev: any) => prev ? {
                     ...prev,
                     name: name,
-                    photoUrl: finalPhotoUrl
-                  } : null);
+                    photoUrl: finalPhotoUrl,
+                    homeRegion: signupHomeRegion,
+                    homeRegionChangedAt: setupTimestamp,
+                  } : {
+                    id: userCred.user.uid,
+                    name,
+                    email,
+                    photoUrl: finalPhotoUrl,
+                    homeRegion: signupHomeRegion,
+                    homeRegionChangedAt: setupTimestamp,
+                    emailVerified: userCred.user.emailVerified,
+                    providerData: userCred.user.providerData,
+                  });
                   
                   // Send secure email verification link
                   try {
@@ -11200,6 +12253,13 @@ Designed with ❤️ for Goofind App Store Listings.
                 </div>
               </div>
 
+              <RegionSwitcher
+                selected={signupHomeRegion}
+                onSelect={setSignupHomeRegion}
+                lang={lang}
+                variant="signup"
+              />
+
               {error && <p className="text-[15px] font-bold text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
 
               <button 
@@ -11222,26 +12282,18 @@ Designed with ❤️ for Goofind App Store Listings.
 
           {/* Social Logins */}
           <div className="flex flex-col gap-3">
-            {isApple ? (
-              <button 
-                type="button"
-                onClick={handleGoogleLogin}
-                className="w-full bg-black text-white hover:bg-slate-900 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[14px] shadow-sm transition-all active:scale-95 flex items-center justify-center gap-4 relative group"
-              >
-                <Apple size={22} className="absolute left-6 text-white" />
-                {lang === 'en' ? 'Continue with Apple' : 'Apple ile giriş yap'}
-              </button>
-            ) : (
-              <button 
-                type="button"
-                onClick={handleGoogleLogin}
-                className="w-full bg-white border border-slate-200 text-slate-700 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[14px] shadow-sm hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-4 relative group"
-              >
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 absolute left-6" alt="Google" />
-                {lang === 'en' ? 'Continue with Google' : 'Google ile devam et'}
-              </button>
+            {isApple && (
+              <AppleStandaloneSignIn lang={lang} onAppleLogin={handleAppleLogin} />
             )}
-            
+            <button 
+              type="button"
+              onClick={handleGoogleLogin}
+              className="w-full bg-white border border-slate-200 text-slate-700 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[14px] shadow-sm hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-4 relative group"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 absolute left-6" alt="Google" />
+              {lang === 'en' ? 'Continue with Google' : 'Google ile devam et'}
+            </button>
+
             <p className="text-[14px] text-slate-400 font-medium text-center mt-3 uppercase tracking-widest">
               {lang === 'en' ? 'By proceeding, you agree to our ' : 'Devam ederek '}
               <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-primary font-black hover:underline transition-colors">{lang === 'en' ? 'Terms' : 'Kullanım Koşulları'}</button>
@@ -11258,6 +12310,7 @@ Designed with ❤️ for Goofind App Store Listings.
         onClose={() => {
           setIsPostModalOpen(false);
           setNoticeImages([]);
+          setIsSubmittingListing(false);
         }} 
         title={t.buttons.postNotice}
       >
@@ -11277,41 +12330,103 @@ Designed with ❤️ for Goofind App Store Listings.
           <form 
             onSubmit={async (e) => {
             e.preventDefault();
+            if (isSubmittingListing) return;
             const formData = new FormData(e.currentTarget);
-            if (!currentUser) return;
-            
+            if (!currentUser || !auth.currentUser) {
+              showToast(lang === 'en' ? 'Please sign in to post a listing.' : 'İlan vermek için giriş yapın.', 'error');
+              return;
+            }
+
+            const listingRegion = resolveRegionForSave(
+              (formData.get('location') as string) || (formData.get('description') as string) || '',
+              userHomeRegion || selectedRegion,
+            );
+            if (!assertRegionalParticipation(listingRegion)) return;
+
+            setIsSubmittingListing(true);
             try {
+              await refreshAuthSession();
+
+              const resolvedMedia = await resolveBusinessMediaForSave(
+                currentUser.id,
+                noticeImages[0] || '',
+                noticeImages,
+                '',
+                'listing-images',
+              );
+
               const newNotif = {
-                title: formData.get('title') as string,
+                title: (formData.get('title') as string).trim(),
                 category: formData.get('category') as NotificationCategory,
-                description: formData.get('description') as string,
-                price: formData.get('price') as string,
-                imageUrl: noticeImages.length > 0 ? noticeImages[0] : '',
-                gallery: noticeImages,
+                description: (formData.get('description') as string).trim(),
+                price: ((formData.get('price') as string) || '').trim(),
+                imageUrl: resolvedMedia.imageUrl,
+                gallery: resolvedMedia.gallery,
                 date: new Date().toISOString().split('T')[0],
                 createdAt: Date.now(),
-                userId: currentUser.id,
-                approved: true // Auto-approved by default (no post verification needed)
+                userId: auth.currentUser.uid,
+                approved: true,
+                region: listingRegion,
               };
-              
-              let docId = Math.random().toString(36).substring(2, 9);
+
+              if (!newNotif.title || !newNotif.description) {
+                showToast(lang === 'en' ? 'Title and description are required.' : 'Başlık ve açıklama zorunludur.', 'error');
+                return;
+              }
+
+              if (resolvedMedia.uploadFailed) {
+                showToast(
+                  lang === 'en'
+                    ? 'Photos could not be uploaded. Your listing was saved without photos.'
+                    : 'Fotoğraflar yüklenemedi. İlanınız fotoğrafsız kaydedildi.',
+                  'info',
+                );
+              }
+
+              let docId = '';
               try {
                 const docRef = await addDoc(collection(db, 'notifications'), newNotif);
                 docId = docRef.id;
               } catch (writeErr: any) {
+                const code = getFirebaseErrorCode(writeErr);
                 const errMsg = String(writeErr?.message || writeErr).toLowerCase();
                 if (errMsg.includes('quota') || errMsg.includes('exceeded') || errMsg.includes('exhausted') || errMsg.includes('limit')) {
                   setIsQuotaExceeded(true);
-                  console.warn("Firestore write for notifications failed due to quota limit. Saving to local state for demo purposes.");
+                  docId = Math.random().toString(36).substring(2, 9);
+                  console.warn('Firestore write for notifications failed due to quota limit. Saving to local state.');
+                } else if (code === 'permission-denied' || errMsg.includes('permission')) {
+                  showToast(
+                    lang === 'en'
+                      ? 'Permission denied. Sign out, sign in again, then try posting.'
+                      : 'Yetki reddedildi. Çıkış yapıp tekrar giriş yapın ve ilanı gönderin.',
+                    'error',
+                  );
+                  return;
+                } else if (
+                  code === 'invalid-argument' ||
+                  errMsg.includes('size') ||
+                  errMsg.includes('maximum allowed') ||
+                  errMsg.includes('payload')
+                ) {
+                  const withoutImages = { ...newNotif, imageUrl: '', gallery: [] as string[] };
+                  const docRef = await addDoc(collection(db, 'notifications'), withoutImages);
+                  docId = docRef.id;
+                  showToast(
+                    lang === 'en'
+                      ? 'Photos were too large. Your listing was saved without photos.'
+                      : 'Fotoğraflar çok büyüktü. İlan fotoğrafsız kaydedildi.',
+                    'info',
+                  );
                 } else {
                   throw writeErr;
                 }
               }
 
-              // Optimistically append to local state
-              const notifWithId: Notification = { id: docId, ...newNotif } as any;
+              const notifWithId: Notification = { id: docId, ...newNotif } as Notification;
               setNotifications(prev => {
-                const exists = prev.some(n => n.id === docId || (n.title === newNotif.title && n.userId === newNotif.id));
+                const exists = prev.some(
+                  (n) => n.id === docId || (n.title === newNotif.title && n.userId === newNotif.userId),
+                );
                 if (exists) return prev;
                 return [notifWithId, ...prev];
               });
@@ -11322,8 +12437,16 @@ Designed with ❤️ for Goofind App Store Listings.
                 setShowPostSuccess(false);
                 setNoticeImages([]);
               }, 2000);
-            } catch (e) {
-              handleFirestoreError(e, 'create', 'notifications');
+            } catch (err) {
+              console.error('Listing post failed', err);
+              showToast(
+                lang === 'en'
+                  ? 'Could not post your listing. Please try again.'
+                  : 'İlan gönderilemedi. Lütfen tekrar deneyin.',
+                'error',
+              );
+            } finally {
+              setIsSubmittingListing(false);
             }
           }}
           className="space-y-6"
@@ -11401,8 +12524,14 @@ Designed with ❤️ for Goofind App Store Listings.
               </div>
             )}
           </div>
-          <button type="submit" className="w-full bg-accent text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-accent/90 shadow-accent/20 transition-all active:scale-95">
-            {lang === 'en' ? 'Submit for Verification' : 'Onaya Gönder'}
+          <button
+            type="submit"
+            disabled={isSubmittingListing}
+            className="w-full bg-accent text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-accent/90 shadow-accent/20 transition-all active:scale-95 disabled:opacity-60 disabled:pointer-events-none"
+          >
+            {isSubmittingListing
+              ? (lang === 'en' ? 'Submitting…' : 'Gönderiliyor…')
+              : (lang === 'en' ? 'Submit for Verification' : 'Onaya Gönder')}
           </button>
         </form>
         )}
@@ -11700,6 +12829,7 @@ Designed with ❤️ for Goofind App Store Listings.
              outgoingThreads={outgoingAnnouncementThreads}
              activeThreadKey={activeNotifMsgThread}
              onOpenThread={handleOpenNotifMsgThread}
+             onPostListing={tryPostListing}
            />
 
            {activeNotifMsgThread && (
@@ -11797,11 +12927,15 @@ Designed with ❤️ for Goofind App Store Listings.
         <div className="space-y-4 max-h-[70vh] overflow-y-auto no-scrollbar pb-6 px-1">
           <UserCompanyMessagesInbox
             lang={lang}
-            incomingThreads={userCompanyIncomingThreads}
-            outgoingThreads={userCompanyOutgoingThreads}
+            incomingThreads={userCompanyIncomingThreadsInRegion}
+            outgoingThreads={userCompanyOutgoingThreadsInRegion}
             onOpenThread={(businessId, partnerId) => {
               handleOpenCompanyMessageThread(businessId, partnerId);
               setIsUserCompanyMessagesModalOpen(false);
+            }}
+            onAddCompany={() => {
+              setIsUserCompanyMessagesModalOpen(false);
+              tryAddCompany();
             }}
           />
         </div>
@@ -11909,7 +13043,7 @@ Designed with ❤️ for Goofind App Store Listings.
                   return (
                     <>
                       <p>{desc || 'Sponsorumuz ve topluluk ortağımız tarafından sağlanan bu içerik, Kanada genelindeki Türk toplumuna yönelik duyuru, kampanya veya hizmetleri içermektedir.'}</p>
-                      <p>Kanada Türk Topluluk Merkezi (Canada-Turkish Community Hub) olarak, yerel işletmelerle olan dayanışmamızı her adımda büyütüyoruz. Doğru bilgi kaynağına erişmek ve topluluğumuzun sunduğu entegrasyon çözümlerinden zahmetsizce haberdar olmak için platformumuzu düzenli olarak takip edebilirsiniz.</p>
+                      <p>Kanada Türk Topluluğu olarak, yerel işletmelerle olan dayanışmamızı her adımda büyütüyoruz. Doğru bilgi kaynağına erişmek ve topluluğumuzun sunduğu entegrasyon çözümlerinden zahmetsizce haberdar olmak için platformumuzu düzenli olarak takip edebilirsiniz.</p>
                       <p>Bu fırsatın kullanım koşulları, katılım detayları veya hizmet randevuları hakkında daha detaylı bilgiye doğrudan ulaşmak isterseniz aşağıdaki "Web Sitesine Git" butonunu kullanabilirsiniz.</p>
                     </>
                   );
@@ -12057,25 +13191,21 @@ Designed with ❤️ for Goofind App Store Listings.
                 transition={{ delay: 0.5 }}
                 className="w-full space-y-4"
               >
-                {isApple ? (
-                  <button 
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    className="w-full py-5 bg-black text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl"
-                  >
-                    <Apple size={22} className="text-white" />
-                    {lang === 'en' ? 'Continue with Apple' : 'Apple ile giriş yap'}
-                  </button>
-                ) : (
-                  <button 
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    className="w-full py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:border-primary/30 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-slate-200/50"
-                  >
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-                    {lang === 'en' ? 'Continue with Google' : 'Google ile devam et'}
-                  </button>
+                {isApple && (
+                  <AppleStandaloneSignIn
+                    lang={lang}
+                    onAppleLogin={handleAppleLogin}
+                    compact
+                  />
                 )}
+                <button 
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  className="w-full py-5 bg-white border-2 border-slate-100 text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs hover:border-primary/30 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl shadow-slate-200/50"
+                >
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+                  {lang === 'en' ? 'Continue with Google' : 'Google ile devam et'}
+                </button>
 
                 <div className="flex items-center gap-4 py-4">
                   <div className="flex-1 h-px bg-slate-100"></div>
@@ -12151,40 +13281,81 @@ Designed with ❤️ for Goofind App Store Listings.
         </div>
       )}
 
+      {/* --- HOME REGION SETUP (Google / legacy users) --- */}
+      <Modal
+        isOpen={isHomeRegionSetupOpen}
+        onClose={() => {}}
+        title={lang === 'en' ? 'Your Home Province' : 'Ana Eyaletiniz'}
+        maxWidth="max-w-md"
+      >
+        <div className="space-y-5 py-2">
+          <p className="text-sm font-medium text-slate-600 leading-relaxed">
+            {lang === 'en'
+              ? 'This becomes your permanent home province for companies, listings, and communities. You can browse other provinces anytime from the menu next to the logo.'
+              : 'Bu, şirket, ilan ve topluluklar için kalıcı ana eyaletiniz olur. Logonun yanındaki menüden istediğiniz zaman diğer eyaletleri gezebilirsiniz.'}
+          </p>
+          <RegionSwitcher
+            selected={pendingHomeRegion}
+            onSelect={setPendingHomeRegion}
+            lang={lang}
+            variant="signup"
+          />
+          <button
+            type="button"
+            onClick={() => completeHomeRegionSetup(pendingHomeRegion)}
+            className="w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-black uppercase tracking-widest text-sm shadow-lg shadow-primary/20 transition-all active:scale-95"
+          >
+            {lang === 'en' ? 'Continue' : 'Devam Et'}
+          </button>
+        </div>
+      </Modal>
+
       {/* --- PROFILE / DASHBOARD MODAL --- */}
       <Modal 
         isOpen={isProfileOpen} 
-        onClose={() => setIsProfileOpen(false)} 
+        onClose={() => {
+          setIsProfileOpen(false);
+          setIsProfileRegionPickerOpen(false);
+        }} 
         title={lang === 'en' ? 'My Dashboard' : 'Kontrol Panelim'}
       >
         <div className="space-y-8">
           {/* User Profile Header */}
           <div className="bg-slate-50 rounded-[2.5rem] border border-slate-100 p-4 sm:p-6 space-y-4">
+             <input
+               type="file"
+               ref={userAvatarFileInputRef}
+               onChange={handleProfileImageFileChange}
+               accept="image/*"
+               className="hidden"
+             />
              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 text-center sm:text-left">
-                {/* Profile Picture Container with Edit Overlay */}
-                <div 
-                  onClick={() => setIsEditingAvatar(!isEditingAvatar)}
-                  className="w-20 h-20 rounded-2xl bg-primary text-white flex items-center justify-center text-2xl font-black shadow-lg overflow-hidden shrink-0 relative group cursor-pointer border-2 border-white ring-4 ring-slate-100 transition-all hover:scale-105"
+                <button
+                  type="button"
+                  onClick={openProfilePhotoPicker}
+                  disabled={isUploadingAvatar}
+                  title={lang === 'en' ? 'Change profile photo' : 'Profil fotoğrafını değiştir'}
+                  className="w-20 h-20 rounded-2xl bg-primary text-white flex items-center justify-center text-2xl font-black shadow-lg overflow-hidden shrink-0 relative cursor-pointer border-2 border-white ring-4 ring-slate-100 transition-all hover:scale-105 active:scale-95 disabled:opacity-70"
                 >
                    {currentUser?.photoUrl ? (
-                      <img src={currentUser.photoUrl} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" referrerPolicy="no-referrer" />
+                      <img src={currentUser.photoUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" alt="" />
                    ) : (
-                      <span className="transition-transform duration-300 group-hover:scale-110">
+                      <span>
                         {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                       </span>
                    )}
-                   {/* Hover edit camera overlay */}
-                   <div className="absolute inset-0 bg-slate-900/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
-                     <Camera size={26} className="text-white scale-75 group-hover:scale-100 transition-transform duration-200" />
-                     <span className="text-[11px] font-black uppercase tracking-widest text-slate-100 mt-1 leading-none">
-                       {lang === 'en' ? 'Modify' : 'Değiştir'}
-                     </span>
-                   </div>
-                </div>
+                   {isUploadingAvatar && (
+                     <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                       <span className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                     </div>
+                   )}
+                   <span className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-white border-2 border-white shadow-md flex items-center justify-center pointer-events-none">
+                     <Camera size={13} strokeWidth={2.5} />
+                   </span>
+                </button>
 
                 <div className="flex-1 w-full">
-                   <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-3">
-                     {isEditingProfileDetails ? (
+                   {isEditingProfileDetails ? (
                         <div className="space-y-3 mt-1 text-left w-full">
                            <div>
                               <label className="text-[13px] font-black uppercase text-slate-400 tracking-wider">
@@ -12194,13 +13365,39 @@ Designed with ❤️ for Goofind App Store Listings.
                                 type="text"
                                 value={editNameInput}
                                 onChange={(e) => setEditNameInput(e.target.value)}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none text-slate-850 font-bold"
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none text-slate-850 font-bold mt-1"
                               />
+                           </div>
+                           <div>
+                              <label className="text-[13px] font-black uppercase text-slate-400 tracking-wider">
+                                {lang === 'en' ? 'Phone Number' : 'Telefon Numarası'}
+                              </label>
+                              <input 
+                                type="tel"
+                                value={editPhoneInput}
+                                onChange={(e) => setEditPhoneInput(e.target.value)}
+                                placeholder={lang === 'en' ? 'e.g. (416) 555-0123' : 'örn. (416) 555-0123'}
+                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-primary focus:border-primary outline-none text-slate-850 font-bold mt-1"
+                              />
+                           </div>
+                           <div>
+                              <label className="text-[13px] font-black uppercase text-slate-400 tracking-wider">
+                                {lang === 'en' ? 'E-mail' : 'E-posta'}
+                              </label>
+                              <input 
+                                type="email"
+                                value={currentUser?.email || ''}
+                                readOnly
+                                className="w-full bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-500 font-bold mt-1 cursor-not-allowed"
+                              />
+                              <p className="text-[10px] font-medium text-slate-400 mt-1">
+                                {lang === 'en' ? 'Email is managed by your login account.' : 'E-posta giriş hesabınızdan yönetilir.'}
+                              </p>
                            </div>
                            <div className="flex gap-2 pt-1">
                               <button
                                 type="button"
-                                onClick={() => handleUpdateProfileDetails(editNameInput, currentUser?.phone || "")}
+                                onClick={() => handleUpdateProfileDetails(editNameInput, editPhoneInput)}
                                 className="px-3.5 py-1.5 bg-primary hover:bg-primary/95 text-white font-black text-[14px] uppercase tracking-wider rounded-xl transition-all"
                               >
                                  {lang === 'en' ? 'Save' : 'Kaydet'}
@@ -12215,101 +13412,196 @@ Designed with ❤️ for Goofind App Store Listings.
                            </div>
                         </div>
                      ) : (
-                        <div className="min-w-0 w-full text-left font-sans">
-                           <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tighter leading-tight mb-1 break-words">
-                             {currentUser?.name}
-                           </h3>
-                           <p className="text-[14px] font-black text-slate-400 uppercase tracking-widest break-all">
-                             {currentUser?.email}
-                           </p>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={openProfileEditor}
+                          className="min-w-0 w-full text-left font-sans space-y-3 rounded-2xl p-3 -m-3 hover:bg-white/90 border border-transparent hover:border-slate-200/80 transition-all active:scale-[0.99] group/profile"
+                        >
+                           <div className="flex items-start justify-between gap-3">
+                             <div className="min-w-0">
+                               <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tighter leading-tight break-words group-hover/profile:text-primary transition-colors">
+                                 {currentUser?.name}
+                               </h3>
+                               <p className="text-[11px] font-bold text-primary/70 uppercase tracking-widest mt-1 flex items-center gap-1">
+                                 <Edit2 size={12} className="opacity-80" />
+                                 {lang === 'en' ? 'Tap to edit profile' : 'Düzenlemek için dokunun'}
+                               </p>
+                             </div>
+                             <ChevronRight size={18} className="text-slate-300 group-hover/profile:text-primary shrink-0 mt-1 transition-colors" />
+                           </div>
+
+                           <div className="space-y-2 pointer-events-none">
+                             {currentUser?.email && (
+                               <a
+                                 href={`mailto:${currentUser.email}`}
+                                 className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl hover:border-primary/20 transition-colors"
+                               >
+                                 <div className="w-9 h-9 rounded-lg bg-primary/5 text-primary flex items-center justify-center shrink-0">
+                                   <Mail size={16} strokeWidth={2.5} />
+                                 </div>
+                                 <div className="min-w-0">
+                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'E-mail' : 'E-posta'}</p>
+                                   <p className="text-sm font-semibold text-slate-700 truncate">{currentUser.email}</p>
+                                 </div>
+                               </a>
+                             )}
+                             {currentUser?.phone ? (
+                               <button
+                                 type="button"
+                                 onClick={() => dialPhoneNumber(currentUser.phone)}
+                                 className="w-full flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-xl hover:border-emerald-300 hover:bg-emerald-50/40 transition-colors text-left"
+                               >
+                                 <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                   <Phone size={16} strokeWidth={2.5} />
+                                 </div>
+                                 <div className="min-w-0 flex-1">
+                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Phone' : 'Telefon'}</p>
+                                   <p className="text-sm font-semibold text-slate-700">{currentUser.phone}</p>
+                                 </div>
+                               </button>
+                             ) : (
+                               <div className="flex items-center gap-3 p-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl">
+                                 <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-400 flex items-center justify-center shrink-0">
+                                   <Phone size={16} strokeWidth={2.5} />
+                                 </div>
+                                 <p className="text-[11px] font-semibold text-slate-500 leading-snug">
+                                   {lang === 'en' ? 'Add a phone number so others can call you.' : 'Diğer kullanıcıların sizi arayabilmesi için telefon numarası ekleyin.'}
+                                 </p>
+                               </div>
+                             )}
+                           </div>
+                        </button>
                      )}
 
-                     <div className="flex flex-row sm:flex-col gap-2 shrink-0">
-                       <button
-                         type="button"
-                         onClick={() => setIsEditingAvatar(!isEditingAvatar)}
-                         className={`px-3 py-1.5 rounded-xl border text-[13px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 shrink-0 ${
-                           isEditingAvatar 
-                             ? 'bg-slate-900 border-slate-900 text-white' 
-                             : 'bg-white border-slate-200 hover:border-slate-300 text-slate-600'
-                         }`}
-                       >
-                         <Camera size={14} />
-                         {lang === 'en' ? 'Photo' : 'Fotoğraf'}
-                       </button>
-
-                       {!isEditingProfileDetails && (
+                   <div className="mt-4 w-full max-w-md mx-auto sm:mx-0 space-y-2">
+                     <div className="w-full flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl">
+                       <div className="flex items-center gap-3 min-w-0">
+                         <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center shrink-0">
+                           <Globe size={20} strokeWidth={2.5} />
+                         </div>
+                         <div className="min-w-0">
+                           <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                             {lang === 'en' ? 'Language' : 'Dil'}
+                           </p>
+                           <p className="text-sm font-bold text-slate-800 truncate">
+                             {lang === 'en' ? 'English' : 'Türkçe'}
+                           </p>
+                         </div>
+                       </div>
+                       <div className="flex gap-1.5 shrink-0">
                          <button
                            type="button"
-                           onClick={() => {
-                             setEditNameInput(currentUser?.name || '');
-                             setIsEditingProfileDetails(true);
-                           }}
-                           className="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-slate-350 bg-white hover:bg-slate-50 text-[13px] font-black text-slate-700 uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-1 shrink-0 cursor-pointer"
+                           onClick={() => setLang('tr')}
+                           className={`px-3 py-1.5 rounded-xl border text-[12px] font-black uppercase tracking-wider transition-all active:scale-95 ${
+                             lang === 'tr'
+                               ? 'bg-primary border-primary text-white'
+                               : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                           }`}
                          >
-                           <Edit2 size={14} />
-                           {lang === 'en' ? 'Edit Details' : 'Profil Düzenle'}
+                           TR
                          </button>
-                       )}
+                         <button
+                           type="button"
+                           onClick={() => setLang('en')}
+                           className={`px-3 py-1.5 rounded-xl border text-[12px] font-black uppercase tracking-wider transition-all active:scale-95 ${
+                             lang === 'en'
+                               ? 'bg-primary border-primary text-white'
+                               : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300'
+                           }`}
+                         >
+                           EN
+                         </button>
+                       </div>
                      </div>
                    </div>
 
-                   <div className="mt-4 sm:mt-2.5 flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full border border-slate-200/80 shadow-sm">
-                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                         <span className="text-[12px] font-black text-slate-500 uppercase tracking-widest">
-                           {lang === 'en' ? 'Active Member' : 'Aktif Üye'}
-                         </span>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white rounded-full border border-slate-200/80 shadow-sm">
-                         <span className="text-[12px] font-black text-primary uppercase tracking-widest">
-                           Hub ID:
-                         </span>
-                         <span className="text-[12px] font-mono text-slate-400 font-bold select-all leading-none">
-                           {currentUser?.id?.substring(0, 8)}...
-                         </span>
-                      </div>
+                   <div className="mt-4 w-full max-w-md mx-auto sm:mx-0">
+                     {(() => {
+                       const profileHomeRegion: CanadianRegion = isCanadianRegion(currentUser?.homeRegion)
+                         ? currentUser.homeRegion
+                         : selectedRegion;
+                       return (
+                         <>
+                           <button
+                             type="button"
+                             onClick={() => setIsProfileRegionPickerOpen((open) => !open)}
+                             className="w-full flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl hover:bg-slate-50 transition-all group text-left"
+                           >
+                             <div className="flex items-center gap-3 min-w-0">
+                               <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center shrink-0">
+                                 <MapPin size={20} strokeWidth={2.5} />
+                               </div>
+                               <div className="min-w-0">
+                                 <p className="text-[12px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
+                                   {lang === 'en' ? 'Permanent Home Province' : 'Kalıcı Ana Eyalet'}
+                                 </p>
+                                 <p className="text-sm font-bold text-slate-800 truncate">
+                                   {regionLabel(profileHomeRegion, lang)}
+                                 </p>
+                               </div>
+                             </div>
+                             <ChevronRight
+                               size={20}
+                               className={`text-slate-300 group-hover:text-primary transition-transform shrink-0 ${
+                                 isProfileRegionPickerOpen ? 'rotate-90' : ''
+                               }`}
+                             />
+                           </button>
+
+                           {isProfileRegionPickerOpen && (
+                             <div className="mt-2 p-4 bg-white border border-slate-100 rounded-2xl space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                               <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
+                                 {lang === 'en'
+                                   ? 'Your permanent home province. Change at most once every 2 months. Use the ≡ menu by the logo to browse other provinces.'
+                                   : 'Kalıcı ana eyaletiniz. 2 ayda en fazla bir kez değiştirilebilir. Diğer eyaletleri gezmek için logonun yanındaki ≡ menüsünü kullanın.'}
+                               </p>
+                               {!canChangeHomeRegionNow && (
+                                 <p className="text-[11px] font-bold text-amber-700 leading-relaxed">
+                                   {lang === 'en'
+                                     ? `Next change available in ${formatCooldownRemaining(homeRegionChangeCooldownRemaining, lang)}.`
+                                     : `Sonraki değişiklik ${formatCooldownRemaining(homeRegionChangeCooldownRemaining, lang)} sonra mümkün.`}
+                                 </p>
+                               )}
+                               <div className="flex flex-col gap-2">
+                                 {ALL_CANADIAN_REGIONS.map((region) => {
+                                   const isActive = profileHomeRegion === region;
+                                   const changeDisabled = !isActive && !canChangeHomeRegionNow;
+                                   return (
+                                     <button
+                                       key={region}
+                                       type="button"
+                                       disabled={changeDisabled}
+                                       onClick={() => {
+                                         if (region !== profileHomeRegion) {
+                                           requestProfileHomeRegionChange(region);
+                                           setIsProfileRegionPickerOpen(false);
+                                         }
+                                       }}
+                                       className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border font-bold text-sm transition-all ${
+                                         isActive
+                                           ? regionProfileActiveClasses(region)
+                                           : changeDisabled
+                                             ? 'bg-slate-100 text-slate-400 border-slate-100 cursor-not-allowed opacity-70'
+                                             : 'bg-slate-50 text-slate-700 border-slate-100 hover:border-primary/30 hover:bg-primary/5'
+                                       }`}
+                                     >
+                                       <MapPin size={16} strokeWidth={2.5} className="shrink-0" />
+                                       <span>{regionLabel(region, lang)}</span>
+                                       {isActive && (
+                                         <Check size={16} strokeWidth={3} className="ml-auto shrink-0" />
+                                       )}
+                                     </button>
+                                   );
+                                 })}
+                               </div>
+                             </div>
+                           )}
+                         </>
+                       );
+                     })()}
                    </div>
                 </div>
              </div>
-
-             {/* Expandable Photo Customizer Frame */}
-             {isEditingAvatar && (
-                <div className="bg-white border border-slate-100 rounded-3xl p-4 space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
-                   <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                      <span className="text-[13px] font-black text-slate-400 uppercase tracking-wider">
-                         {lang === 'en' ? 'Profile Photo' : 'Profil Fotoğrafı'}
-                      </span>
-                      <button 
-                        type="button"
-                        onClick={() => setIsEditingAvatar(false)}
-                        className="text-slate-400 hover:text-slate-600 font-bold text-xs uppercase cursor-pointer"
-                      >
-                         ✕
-                      </button>
-                   </div>
-
-                   <button
-                     type="button"
-                     onClick={() => userAvatarFileInputRef.current?.click()}
-                     disabled={isUploadingAvatar}
-                     className="w-full flex items-center justify-center gap-2 border border-dashed border-slate-250 hover:border-primary/50 hover:bg-primary/5 rounded-2xl p-5 text-center transition-all group cursor-pointer bg-slate-50/50"
-                   >
-                     <Upload size={22} className="text-slate-400 group-hover:text-primary transition-colors duration-200 shrink-0" />
-                     <span className="text-sm font-bold text-slate-600 group-hover:text-primary transition-colors duration-200">
-                       {isUploadingAvatar ? (lang === 'en' ? 'Processing...' : 'Yükleniyor...') : (lang === 'en' ? 'Choose File' : 'Dosya Seç')}
-                     </span>
-                   </button>
-                   <input 
-                     type="file" 
-                     ref={userAvatarFileInputRef} 
-                     onChange={handleProfileImageFileChange} 
-                     accept="image/*" 
-                     className="hidden" 
-                   />
-                </div>
-             )}
           </div>
 
           {/* Quick Stats (Interactive Boxes) */}
@@ -12395,6 +13687,11 @@ Designed with ❤️ for Goofind App Store Listings.
                               handleOpenCompanyMessageThread(businessId, partnerId);
                               setIsProfileOpen(false);
                               setActiveDashboardTab(null);
+                            }}
+                            onAddCompany={() => {
+                              setIsProfileOpen(false);
+                              setActiveDashboardTab(null);
+                              tryAddCompany();
                             }}
                             compact
                           />
@@ -12672,8 +13969,7 @@ Designed with ❤️ for Goofind App Store Listings.
                      onClick={() => {
                        checkAuth(() => {
                          setIsProfileOpen(false);
-                         setBusinessFormLocation({ address: '' });
-                         setIsBusinessRegistrationModalOpen(true);
+                         tryAddCompany();
                        });
                      }}
                      className="text-[14px] font-black text-primary uppercase tracking-widest hover:underline"
@@ -12681,8 +13977,8 @@ Designed with ❤️ for Goofind App Store Listings.
                      {lang === 'en' ? '+ Register New' : '+ Yeni Kaydet'}
                    </button>
                 </div>
-                {(businesses || []).filter(b => b && b.ownerId === currentUser?.id).length > 0 ? (
-                  (businesses || []).filter(b => b && b.ownerId === currentUser?.id).map(myBiz => (
+                {myBusinessesInRegion.length > 0 ? (
+                  myBusinessesInRegion.map(myBiz => (
                     <button 
                       key={myBiz.id}
                       onClick={() => {
@@ -12708,9 +14004,8 @@ Designed with ❤️ for Goofind App Store Listings.
                   <button 
                     onClick={() => {
                       checkAuth(() => {
-                        setBusinessFormLocation({ address: '' });
-                        setIsBusinessRegistrationModalOpen(true);
                         setIsProfileOpen(false);
+                        tryAddCompany();
                       });
                     }}
                     className="w-full flex flex-col items-center justify-center p-8 bg-slate-50 border border-dashed border-slate-200 rounded-2xl group hover:border-primary/50 transition-all"
@@ -12781,6 +14076,58 @@ Designed with ❤️ for Goofind App Store Listings.
           </div>
         </div>
       </Modal>
+
+      {/* --- HOME REGION CHANGE CONFIRM (profile, above profile modal) --- */}
+      <Modal
+        isOpen={isHomeRegionConfirmOpen}
+        onClose={() => {
+          setIsHomeRegionConfirmOpen(false);
+          setPendingProfileHomeRegion(null);
+        }}
+        title={lang === 'en' ? 'Change Province?' : 'Eyalet Değiştirilsin mi?'}
+        maxWidth="max-w-md"
+        elevated
+      >
+        {pendingProfileHomeRegion && (
+          <div className="space-y-5 py-2">
+            <p className="text-sm font-medium text-slate-600 leading-relaxed">
+              {lang === 'en'
+                ? `Are you sure you want to change your home province from ${regionLabel(
+                    isCanadianRegion(currentUser?.homeRegion) ? currentUser.homeRegion : selectedRegion,
+                    lang,
+                  )} to ${regionLabel(pendingProfileHomeRegion, lang)}? You can change it again only after 30 days. Community membership outside your new province will be removed.`
+                : `Ana eyaletinizi ${regionLabel(
+                    isCanadianRegion(currentUser?.homeRegion) ? currentUser.homeRegion : selectedRegion,
+                    lang,
+                  )} → ${regionLabel(pendingProfileHomeRegion, lang)} olarak değiştirmek istediğinize emin misiniz? 30 gün içinde tekrar değiştiremezsiniz. Yeni eyalet dışındaki topluluk üyeliğiniz kaldırılır.`}
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsHomeRegionConfirmOpen(false);
+                  setPendingProfileHomeRegion(null);
+                }}
+                className="flex-1 py-3 rounded-xl border border-slate-200 bg-white text-slate-600 font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all"
+              >
+                {lang === 'en' ? 'Cancel' : 'Vazgeç'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (pendingProfileHomeRegion) {
+                    void handleProfileHomeRegionChange(pendingProfileHomeRegion);
+                  }
+                }}
+                className="flex-1 py-3 rounded-xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+              >
+                {lang === 'en' ? 'Yes, Change' : 'Evet, Değiştir'}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
       <Modal 
         isOpen={isBusinessRegistrationModalOpen} 
         onClose={() => {
@@ -12788,6 +14135,7 @@ Designed with ❤️ for Goofind App Store Listings.
           setBusinessImageUrlPreview('');
           setBusinessGallery([]);
           setBusinessFormLocation({ address: '' });
+          setBusinessSocialLinks({});
         }} 
         title={lang === 'en' ? 'Register Your Business' : 'İşletmenizi Kaydedin'}
       >
@@ -12829,6 +14177,7 @@ Designed with ❤️ for Goofind App Store Listings.
             <label htmlFor="reg-biz-phone" className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Contact Phone' : 'İletişim Telefonu'}</label>
             <input required id="reg-biz-phone" name="phone" autoComplete="tel" type="tel" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all placeholder:text-slate-300" placeholder="+1 (416) ..." />
           </div>
+          <BusinessSocialLinksForm lang={lang} value={businessSocialLinks} onChange={setBusinessSocialLinks} />
           <div className="space-y-2">
             <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Company Bio (Optional)' : 'Şirket Açıklaması (İsteğe Bağlı)'}</label>
             <textarea name="description" rows={3} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all placeholder:text-slate-300" placeholder="Tell us about your business..." />
@@ -12844,7 +14193,7 @@ Designed with ❤️ for Goofind App Store Listings.
                 className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all placeholder:text-slate-300" 
                 placeholder={lang === 'en' ? 'Paste image URL here...' : 'Görsel URL\'sini buraya yapıştırın...'} 
               />
-              <div className="grid grid-cols-2 gap-2">
+              <div>
                 <input 
                   type="file" 
                   ref={businessFileInputRef} 
@@ -12855,21 +14204,10 @@ Designed with ❤️ for Goofind App Store Listings.
                 <button 
                   type="button"
                   onClick={() => businessFileInputRef.current?.click()}
-                  className="py-4 bg-primary-mid/10 text-primary hover:bg-primary/20 rounded-2xl transition-all flex items-center justify-center gap-2 font-black text-[14px] uppercase tracking-widest"
+                  className="w-full py-4 bg-primary-mid/10 text-primary hover:bg-primary/20 rounded-2xl transition-all flex items-center justify-center gap-2 font-black text-[14px] uppercase tracking-widest"
                 >
                   <Upload size={20} />
                   {lang === 'en' ? 'Upload' : 'Yükle'}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    const randomImg = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?auto=format&fit=crop&w=800&q=80`;
-                    setBusinessImageUrlPreview(randomImg);
-                  }}
-                  className="py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl transition-all flex items-center justify-center gap-2 font-black text-[14px] uppercase tracking-widest"
-                >
-                  <ImageIcon size={20} />
-                  {lang === 'en' ? 'Random' : 'Rastgele'}
                 </button>
               </div>
             </div>
@@ -12981,6 +14319,7 @@ Designed with ❤️ for Goofind App Store Listings.
           setBusinessImageUrlPreview('');
           setBusinessGallery([]);
           setBusinessFormLocation({ address: '' });
+          setBusinessSocialLinks({});
           setIsDeleteConfirming(false);
         }} 
         title={lang === 'en' ? 'Update Business Information' : 'İşletmeyi Güncelle'}
@@ -13010,6 +14349,7 @@ Designed with ❤️ for Goofind App Store Listings.
             <label htmlFor="edit-biz-phone" className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Contact Phone' : 'İletişim Telefonu'}</label>
             <input required id="edit-biz-phone" name="phone" autoComplete="tel" type="tel" defaultValue={editingBusiness?.phone} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all placeholder:text-slate-300" />
           </div>
+          <BusinessSocialLinksForm lang={lang} value={businessSocialLinks} onChange={setBusinessSocialLinks} />
           <div className="space-y-2">
             <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Company Bio (Optional)' : 'Şirket Açıklaması (İsteğe Bağlı)'}</label>
             <textarea name="description" rows={3} defaultValue={editingBusiness?.description} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all placeholder:text-slate-300" />
@@ -13024,27 +14364,14 @@ Designed with ❤️ for Goofind App Store Listings.
                 onChange={(e) => setBusinessImageUrlPreview(e.target.value)}
                 className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all placeholder:text-slate-300" 
               />
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  type="button"
-                  onClick={() => businessFileInputRef.current?.click()}
-                  className="py-4 bg-primary-mid/10 text-primary hover:bg-primary/20 rounded-2xl transition-all flex items-center justify-center gap-2 font-black text-[14px] uppercase tracking-widest"
-                >
-                  <Upload size={20} />
-                  {lang === 'en' ? 'Upload' : 'Yükle'}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    const randomImg = `https://images.unsplash.com/photo-${Math.floor(Math.random() * 1000000000)}?auto=format&fit=crop&w=800&q=80`;
-                    setBusinessImageUrlPreview(randomImg);
-                  }}
-                  className="py-4 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-2xl transition-all flex items-center justify-center gap-2 font-black text-[14px] uppercase tracking-widest"
-                >
-                  <ImageIcon size={20} />
-                  {lang === 'en' ? 'Random' : 'Rastgele'}
-                </button>
-              </div>
+              <button 
+                type="button"
+                onClick={() => businessFileInputRef.current?.click()}
+                className="w-full py-4 bg-primary-mid/10 text-primary hover:bg-primary/20 rounded-2xl transition-all flex items-center justify-center gap-2 font-black text-[14px] uppercase tracking-widest"
+              >
+                <Upload size={20} />
+                {lang === 'en' ? 'Upload' : 'Yükle'}
+              </button>
             </div>
           </div>
 
@@ -13198,8 +14525,8 @@ Designed with ❤️ for Goofind App Store Listings.
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between pb-4 border-b border-slate-100">
             <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">
               {lang === 'en' 
-                ? `${places.filter(p => p && p.approved !== false).length} Places Available` 
-                : `${places.filter(p => p && p.approved !== false).length} Harika Mekan Listeleniyor`}
+                ? `${regionPlaces.filter(p => p && p.approved !== false).length} Places Available` 
+                : `${regionPlaces.filter(p => p && p.approved !== false).length} Harika Mekan Listeleniyor`}
             </p>
             <div className="relative w-full sm:w-72">
               <input
@@ -13221,7 +14548,7 @@ Designed with ❤️ for Goofind App Store Listings.
           />
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6 max-h-[55vh] overflow-y-auto pr-1.5 custom-scrollbar">
-            {places
+            {regionPlaces
               .filter(p => {
                 const isApproved = p && p.approved !== false;
                 if (!isApproved) return false;
@@ -13291,6 +14618,21 @@ Designed with ❤️ for Goofind App Store Listings.
           <div className="space-y-2">
             <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Price (Optional)' : 'Fiyat (İsteğe Bağlı)'}</label>
             <input type="text" value={editNotifPrice} onChange={(e) => setEditNotifPrice(e.target.value)} placeholder="e.g. $500 or Free" className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all placeholder:text-slate-300" />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[14px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Province' : 'Eyalet'}</label>
+            <select
+              value={editNotifRegion}
+              onChange={(e) => setEditNotifRegion(e.target.value as CanadianRegion)}
+              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none font-bold text-sm text-slate-900 focus:border-primary transition-all cursor-pointer"
+            >
+              {ALL_CANADIAN_REGIONS.map((r) => (
+                <option key={r} value={r}>
+                  {r} — {regionLabel(r, lang)}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button type="submit" className="w-full bg-primary text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl hover:bg-primary/90 transition-all active:scale-95 mt-4">
@@ -13819,6 +15161,24 @@ Designed with ❤️ for Goofind App Store Listings.
               placeholder={lang === 'en' ? 'e.g. High Park Area 3, Toronto' : 'Örn. High Park Bölge 3, Toronto'}
               className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3.5 text-xs font-bold focus:bg-white focus:ring-1 focus:ring-primary transition-all outline-none"
             />
+          </div>
+
+          {/* Event Province */}
+          <div>
+            <label className="block text-[14px] font-black text-slate-400 uppercase tracking-widest mb-1.5">
+              {lang === 'en' ? 'Province' : 'Eyalet'}
+            </label>
+            <select
+              value={eventRegion}
+              onChange={(e) => setEventRegion(e.target.value as CanadianRegion)}
+              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3.5 text-xs font-bold focus:bg-white focus:ring-1 focus:ring-primary transition-all outline-none cursor-pointer"
+            >
+              {ALL_CANADIAN_REGIONS.map((r) => (
+                <option key={r} value={r}>
+                  {r} — {regionLabel(r, lang)}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Event Organizer */}
@@ -14470,10 +15830,10 @@ Designed with ❤️ for Goofind App Store Listings.
       >
         <NearbyMapLoader
           lang={lang}
-          businesses={businesses || []}
-          events={(events || []).filter((e) => e?.approved !== false)}
-          places={(places || []).filter((p) => p?.approved !== false)}
-          notifications={(notifications || []).filter((n) => n?.approved)}
+          businesses={regionBusinesses}
+          events={regionEvents.filter((e) => e?.approved !== false)}
+          places={regionPlaces.filter((p) => p?.approved !== false)}
+          notifications={regionNotifications.filter((n) => n?.approved)}
           onClose={() => setIsNearbyMapOpen(false)}
           onSelectBusiness={(biz) => {
             setSelectedBusiness(biz);
@@ -14499,7 +15859,11 @@ Designed with ❤️ for Goofind App Store Listings.
       <Modal 
         isOpen={isBusinessDetailModalOpen} 
         onClose={() => setIsBusinessDetailModalOpen(false)} 
-        title={selectedBusiness?.name || 'Details'}
+        title={
+          selectedBusiness
+            ? t.categories[selectedBusiness.category as keyof typeof t.categories] || selectedBusiness.category
+            : 'Details'
+        }
         maxWidth="max-w-2xl"
       >
         {selectedBusiness && (
@@ -14572,6 +15936,7 @@ Designed with ❤️ for Goofind App Store Listings.
               });
               setBusinessImageUrlPreview(selectedBusiness.imageUrl);
               setBusinessGallery(selectedBusiness.gallery || []);
+              setBusinessSocialLinks(selectedBusiness.socialLinks || {});
               setIsEditBusinessModalOpen(true);
               setIsBusinessDetailModalOpen(false);
             }}
@@ -14586,6 +15951,14 @@ Designed with ❤️ for Goofind App Store Listings.
             onOpenCompanyThread={
               currentUser?.id === selectedBusiness.ownerId ? handleOpenCompanyMessageThread : undefined
             }
+            onOpenImageLightbox={(images, startIndex) => {
+              setLightboxImages(images);
+              setLightboxIndex(startIndex);
+              setZoomLevel(1);
+              setPanOffset({ x: 0, y: 0 });
+              setRotationAngle(0);
+            }}
+            onLoginRequired={() => setIsAuthModalOpen(true)}
           />
         )}
       </Modal>
@@ -14810,8 +16183,10 @@ Designed with ❤️ for Goofind App Store Listings.
       >
         {profileUser && (() => {
           const ownedBusinesses = (businesses || []).filter(b => b && b.ownerId === profileUser.id);
+          const profilePhone = resolveUserPhone(profileUser, dbUsers);
+          const profileEmail = profileUser.email?.trim() || '';
           return (
-            <div className="flex flex-col items-center text-center space-y-6 py-2 animate-in fade-in duration-300">
+            <div className="flex flex-col items-center text-center space-y-5 py-2 animate-in fade-in duration-300">
               {/* User Avatar */}
               <div className="w-20 h-20 rounded-full bg-primary-mid/10 border-4 border-white shadow-xl flex items-center justify-center text-primary text-3xl font-black relative overflow-hidden">
                 {profileUser.photoUrl ? (
@@ -14824,38 +16199,70 @@ Designed with ❤️ for Goofind App Store Listings.
                 )}
               </div>
 
-              {/* User Identity Details */}
               <div className="space-y-1">
                 <h4 className="text-xl font-black text-slate-800 uppercase tracking-tight">
                   {profileUser.name}
                 </h4>
-                <p className="text-xs font-black text-primary uppercase tracking-widest px-3 py-1 bg-primary/5 rounded-full inline-block">
-                  {lang === 'en' ? 'Verified Hub Member' : 'Doğrulanmış Bölge Üyesi'}
-                </p>
               </div>
 
-              {/* Profile Information Fields */}
-              <div className="w-full bg-slate-50 border border-slate-100 rounded-[1.5rem] p-5 text-left space-y-4">
-                <div>
-                  <p className="text-[14px] font-bold text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'E-mail Address' : 'E-posta Adresi'}</p>
-                  <p className="text-sm font-semibold text-slate-700 mt-0.5 break-all">
-                    {profileUser.email || (lang === 'en' ? 'Confidential / Hidden' : 'Gizli / Belirtilmemiş')}
-                  </p>
-                </div>
+              <div className="w-full space-y-2 text-left">
+                {profileEmail ? (
+                  <a
+                    href={`mailto:${profileEmail}`}
+                    className="flex items-center gap-3 p-3.5 bg-white border border-slate-100 rounded-xl hover:border-primary/25 transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
+                      <Mail size={18} strokeWidth={2.5} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'E-mail' : 'E-posta'}</p>
+                      <p className="text-sm font-semibold text-slate-700 break-all">{profileEmail}</p>
+                    </div>
+                  </a>
+                ) : (
+                  <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-[12px] font-semibold text-slate-500">
+                    {lang === 'en' ? 'E-mail not shared' : 'E-posta paylaşılmamış'}
+                  </div>
+                )}
 
-                <div>
-                  <p className="text-[14px] font-bold text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Unique Member ID' : 'Benzersiz Üye Kimliği'}</p>
-                  <p className="text-[14px] font-mono text-slate-500 mt-0.5 break-all select-all">{profileUser.id}</p>
-                </div>
-
-                <div>
-                  <p className="text-[14px] font-bold text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Community Verification' : 'Topluluk Doğrulaması'}</p>
-                  <span className="inline-flex items-center gap-1.5 text-[14px] uppercase font-black text-emerald-600 mt-1 bg-emerald-50 py-1 px-2.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    {lang === 'en' ? 'Active Citizen User' : 'Aktif Vatandaş Kullanıcı'}
-                  </span>
-                </div>
+                {profilePhone ? (
+                  <button
+                    type="button"
+                    onClick={() => dialPhoneNumber(profilePhone)}
+                    className="w-full flex items-center gap-3 p-3.5 bg-white border border-slate-100 rounded-xl hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <Phone size={18} strokeWidth={2.5} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{lang === 'en' ? 'Phone' : 'Telefon'}</p>
+                      <p className="text-sm font-semibold text-slate-700">{profilePhone}</p>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="p-3.5 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-[12px] font-semibold text-slate-500 leading-snug">
+                    {lang === 'en' ? 'No phone number on this profile.' : 'Bu profilde telefon numarası yok.'}
+                  </div>
+                )}
               </div>
+
+              <button
+                type="button"
+                disabled={!profilePhone}
+                onClick={() => {
+                  if (!profilePhone) return;
+                  setIsUserProfileModalOpen(false);
+                  handlePlaceUserCall({ ...profileUser, phone: profilePhone });
+                }}
+                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all ${
+                  profilePhone
+                    ? 'bg-primary text-white shadow-md hover:bg-primary/95 active:scale-95'
+                    : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                }`}
+              >
+                <PhoneCall size={18} className={profilePhone ? 'animate-pulse' : ''} />
+                <span>{lang === 'en' ? 'Call' : 'Ara'}</span>
+              </button>
 
               {/* Owned Businesses & Companies */}
               {ownedBusinesses.length > 0 && (
@@ -14902,6 +16309,13 @@ Designed with ❤️ for Goofind App Store Listings.
                             <p className="text-[14px] text-slate-500 mt-0.5 line-clamp-1">
                               {biz.description}
                             </p>
+                            <BusinessSocialLinksBar
+                              links={biz.socialLinks}
+                              lang={lang}
+                              size="sm"
+                              className="mt-2"
+                              onLinkClick={(e) => e.stopPropagation()}
+                            />
                           </div>
                           
                           <div className="mt-1.5 flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-100">
@@ -14934,31 +16348,6 @@ Designed with ❤️ for Goofind App Store Listings.
                   </div>
                 </div>
               )}
-
-              {/* Direct Calling & Connection Actions (Arama Butonları) */}
-              <div className="w-full space-y-2.5">
-                <div className="flex items-center gap-2 border-b border-slate-200 pb-1 text-left">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  <span className="text-[14px] font-black text-slate-400 uppercase tracking-wider">
-                    {lang === 'en' ? 'Direct Actions & Calling' : 'Doğrudan İşlemler & Arama'}
-                  </span>
-                </div>
-
-                <div className="w-full">
-                  {/* WebRTC In-App Direct Call */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsUserProfileModalOpen(false);
-                      handlePlaceUserCall(profileUser);
-                    }}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-md hover:bg-primary/95 hover:scale-[1.01] transition-all cursor-pointer active:scale-95 text-center leading-none"
-                  >
-                     <PhoneCall size={18} className="animate-pulse" />
-                     <span>{lang === 'en' ? 'Call' : 'Ara'}</span>
-                  </button>
-                </div>
-              </div>
 
               {/* Close Button */}
               <button
@@ -15250,9 +16639,6 @@ Designed with ❤️ for Goofind App Store Listings.
                  <button onClick={() => setIsTermsModalOpen(true)} className="text-[14px] font-black text-slate-400 hover:text-accent-vivid-vivid uppercase tracking-widest transition-colors font-mono cursor-pointer">
                    {lang === 'en' ? 'Terms & Conditions' : 'Kullanım Koşulları'}
                  </button>
-                 <a href="?page=delete-account" className="text-[14px] font-extrabold text-red-500 hover:text-red-650 uppercase tracking-widest transition-colors font-mono">
-                   🚨 {lang === 'en' ? 'Delete Account Request' : 'Hesap Silme Talebi'}
-                 </a>
               </div>
            </div>
            <div className="w-full h-px bg-slate-50 mb-8" />
@@ -15375,12 +16761,12 @@ Designed with ❤️ for Goofind App Store Listings.
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
             style={{ x: '-50%' }}
-            className={`fixed bottom-28 left-1/2 z-[2000] px-6 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 border backdrop-blur-md max-w-[90%] md:max-w-md ${
+            className={`fixed bottom-28 left-1/2 z-[9999] px-6 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 border max-w-[92%] md:max-w-md ${
               toast.type === 'success' 
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                ? 'bg-emerald-600 border-emerald-700 text-white' 
                 : toast.type === 'error' 
-                ? 'bg-red-500/10 border-red-500/20 text-red-500' 
-                : 'bg-primary-mid/10 border-primary/20 text-primary-light'
+                ? 'bg-red-600 border-red-700 text-white' 
+                : 'bg-primary border-primary-dark text-white'
             }`}
           >
             {toast.type === 'success' ? (
@@ -15402,7 +16788,7 @@ Designed with ❤️ for Goofind App Store Listings.
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[3000] bg-black/95 flex flex-col items-center justify-center select-none no-lightbox"
+            className="fixed inset-0 z-[3000] bg-black flex flex-col items-center justify-center select-none no-lightbox"
             onClick={closeLightbox}
           >
             <button
@@ -15411,62 +16797,32 @@ Designed with ❤️ for Goofind App Store Listings.
                 e.stopPropagation();
                 closeLightbox();
               }}
-              className="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-[3010] w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 text-white flex items-center justify-center transition-all shadow-lg border border-white/20"
+              className="fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-[3010] w-11 h-11 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white flex items-center justify-center transition-all"
               aria-label={lang === 'tr' ? 'Kapat' : 'Close'}
             >
               <X size={24} strokeWidth={2.5} />
             </button>
 
             {lightboxImages.length > 1 && (
-              <div className="fixed top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] z-[3010] px-2.5 py-1 rounded-full bg-black/50 text-white text-[11px] font-bold">
+              <div className="fixed top-[max(1rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-[3010] px-3 py-1 rounded-full bg-black/40 text-white/90 text-[11px] font-bold pointer-events-none">
                 {lightboxIndex + 1} / {lightboxImages.length}
               </div>
             )}
 
             <div
-              className="relative w-full h-full flex items-center justify-center px-2 py-14"
+              className="relative w-full h-full flex items-center justify-center p-2 sm:p-4"
               onClick={(e) => e.stopPropagation()}
               onWheel={handleWheel}
             >
-              {lightboxImages.length > 1 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePrevImage();
-                  }}
-                  disabled={lightboxIndex === 0}
-                  className="absolute left-2 z-[3010] w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center transition-all disabled:opacity-20 active:scale-90"
-                  aria-label={lang === 'tr' ? 'Önceki' : 'Previous'}
-                >
-                  <ChevronLeft size={24} strokeWidth={2.5} />
-                </button>
-              )}
-
-              {lightboxImages.length > 1 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleNextImage();
-                  }}
-                  disabled={lightboxIndex === lightboxImages.length - 1}
-                  className="absolute right-2 z-[3010] w-10 h-10 rounded-full bg-black/50 text-white flex items-center justify-center transition-all disabled:opacity-20 active:scale-90"
-                  aria-label={lang === 'tr' ? 'Sonraki' : 'Next'}
-                >
-                  <ChevronRight size={24} strokeWidth={2.5} />
-                </button>
-              )}
-
               <motion.img
                 key={lightboxIndex}
                 src={lightboxImage}
                 alt=""
-                initial={{ opacity: 0, scale: 0.96 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.2 }}
-                className={`max-w-[92vw] max-h-[80vh] object-contain select-none ${
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.18 }}
+                className={`max-w-full max-h-[92dvh] w-auto h-auto object-contain select-none touch-manipulation ${
                   zoomLevel === 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-all-scroll'
                 }`}
                 style={{
@@ -15540,30 +16896,6 @@ Designed with ❤️ for Goofind App Store Listings.
                 }}
               />
             </div>
-
-            {lightboxImages.length > 1 && (
-              <div
-                className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[3010] flex gap-1.5 items-center"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {lightboxImages.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setLightboxIndex(idx);
-                      setZoomLevel(1);
-                      setPanOffset({ x: 0, y: 0 });
-                      setRotationAngle(0);
-                    }}
-                    className={`h-2 rounded-full transition-all ${
-                      idx === lightboxIndex ? 'w-5 bg-white' : 'w-2 bg-white/35'
-                    }`}
-                    aria-label={lang === 'tr' ? `Fotoğraf ${idx + 1}` : `Photo ${idx + 1}`}
-                  />
-                ))}
-              </div>
-            )}
           </motion.div>
         )}
       </AnimatePresence>

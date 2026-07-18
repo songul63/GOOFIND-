@@ -3,8 +3,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-document.getElementById('app-loading')?.remove();
-
 class AppErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { error: Error | null }

@@ -15,13 +15,16 @@ function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([bytes], { type: mime });
 }
 
+type MediaStoragePrefix = 'business-images' | 'listing-images' | 'profile-images';
+
 async function uploadImageBlob(
   blob: Blob,
   ownerId: string,
   batchId: string,
   filename: string,
+  storagePrefix: MediaStoragePrefix,
 ): Promise<string> {
-  const path = `business-images/${ownerId}/${batchId}/${filename}`;
+  const path = `${storagePrefix}/${ownerId}/${batchId}/${filename}`;
   const storageRef = ref(storage, path);
   await uploadBytes(storageRef, blob, { contentType: blob.type || 'image/jpeg' });
   return getDownloadURL(storageRef);
@@ -32,6 +35,7 @@ async function uploadImageSource(
   ownerId: string,
   batchId: string,
   filename: string,
+  storagePrefix: MediaStoragePrefix,
 ): Promise<string> {
   if (source.startsWith('http://') || source.startsWith('https://')) {
     return source;
@@ -43,7 +47,7 @@ async function uploadImageSource(
   if (blob.size > 5 * 1024 * 1024) {
     throw new Error('image_too_large');
   }
-  return uploadImageBlob(blob, ownerId, batchId, filename);
+  return uploadImageBlob(blob, ownerId, batchId, filename, storagePrefix);
 }
 
 export async function resolveBusinessMediaForSave(
@@ -51,6 +55,7 @@ export async function resolveBusinessMediaForSave(
   imageUrl: string,
   gallery: string[],
   fallbackImageUrl: string,
+  storagePrefix: MediaStoragePrefix = 'business-images',
 ): Promise<{ imageUrl: string; gallery: string[]; uploadFailed?: boolean }> {
   const existingHttpGallery = gallery.filter((item) => item.trim().startsWith('http')).slice(0, 10);
   const trimmedCover = imageUrl.trim();
@@ -72,7 +77,7 @@ export async function resolveBusinessMediaForSave(
     if (coverSource.startsWith('http')) {
       resolvedCover = coverSource;
     } else if (coverSource.startsWith('data:image/')) {
-      resolvedCover = await uploadImageSource(coverSource, ownerId, batchId, 'cover.jpg');
+      resolvedCover = await uploadImageSource(coverSource, ownerId, batchId, 'cover.jpg', storagePrefix);
     }
 
     const resolvedGallery = await Promise.all(
@@ -81,7 +86,7 @@ export async function resolveBusinessMediaForSave(
         if (!source) return null;
         if (source.startsWith('http')) return source;
         if (source.startsWith('data:image/')) {
-          return uploadImageSource(source, ownerId, batchId, `gallery-${index}.jpg`);
+          return uploadImageSource(source, ownerId, batchId, `gallery-${index}.jpg`, storagePrefix);
         }
         return null;
       }),
@@ -99,4 +104,8 @@ export async function resolveBusinessMediaForSave(
       uploadFailed: true,
     };
   }
+}
+
+export async function uploadProfileAvatar(userId: string, dataUrl: string): Promise<string> {
+  return uploadImageSource(dataUrl, userId, 'avatar', `photo-${Date.now()}.jpg`, 'profile-images');
 }

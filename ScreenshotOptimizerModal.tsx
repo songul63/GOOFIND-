@@ -38,7 +38,7 @@ export const ScreenshotOptimizerModal: React.FC<ScreenshotOptimizerModalProps> =
   // Styling options (for 'frame' mockup layout)
   const [titleText, setTitleText] = useState<string>('GOOFIND');
   const [subtitleText, setSubtitleText] = useState<string>(
-    lang === 'tr' ? 'Kanada Türk Topluluk Merkezi' : "Canada's Turkish Community Hub"
+    lang === 'tr' ? 'Kanada Türk Topluluğu' : "Canada's Turkish Community"
   );
   const [bgStyle, setBgStyle] = useState<string>('slate-navy');
   const [textColorStyle, setTextColorStyle] = useState<string>('white');
@@ -141,7 +141,7 @@ export const ScreenshotOptimizerModal: React.FC<ScreenshotOptimizerModalProps> =
     setZoomScale(100);
     setStripAndroidBars(true);
     setTitleText('GOOFIND');
-    setSubtitleText(lang === 'tr' ? 'Kanada Türk Topluluk Merkezi' : "Canada's Turkish Community Hub");
+    setSubtitleText(lang === 'tr' ? 'Kanada Türk Topluluğu' : "Canada's Turkish Community");
     setBgStyle('slate-navy');
   };
 
@@ -671,7 +671,7 @@ export const ScreenshotOptimizerModal: React.FC<ScreenshotOptimizerModalProps> =
                             type="text" 
                             value={subtitleText} 
                             onChange={(e) => setSubtitleText(e.target.value)}
-                            placeholder={lang === 'tr' ? 'Kanada Türk Topluluk Merkezi' : "Canada's Turkish Community Hub"}
+                            placeholder={lang === 'tr' ? 'Kanada Türk Topluluğu' : "Canada's Turkish Community"}
                             className="w-full text-xs font-bold px-3 py-2 border border-slate-200 rounded-lg bg-white outline-none focus:border-primary shrink-0"
                           />
                         </div>

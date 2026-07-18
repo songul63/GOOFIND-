@@ -60,6 +60,7 @@ function MapClickPicker({
 export function BusinessAddressMapPicker({ lang, value, onChange }: BusinessAddressMapPickerProps) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [searchCompleted, setSearchCompleted] = useState(false);
   const [resolving, setResolving] = useState(false);
   const skipNextSearchRef = useRef(false);
   const searchRequestIdRef = useRef(0);
@@ -93,17 +94,20 @@ export function BusinessAddressMapPicker({ lang, value, onChange }: BusinessAddr
     const query = value.address.trim();
     if (skipNextSearchRef.current) {
       skipNextSearchRef.current = false;
+      setSearchCompleted(false);
       return;
     }
 
-    if (query.length < 3) {
+    if (query.length < 4) {
       setSuggestions([]);
       setLoadingSuggestions(false);
+      setSearchCompleted(false);
       return;
     }
 
     const requestId = ++searchRequestIdRef.current;
     setLoadingSuggestions(true);
+    setSearchCompleted(false);
 
     const timer = window.setTimeout(() => {
       void (async () => {
@@ -118,17 +122,22 @@ export function BusinessAddressMapPicker({ lang, value, onChange }: BusinessAddr
         } finally {
           if (searchRequestIdRef.current === requestId) {
             setLoadingSuggestions(false);
+            setSearchCompleted(true);
           }
         }
       })();
-    }, 450);
+    }, 700);
 
     return () => {
       window.clearTimeout(timer);
     };
   }, [value.address]);
 
-  const showSuggestionPanel = value.address.trim().length >= 3;
+  const showSuggestionPanel =
+    !hasPin &&
+    !resolving &&
+    value.address.trim().length >= 4 &&
+    (loadingSuggestions || suggestions.length > 0 || searchCompleted);
 
   const handleAddressChange = useCallback(
     (nextAddress: string) => {
@@ -239,11 +248,11 @@ export function BusinessAddressMapPicker({ lang, value, onChange }: BusinessAddr
                 </li>
               ))}
             </ul>
-          ) : (
+          ) : searchCompleted ? (
             <div className="px-4 py-3 text-[12px] font-semibold text-slate-500">
               {labels.noResults}
             </div>
-          )}
+          ) : null}
         </div>
       )}
 

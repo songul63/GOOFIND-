@@ -17,9 +17,53 @@ export const TORONTO_CENTER = { lat: 43.6532, lng: -79.3832 };
 
 const GEO_CACHE_KEY = 'goofind_geo_cache_v2';
 const GEOCODER_CACHE_KEY = 'goofind_geocoder_cache_v1';
-const NOMINATIM_URL = '/api/nominatim/search';
-const NOMINATIM_REVERSE_URL = '/api/nominatim/reverse';
+const GEOCODE_API_URL = '/api/geocode';
 const NOMINATIM_MIN_INTERVAL_MS = 1100;
+const DEV_GEO_PROXY_PORTS = new Set(['3000', '4173']);
+const CANADA_PHOTON_BBOX = '-141,41,-52,83';
+
+type GeoEndpoints = {
+  nominatimSearch: string;
+  nominatimReverse: string;
+  photon: string;
+  canadaGeoLocate: string;
+};
+
+function geoUsesDevProxy(): boolean {
+  if (typeof window === 'undefined') return false;
+  const { hostname, port } = window.location;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return DEV_GEO_PROXY_PORTS.has(port || '80');
+  }
+  return /^(192\.168\.|10\.|172\.(1[6-9]|2\d|3[01])\.)/.test(hostname) && DEV_GEO_PROXY_PORTS.has(port);
+}
+
+function getGeoEndpoints(): GeoEndpoints {
+  if (geoUsesDevProxy()) {
+    return {
+      nominatimSearch: '/api/nominatim/search',
+      nominatimReverse: '/api/nominatim/reverse',
+      photon: '/api/photon/',
+      canadaGeoLocate: '/api/canada-geo/locate',
+    };
+  }
+  return {
+    nominatimSearch: 'https://nominatim.openstreetmap.org/search',
+    nominatimReverse: 'https://nominatim.openstreetmap.org/reverse',
+    photon: 'https://photon.komoot.io/api/',
+    canadaGeoLocate: 'https://geolocator.api.geo.ca/geolocation/en/locate',
+  };
+}
+
+async function readJsonResponse<T>(res: Response): Promise<T | null> {
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) return null;
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
 
 type GeoCache = Record<string, { lat: number; lng: number }>;
 type GeocoderCache = Record<string, AddressSuggestion>;
@@ -101,11 +145,6 @@ export type AddressSuggestion = {
   source?: 'nominatim' | 'photon' | 'geocoder.ca';
 };
 
-const PHOTON_URL = '/api/photon/';
-const GEOCODE_API_URL = '/api/geocode';
-const CANADA_GEO_URL = '/api/canada-geo/locate';
-const CANADA_PHOTON_BBOX = '-141,41,-52,83';
-
 function formatCanadianPostal(postal?: string): string | null {
   if (!postal) return null;
   const compact = postal.replace(/\s+/g, '').toUpperCase();
@@ -172,6 +211,12 @@ export function extractCanadianPostal(text?: string): string | undefined {
   const match = text.toUpperCase().match(/\b([A-Z]\d[A-Z])\s?(\d[A-Z]\d)\b/);
   if (!match) return undefined;
   return `${match[1]} ${match[2]}`;
+}
+
+function shouldUsePaidGeocoder(query: string): boolean {
+  if (extractCanadianPostal(query)) return true;
+  const trimmed = query.trim();
+  return /^\d+\s+\S/.test(trimmed) && trimmed.length >= 8;
 }
 
 export function mergeAddressWithPostal(address: string, postalCode?: string): string {
@@ -256,7 +301,7 @@ async function fetchNominatimSuggestions(query: string, limit: number): Promise<
     });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${NOMINATIM_URL}?${params}`, {
+    const res = await fetch(`${getGeoEndpoints().nominatimSearch}?${params}`, {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
@@ -266,15 +311,16 @@ async function fetchNominatimSuggestions(query: string, limit: number): Promise<
     window.clearTimeout(timeout);
     if (!res.ok) return [];
 
-    const data = (await res.json()) as Array<{
+    const data = await readJsonResponse<Array<{
       place_id?: number;
       display_name?: string;
       lat?: string;
       lon?: string;
       address?: NominatimAddress;
-    }>;
+    }>>(res);
+    if (!data) return [];
 
-    return (data || [])
+    return data
       .map((item) => {
         const lat = item.lat ? parseFloat(item.lat) : NaN;
         const lng = item.lon ? parseFloat(item.lon) : NaN;
@@ -307,14 +353,14 @@ async function fetchPhotonSuggestions(query: string, limit: number): Promise<Add
     });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${PHOTON_URL}?${params}`, {
+    const res = await fetch(`${getGeoEndpoints().photon}?${params}`, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
     window.clearTimeout(timeout);
     if (!res.ok) return [];
 
-    const data = (await res.json()) as {
+    const data = await readJsonResponse<{
       features?: Array<{
         geometry?: { coordinates?: [number, number] };
         properties?: {
@@ -327,7 +373,8 @@ async function fetchPhotonSuggestions(query: string, limit: number): Promise<Add
           countrycode?: string;
         };
       }>;
-    };
+    }>(res);
+    if (!data) return [];
 
     return (data.features || [])
       .filter((feature) => feature.properties?.countrycode === 'CA')
@@ -358,27 +405,29 @@ async function fetchCanadaGeoSuggestions(query: string, limit = 6): Promise<Addr
     const params = new URLSearchParams({ q: query });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${CANADA_GEO_URL}?${params}`, {
+    const res = await fetch(`${getGeoEndpoints().canadaGeoLocate}?${params}`, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
     window.clearTimeout(timeout);
     if (!res.ok) return [];
 
-    const data = (await res.json()) as Array<{
+    const data = await readJsonResponse<Array<{
       title?: string;
       qualifier?: string;
       type?: string;
       geometry?: { coordinates?: [number, number] };
-    }>;
+    }>>(res);
+    if (!data) return [];
 
-    return (data || [])
+    return data
       .filter(
         (item) =>
           item.geometry?.coordinates &&
           (item.type?.includes('Street') ||
             item.type?.includes('Intersection') ||
-            item.qualifier === 'INTERPOLATED_POSITION'),
+            item.qualifier === 'INTERPOLATED_POSITION' ||
+            item.qualifier === 'INTERPOLATED_CENTROID'),
       )
       .slice(0, limit)
       .map((item, index) => {
@@ -490,18 +539,39 @@ export async function searchAddressSuggestions(
   if (trimmed.length < 3) return [];
 
   try {
-    const canadaGeoResults = await fetchCanadaGeoSuggestions(trimmed, 6);
-    const collected: AddressSuggestion[] = [...canadaGeoResults];
+    const params = new URLSearchParams({ q: trimmed, limit: String(limit) });
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 12000);
+    const res = await fetch(`/api/address-search?${params}`, {
+      signal: controller.signal,
+      headers: { Accept: 'application/json' },
+    });
+    window.clearTimeout(timeout);
+    if (!res.ok) return [];
 
-    if (collected.length < limit) {
-      const [photonResults, nominatimResults] = await Promise.all([
-        fetchPhotonSuggestions(trimmed, 4),
-        fetchNominatimSuggestions(`${trimmed}, Canada`, 4),
-      ]);
-      collected.push(...photonResults, ...nominatimResults);
-    }
+    const data = await readJsonResponse<{ suggestions?: AddressSuggestion[] }>(res);
+    if (data?.suggestions?.length) return data.suggestions;
+
+    // Fallback if function not deployed yet
+    const [canadaGeoResults, photonResults, nominatimResults, geocoderResult] = await Promise.all([
+      fetchCanadaGeoSuggestions(trimmed, 6),
+      fetchPhotonSuggestions(trimmed, 4),
+      fetchNominatimSuggestions(`${trimmed}, Canada`, 4),
+      trimmed.length >= 5 && shouldUsePaidGeocoder(trimmed)
+        ? fetchGeocodeApi({ locate: trimmed })
+        : Promise.resolve(null),
+    ]);
+
+    const collected: AddressSuggestion[] = [
+      ...(geocoderResult ? [geocoderResult] : []),
+      ...canadaGeoResults,
+      ...photonResults,
+      ...nominatimResults,
+    ];
 
     return dedupeSuggestions(collected, limit).sort((a, b) => {
+      if (a.source === 'geocoder.ca' && b.source !== 'geocoder.ca') return -1;
+      if (b.source === 'geocoder.ca' && a.source !== 'geocoder.ca') return 1;
       const aHasNumber = /^\d+/.test(a.label);
       const bHasNumber = /^\d+/.test(b.label);
       if (aHasNumber && !bHasNumber) return -1;
@@ -513,19 +583,24 @@ export async function searchAddressSuggestions(
   }
 }
 
-export async function geocodeAddress(query: string): Promise<{ lat: number; lng: number } | null> {
+export async function geocodeAddress(
+  query: string,
+  options?: { allowPaidGeocoder?: boolean },
+): Promise<{ lat: number; lng: number } | null> {
   const normalized = query.trim().toLowerCase();
   if (!normalized || normalized === 'online' || normalized.includes('zoom')) return null;
 
   const cache = readCache();
   if (cache[normalized]) return cache[normalized];
 
-  const verified = await lookupCanadianAddress(query);
-  if (verified) {
-    const coords = { lat: verified.lat, lng: verified.lng };
-    cache[normalized] = coords;
-    writeCache(cache);
-    return coords;
+  if (options?.allowPaidGeocoder !== false && shouldUsePaidGeocoder(query)) {
+    const verified = await lookupCanadianAddress(query);
+    if (verified) {
+      const coords = { lat: verified.lat, lng: verified.lng };
+      cache[normalized] = coords;
+      writeCache(cache);
+      return coords;
+    }
   }
 
   await waitForNominatimSlot();
@@ -539,7 +614,7 @@ export async function geocodeAddress(query: string): Promise<{ lat: number; lng:
     });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${NOMINATIM_URL}?${params}`, {
+    const res = await fetch(`${getGeoEndpoints().nominatimSearch}?${params}`, {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
@@ -549,7 +624,7 @@ export async function geocodeAddress(query: string): Promise<{ lat: number; lng:
     window.clearTimeout(timeout);
     if (!res.ok) return null;
 
-    const data = (await res.json()) as Array<{ lat?: string; lon?: string }>;
+    const data = await readJsonResponse<Array<{ lat?: string; lon?: string }>>(res);
     const item = data?.[0];
     if (item?.lat && item?.lon) {
       const coords = { lat: parseFloat(item.lat), lng: parseFloat(item.lon) };
@@ -565,10 +640,11 @@ export async function geocodeAddress(query: string): Promise<{ lat: number; lng:
   return null;
 }
 
-export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
-  const verified = await lookupCanadianAddressByCoords(lat, lng);
-  if (verified?.label) return verified.label;
-
+export async function reverseGeocode(
+  lat: number,
+  lng: number,
+  options?: { allowPaidGeocoder?: boolean },
+): Promise<string | null> {
   await waitForNominatimSlot();
 
   try {
@@ -581,7 +657,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
     });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(`${NOMINATIM_REVERSE_URL}?${params}`, {
+    const res = await fetch(`${getGeoEndpoints().nominatimReverse}?${params}`, {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
@@ -589,12 +665,21 @@ export async function reverseGeocode(lat: number, lng: number): Promise<string |
       },
     });
     window.clearTimeout(timeout);
-    if (!res.ok) return null;
-    const data = (await res.json()) as { display_name?: string };
-    return data.display_name?.trim() || null;
+    if (res.ok) {
+      const data = await readJsonResponse<{ display_name?: string }>(res);
+      const nominatimLabel = data?.display_name?.trim();
+      if (nominatimLabel) return nominatimLabel;
+    }
   } catch {
-    return null;
+    /* try paid geocoder fallback below */
   }
+
+  if (options?.allowPaidGeocoder !== false) {
+    const verified = await lookupCanadianAddressByCoords(lat, lng);
+    if (verified?.label) return verified.label;
+  }
+
+  return null;
 }
 
 const GEOCODE_TYPE_PRIORITY: Record<MapItemType, number> = {
@@ -620,7 +705,7 @@ export async function resolveMapPoints(
 
   for (const point of toGeocode) {
     try {
-      const coords = await geocodeAddress(point.addressQuery);
+      const coords = await geocodeAddress(point.addressQuery, { allowPaidGeocoder: false });
       if (coords) {
         result.push({ ...point, lat: coords.lat, lng: coords.lng });
         onUpdate?.([...result]);
@@ -716,6 +801,21 @@ export function openMapDirections(point: MapPoint): void {
   }
 
   window.open(web, '_blank', 'noopener,noreferrer');
+}
+
+/** Open Google Maps to view a place by coordinates or address. */
+export function openGoogleMapsPlace(options: {
+  address: string;
+  lat?: number;
+  lng?: number;
+}): void {
+  const query =
+    typeof options.lat === 'number' && typeof options.lng === 'number'
+      ? `${options.lat},${options.lng}`
+      : options.address.trim();
+  if (!query) return;
+  const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 /** City-level fallback when GPS permission is blocked (e.g. HTTP preview). */

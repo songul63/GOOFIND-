@@ -38,6 +38,10 @@
         "function": "geocodeCanadianAddress"
       },
       {
+        "source": "/api/address-search",
+        "function": "searchCanadianAddressSuggestions"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

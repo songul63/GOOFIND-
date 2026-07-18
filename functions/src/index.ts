@@ -10,6 +10,7 @@ import {
   normalizeQuery,
   type GeocodeSuggestion,
 } from './geocode';
+import { searchCanadianAddresses } from './addressSearch';
 
 initializeApp();
 
@@ -112,6 +113,39 @@ export const geocodeCanadianAddress = onRequest(
       res.json({ success: true, suggestion, cached: false });
     } catch (error) {
       console.error('geocodeCanadianAddress failed', error);
+      res.status(500).json({ success: false, error: 'server_error' });
+    }
+  },
+);
+
+export const searchCanadianAddressSuggestions = onRequest(
+  {
+    secrets: [geocoderAuth],
+    cors: true,
+    maxInstances: 10,
+  },
+  async (req, res) => {
+    if (req.method !== 'GET') {
+      res.status(405).json({ success: false, error: 'method_not_allowed' });
+      return;
+    }
+
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    const limitRaw = typeof req.query.limit === 'string' ? parseInt(req.query.limit, 10) : 8;
+    const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), 12) : 8;
+
+    if (q.length < 3) {
+      res.status(400).json({ success: false, error: 'missing_query' });
+      return;
+    }
+
+    try {
+      const authToken = geocoderAuth.value();
+      const suggestions = await searchCanadianAddresses(q, limit, authToken);
+      res.set('Cache-Control', 'public, max-age=60');
+      res.json({ success: true, suggestions });
+    } catch (error) {
+      console.error('searchCanadianAddressSuggestions failed', error);
       res.status(500).json({ success: false, error: 'server_error' });
     }
   },

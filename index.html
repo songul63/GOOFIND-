@@ -7,6 +7,17 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
+    <script>
+      (function () {
+        var host = location.hostname;
+        if (host === 'gen-lang-client-0422005049.web.app') {
+          location.replace(
+            location.protocol + '//gen-lang-client-0422005049.firebaseapp.com' +
+            location.pathname + location.search + location.hash
+          );
+        }
+      })();
+    </script>
     <title>Goofind - Canada Turkish Community Hub</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563EB">
@@ -14,7 +25,7 @@
     <link rel="apple-touch-icon" href="/goofind_icon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -239,8 +250,72 @@
         }
 
         /* Home: gap between Şirketler / İlanlar / Topluluk = one category pill box (6.75rem) */
-        .home-sections > * + * {
-          margin-top: 6.75rem;
+        .home-sections {
+          display: flex;
+          flex-direction: column;
+          gap: 15rem;
+        }
+
+        @media (max-width: 640px) {
+          .home-sections {
+            gap: 10rem;
+          }
+        }
+
+        .region-menu-btn {
+          display: inline-flex !important;
+          align-items: center;
+          justify-content: center;
+          width: 2rem;
+          height: 2rem;
+          min-width: 2rem;
+          min-height: 2rem;
+          padding: 0;
+          margin-right: -0.125rem;
+          background: transparent !important;
+          color: #2563EB !important;
+          border: none !important;
+          border-radius: 0.75rem;
+          flex-shrink: 0;
+          box-shadow: none !important;
+        }
+
+        .region-menu-btn svg {
+          color: #2563EB !important;
+          stroke: #2563EB !important;
+        }
+
+        .region-menu-btn.is-open {
+          background: transparent !important;
+          opacity: 0.7;
+        }
+
+        .region-menu-btn:hover {
+          opacity: 0.75;
+        }
+
+        .region-menu-panel {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 0.25rem;
+          padding: 0.25rem;
+          background: #FFFFFF;
+          border: 1px solid rgba(37, 99, 235, 0.2);
+          border-radius: 0.75rem;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15);
+          min-width: 7rem;
+        }
+
+        .region-menu-panel-title {
+          grid-column: 1 / -1;
+          margin: 0;
+          padding: 0.25rem 0.35rem 0.1rem;
+          font-size: 9px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #64748b;
+          text-align: center;
         }
 
         /* Standard content images get a zoom cursor to show they are clickable */
@@ -259,14 +334,164 @@
           transform: none !important;
           opacity: 1 !important;
         }
+
+        /* Goofind 3D bubble wordmark */
+        .goofind-bubble-wordmark {
+          --bubble-letter: linear-gradient(
+            165deg,
+            #bae6fd 0%,
+            #7dd3fc 7%,
+            #38bdf8 16%,
+            #3b82f6 38%,
+            #2563eb 62%,
+            #1d4ed8 86%,
+            #1e40af 100%
+          );
+          --bubble-glint: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.5) 0%,
+            rgba(255, 255, 255, 0.18) 20%,
+            rgba(255, 255, 255, 0) 48%
+          );
+          --bubble-f-letter: linear-gradient(
+            165deg,
+            #ffd4b8 0%,
+            #ffb380 8%,
+            #ff8533 22%,
+            #ff4500 52%,
+            #ea580c 78%,
+            #c2410c 100%
+          );
+          position: relative;
+          display: inline-flex;
+          align-items: baseline;
+          font-family: 'Fredoka', 'Plus Jakarta Sans', system-ui, sans-serif;
+          font-weight: 600;
+          letter-spacing: -0.025em;
+          line-height: 1;
+          isolation: isolate;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        .goofind-bubble-wordmark--prominent {
+          font-weight: 700;
+          letter-spacing: -0.03em;
+        }
+
+        .goofind-bubble-wordmark__body,
+        .goofind-bubble-wordmark__glint {
+          display: inline-flex;
+          align-items: baseline;
+          white-space: nowrap;
+        }
+
+        .goofind-bubble-wordmark__body {
+          position: relative;
+          z-index: 1;
+          background-image: var(--bubble-letter);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .goofind-bubble-wordmark__glint {
+          position: absolute;
+          left: 0;
+          top: 0;
+          z-index: 2;
+          pointer-events: none;
+          background-image: var(--bubble-glint);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .goofind-bubble-f {
+          display: inline;
+        }
+
+        .goofind-bubble-wordmark__body .goofind-bubble-f {
+          background-image: var(--bubble-f-letter);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .goofind-bubble-i-wrap {
+          position: relative;
+          display: inline-block;
+          width: 0.34em;
+          height: 0.72em;
+          vertical-align: baseline;
+          flex-shrink: 0;
+        }
+
+        .goofind-bubble-i-wrap--ghost {
+          visibility: hidden;
+          line-height: 0.72em;
+          text-align: center;
+        }
+
+        .goofind-bubble-i-stem {
+          position: absolute;
+          left: 50%;
+          bottom: 0.02em;
+          transform: translateX(-50%);
+          display: block;
+          width: 0.15em;
+          height: 0.56em;
+          border-radius: 999px;
+          background: var(--bubble-letter);
+          overflow: hidden;
+          z-index: 1;
+        }
+
+        .goofind-bubble-i-stem::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: var(--bubble-glint);
+        }
+
+        .goofind-bubble-dot {
+          position: absolute;
+          top: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 0.22em;
+          height: 0.22em;
+          border-radius: 999px;
+          background: var(--bubble-letter);
+          overflow: hidden;
+          z-index: 2;
+        }
+
+        .goofind-bubble-dot::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          background: var(--bubble-glint);
+        }
     </style>
 </head>
 <body>
     <div id="root">
-      <div id="app-loading" style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#EFF6FF;color:#2563EB;font-family:'Plus Jakarta Sans',system-ui,sans-serif;gap:12px;padding:24px;text-align:center;">
-        <div style="width:44px;height:44px;border:4px solid #BFDBFE;border-top-color:#2563EB;border-radius:50%;animation:app-spin 0.9s linear infinite;"></div>
-        <p style="margin:0;font-size:14px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;">Goofind yükleniyor…</p>
-        <p style="margin:0;font-size:11px;font-weight:600;color:#64748B;max-width:260px;line-height:1.5;">İlk açılış birkaç saniye sürebilir. Ekran boş kalırsa sayfayı yenileyin.</p>
+      <div id="app-loading" style="position:fixed;inset:0;display:flex;flex-direction:column;background:#FFFFFF;color:#0F172A;font-family:'Plus Jakarta Sans',system-ui,sans-serif;">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:32px;">
+          <img src="/goofind-mark.png" alt="" width="120" height="120" style="display:block;object-fit:contain;width:120px;height:120px;" />
+        </div>
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:0 24px 48px;text-align:center;">
+          <p class="goofind-bubble-wordmark goofind-bubble-wordmark--prominent" style="margin:0;font-size:clamp(1.75rem,6vw,2.25rem);">
+            <span class="goofind-bubble-wordmark__body">Goo<span class="goofind-bubble-f">f</span><span class="goofind-bubble-i-wrap"><span class="goofind-bubble-i-stem"></span><span class="goofind-bubble-dot"></span></span>nd</span>
+            <span class="goofind-bubble-wordmark__glint" aria-hidden="true">Goo<span class="goofind-bubble-f">f</span><span class="goofind-bubble-i-wrap goofind-bubble-i-wrap--ghost"><span>ı</span></span>nd</span>
+          </p>
+          <p style="margin:0;font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#64748B;">Kanada Türk Topluluğu</p>
+        </div>
       </div>
     </div>
     <style>@keyframes app-spin{to{transform:rotate(360deg)}}</style>
@@ -290,10 +515,10 @@
       setTimeout(function () {
         var loading = document.getElementById('app-loading');
         if (!loading) return;
-        var hint = loading.querySelector('p:last-child');
-        if (hint) {
-          hint.textContent = 'Yükleme uzun sürüyor. Aynı Wi-Fi ağında olduğunuzdan emin olun, sayfayı yenileyin veya bilgisayarda npm run phone komutunu tekrar çalıştırın.';
-          hint.style.color = '#DC2626';
+        var tagline = loading.querySelector('p:last-of-type');
+        if (tagline) {
+          tagline.textContent = 'Yükleme uzun sürüyor… Sayfayı yenileyin veya ağ bağlantınızı kontrol edin.';
+          tagline.style.color = '#DC2626';
         }
       }, 12000);
     </script>

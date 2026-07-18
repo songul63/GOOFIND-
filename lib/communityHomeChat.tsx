@@ -9,6 +9,8 @@ type CommunityHeaderActionsProps = {
   onJoin: () => void;
   onOpenChat: () => void;
   variant?: 'landing' | 'page';
+  participationAllowed?: boolean;
+  onParticipationBlocked?: () => void;
 };
 
 export function CommunityHeaderActions({
@@ -17,6 +19,8 @@ export function CommunityHeaderActions({
   onJoin,
   onOpenChat,
   variant = 'landing',
+  participationAllowed = true,
+  onParticipationBlocked,
 }: CommunityHeaderActionsProps) {
   const isLanding = variant === 'landing';
 
@@ -37,6 +41,19 @@ export function CommunityHeaderActions({
         </span>
         <MessageSquare size={isLanding ? 12 : 14} strokeWidth={2.5} />
         {lang === 'en' ? 'Open Chat' : 'Sohbete Git'}
+      </button>
+    );
+  }
+
+  if (!participationAllowed) {
+    return (
+      <button
+        type="button"
+        onClick={onParticipationBlocked || onJoin}
+        className={`${joinBtnClass} opacity-85`}
+      >
+        <UserPlus size={isLanding ? 12 : 14} strokeWidth={2.5} />
+        {lang === 'en' ? 'Join' : 'Katıl'}
       </button>
     );
   }
@@ -62,6 +79,8 @@ type CommunityHomeChatPanelProps = {
   onLogin: () => void;
   onSendMessage: (e: React.FormEvent<HTMLFormElement>) => void;
   isUploadingImage?: boolean;
+  participationAllowed?: boolean;
+  onParticipationBlocked?: () => void;
 };
 
 export function CommunityHomeChatPanel({
@@ -77,6 +96,8 @@ export function CommunityHomeChatPanel({
   onLogin,
   onSendMessage,
   isUploadingImage = false,
+  participationAllowed = true,
+  onParticipationBlocked,
 }: CommunityHomeChatPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -96,6 +117,10 @@ export function CommunityHomeChatPanel({
           : `${community.name} önizlemesi — katılın ve kendi şehrinizde yazın`,
       empty: lang === 'en' ? 'No messages yet. Start the conversation!' : 'Henüz mesaj yok. İlk mesajı sen yaz!',
       readOnly: lang === 'en' ? 'Join to send messages' : 'Mesaj göndermek için katılın',
+      readOnlyBrowse:
+        lang === 'en'
+          ? 'Read-only browse — join only in your home province'
+          : 'Salt okunur gezinti — yalnızca ana eyaletinizde katılabilirsiniz',
       login: lang === 'en' ? 'Log in to join' : 'Katılmak için giriş yapın',
       placeholder: lang === 'en' ? 'Write to the group...' : 'Gruba yaz...',
       you: lang === 'en' ? 'You' : 'Siz',
@@ -202,6 +227,14 @@ export function CommunityHomeChatPanel({
               <Send size={16} strokeWidth={2.5} />
             </button>
           </form>
+        ) : !participationAllowed ? (
+          <button
+            type="button"
+            onClick={onParticipationBlocked || onJoin}
+            className="w-full py-2.5 rounded-xl bg-amber-50 text-amber-900 font-black text-[10px] uppercase tracking-widest text-center border border-amber-200 hover:bg-amber-100 transition-colors"
+          >
+            {lang === 'en' ? 'Join' : 'Katıl'}
+          </button>
         ) : (
           <button
             type="button"

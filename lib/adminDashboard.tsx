@@ -5,8 +5,10 @@ import {
   Check,
   CheckCircle2,
   LayoutDashboard,
+  MapPin,
   Megaphone,
   MessageCircle,
+  Save,
   Shield,
   Sparkles,
   Trash2,
@@ -14,9 +16,18 @@ import {
   Wrench,
 } from 'lucide-react';
 import { Business, Community, Notification } from '../types';
+import {
+  ALL_CANADIAN_REGIONS,
+  getCommunityRegion,
+  regionLabel,
+  resolveBusinessRegion,
+  type CanadianRegion,
+} from './regions';
+import { AdminRegionBadge, type AdminRegionFilter } from './adminRegions';
 
 export type AdminDashboardTab =
   | 'overview'
+  | 'regions'
   | 'support'
   | 'moderation'
   | 'content'
@@ -47,6 +58,7 @@ type AdminTabBarProps = {
 
 const TAB_CONFIG: { id: AdminDashboardTab; icon: React.ElementType }[] = [
   { id: 'overview', icon: LayoutDashboard },
+  { id: 'regions', icon: MapPin },
   { id: 'support', icon: MessageCircle },
   { id: 'moderation', icon: Shield },
   { id: 'content', icon: Megaphone },
@@ -58,6 +70,7 @@ const TAB_CONFIG: { id: AdminDashboardTab; icon: React.ElementType }[] = [
 export function AdminTabBar({ lang, activeTab, onChange, counts }: AdminTabBarProps) {
   const labels: Record<AdminDashboardTab, { en: string; tr: string }> = {
     overview: { en: 'Overview', tr: 'Genel Bakış' },
+    regions: { en: 'Provinces', tr: 'Eyaletler' },
     support: { en: 'Support', tr: 'Destek' },
     moderation: { en: 'Moderation', tr: 'Moderasyon' },
     content: { en: 'Content', tr: 'İçerik' },
@@ -251,6 +264,7 @@ type AdminAllBusinessesPanelProps = {
   onSelect: (biz: Business) => void;
   onVerify: (id: string) => void;
   onDelete: (id: string, name: string) => void;
+  onChangeRegion?: (id: string, region: CanadianRegion) => void;
 };
 
 export function AdminAllBusinessesPanel({
@@ -261,6 +275,7 @@ export function AdminAllBusinessesPanel({
   onSelect,
   onVerify,
   onDelete,
+  onChangeRegion,
 }: AdminAllBusinessesPanelProps) {
   const filtered = businesses.filter(
     (b) =>
@@ -297,10 +312,27 @@ export function AdminAllBusinessesPanel({
               className="flex items-center justify-between gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-slate-200 transition-all"
             >
               <button type="button" onClick={() => onSelect(biz)} className="min-w-0 flex-1 text-left">
+                <div className="flex items-center gap-2 mb-1">
+                  <AdminRegionBadge region={resolveBusinessRegion(biz)} lang={lang} compact />
+                </div>
                 <p className="text-xs font-black uppercase truncate text-slate-900">{biz.name}</p>
                 <p className="text-[11px] font-bold text-slate-400 uppercase mt-0.5">{biz.category}</p>
               </button>
               <div className="flex items-center gap-1.5 shrink-0">
+                {onChangeRegion && (
+                  <select
+                    value={resolveBusinessRegion(biz)}
+                    onChange={(e) => onChangeRegion(biz.id, e.target.value as CanadianRegion)}
+                    className="text-[9px] font-black uppercase bg-white border border-slate-200 rounded-lg px-1.5 py-1.5 max-w-[52px]"
+                    title={lang === 'en' ? 'Assign province' : 'Eyalet ata'}
+                  >
+                    {ALL_CANADIAN_REGIONS.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 {!biz.verified && (
                   <button
                     type="button"
@@ -334,11 +366,19 @@ export function AdminAllBusinessesPanel({
 
 type AdminUsersPanelProps = {
   lang: 'en' | 'tr';
-  users: { id: string; name?: string; email?: string; lastActive?: number }[];
+  users: {
+    id: string;
+    name?: string;
+    email?: string;
+    lastActive?: number;
+    homeRegion?: CanadianRegion | null;
+    joinedCommunityId?: string | null;
+  }[];
   deletionRequests: DeletionRequest[];
   search: string;
   onSearchChange: (v: string) => void;
   onProcessDeletion: (id: string, status: 'processed' | 'rejected') => void;
+  onChangeHomeRegion?: (userId: string, region: CanadianRegion) => void;
 };
 
 export function AdminUsersPanel({
@@ -348,6 +388,7 @@ export function AdminUsersPanel({
   search,
   onSearchChange,
   onProcessDeletion,
+  onChangeHomeRegion,
 }: AdminUsersPanelProps) {
   const filteredUsers = users.filter(
     (u) =>
@@ -377,13 +418,47 @@ export function AdminUsersPanel({
           ) : (
             filteredUsers.map((user) => (
               <div key={user.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                <p className="text-sm font-black text-slate-900">{user.name || 'User'}</p>
-                <p className="text-xs font-bold text-slate-500 mt-0.5">{user.email || user.id}</p>
-                {user.lastActive && (
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-slate-900">{user.name || 'User'}</p>
+                    <p className="text-xs font-bold text-slate-500 mt-0.5">{user.email || user.id}</p>
+                  </div>
+                  {user.homeRegion ? (
+                    <AdminRegionBadge region={user.homeRegion} lang={lang} compact />
+                  ) : (
+                    <span className="text-[9px] font-black uppercase text-amber-600 bg-amber-50 px-2 py-1 rounded-lg shrink-0">
+                      {lang === 'en' ? 'No home' : 'Eyalet yok'}
+                    </span>
+                  )}
+                </div>
+                {user.joinedCommunityId && (
                   <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
+                    {lang === 'en' ? 'Community' : 'Topluluk'}: {user.joinedCommunityId}
+                  </p>
+                )}
+                {user.lastActive && (
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
                     {lang === 'en' ? 'Last active' : 'Son aktif'}:{' '}
                     {new Date(user.lastActive).toLocaleString()}
                   </p>
+                )}
+                {onChangeHomeRegion && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <label className="text-[9px] font-black uppercase text-slate-400 shrink-0">
+                      {lang === 'en' ? 'Home province' : 'Ana eyalet'}
+                    </label>
+                    <select
+                      value={user.homeRegion || 'ON'}
+                      onChange={(e) => onChangeHomeRegion(user.id, e.target.value as CanadianRegion)}
+                      className="flex-1 text-[10px] font-black uppercase bg-white border border-slate-200 rounded-lg px-2 py-1.5"
+                    >
+                      {ALL_CANADIAN_REGIONS.map((r) => (
+                        <option key={r} value={r}>
+                          {r} — {regionLabel(r, lang)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
               </div>
             ))
@@ -484,49 +559,181 @@ export function AdminUsersPanel({
 type AdminCommunitiesPanelProps = {
   lang: 'en' | 'tr';
   communities: Community[];
+  regionFilter?: AdminRegionFilter;
+  onUpdateCommunity?: (
+    communityId: string,
+    updates: { region?: CanadianRegion; memberCount?: number; description?: string },
+  ) => void;
 };
 
-export function AdminCommunitiesPanel({ lang, communities }: AdminCommunitiesPanelProps) {
+function CommunityAdminCard({
+  lang,
+  community,
+  onUpdateCommunity,
+}: {
+  lang: 'en' | 'tr';
+  community: Community;
+  onUpdateCommunity?: AdminCommunitiesPanelProps['onUpdateCommunity'];
+}) {
+  const [region, setRegion] = useState<CanadianRegion>(getCommunityRegion(community));
+  const [memberCount, setMemberCount] = useState(String(community.memberCount || 0));
+  const [description, setDescription] = useState(community.description || '');
+  const [dirty, setDirty] = useState(false);
+
+  return (
+    <div className="p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:border-rose-100 transition-all">
+      <div className="flex items-center gap-3 mb-3">
+        {community.imageUrl ? (
+          <img src={community.imageUrl} alt="" className="w-12 h-12 rounded-xl object-cover border border-slate-200" />
+        ) : (
+          <div className="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-black">
+            {(community.name || '?').charAt(0)}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-black text-slate-900 truncate">{community.name}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase">/{community.slug}</p>
+        </div>
+        <AdminRegionBadge region={getCommunityRegion(community)} lang={lang} compact />
+      </div>
+      {onUpdateCommunity ? (
+        <>
+          <div className="space-y-3 mb-3">
+            <div>
+              <label className="text-[9px] font-black uppercase text-slate-400">
+                {lang === 'en' ? 'Province' : 'Eyalet'}
+              </label>
+              <select
+                value={region}
+                onChange={(e) => {
+                  setRegion(e.target.value as CanadianRegion);
+                  setDirty(true);
+                }}
+                className="w-full mt-1 text-[10px] font-black uppercase bg-white border border-slate-200 rounded-lg px-2 py-2"
+              >
+                {ALL_CANADIAN_REGIONS.map((r) => (
+                  <option key={r} value={r}>
+                    {r} — {regionLabel(r, lang)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[9px] font-black uppercase text-slate-400">
+                {lang === 'en' ? 'Members' : 'Üye sayısı'}
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={memberCount}
+                onChange={(e) => {
+                  setMemberCount(e.target.value);
+                  setDirty(true);
+                }}
+                className="w-full mt-1 text-xs font-bold bg-white border border-slate-200 rounded-lg px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] font-black uppercase text-slate-400">
+                {lang === 'en' ? 'Description' : 'Açıklama'}
+              </label>
+              <textarea
+                rows={2}
+                value={description}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setDirty(true);
+                }}
+                className="w-full mt-1 text-xs font-medium bg-white border border-slate-200 rounded-lg px-3 py-2 resize-none"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={!dirty}
+            onClick={() => {
+              onUpdateCommunity(community.id, {
+                region,
+                memberCount: Math.max(0, parseInt(memberCount, 10) || 0),
+                description: description.trim(),
+              });
+              setDirty(false);
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-40 hover:bg-primary/90 transition-all"
+          >
+            <Save size={14} />
+            {lang === 'en' ? 'Save' : 'Kaydet'}
+          </button>
+        </>
+      ) : (
+        <>
+          <p className="text-xs text-slate-500 line-clamp-2 mb-3">{community.description}</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase text-slate-400">
+              {community.memberCount || 0} {lang === 'en' ? 'members' : 'üye'}
+            </span>
+            <CheckCircle2 size={16} className="text-emerald-500" />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export function AdminCommunitiesPanel({
+  lang,
+  communities,
+  regionFilter = 'ALL',
+  onUpdateCommunity,
+}: AdminCommunitiesPanelProps) {
+  const visible = communities.filter((c) => c.id !== 'all');
+  const grouped = useMemo(() => {
+    if (regionFilter !== 'ALL') return [{ region: regionFilter, items: visible }];
+    return ALL_CANADIAN_REGIONS.map((region) => ({
+      region,
+      items: visible.filter((c) => getCommunityRegion(c) === region),
+    })).filter((g) => g.items.length > 0);
+  }, [visible, regionFilter]);
+
   return (
     <div className="bg-white p-6 md:p-10 rounded-[2.5rem] border border-slate-200 shadow-xl animate-in fade-in duration-300">
-      <h4 className="text-sm font-black uppercase tracking-[0.2em] text-rose-600 mb-6">
-        {lang === 'en' ? 'Community' : 'Topluluk'}
-      </h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {communities.length === 0 ? (
-          <p className="text-slate-400 italic col-span-full text-center py-10">
-            {lang === 'en' ? 'No communities configured' : 'Topluluk bulunamadı'}
-          </p>
-        ) : (
-          communities.map((c) => (
-            <div
-              key={c.id}
-              className="p-5 rounded-2xl border border-slate-100 bg-slate-50 hover:border-rose-100 transition-all"
-            >
-              <div className="flex items-center gap-3 mb-3">
-                {c.imageUrl ? (
-                  <img src={c.imageUrl} alt="" className="w-12 h-12 rounded-xl object-cover border border-slate-200" />
-                ) : (
-                  <div className="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-black">
-                    {(c.name || '?').charAt(0)}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-sm font-black text-slate-900 truncate">{c.name}</p>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">/{c.slug}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+        <h4 className="text-sm font-black uppercase tracking-[0.2em] text-rose-600">
+          {lang === 'en' ? 'Community Management' : 'Topluluk Yönetimi'}
+        </h4>
+        <span className="text-[11px] font-black uppercase text-slate-400">
+          {visible.length} {lang === 'en' ? 'communities' : 'topluluk'}
+        </span>
+      </div>
+      {visible.length === 0 ? (
+        <p className="text-slate-400 italic text-center py-10">
+          {lang === 'en' ? 'No communities configured' : 'Topluluk bulunamadı'}
+        </p>
+      ) : (
+        <div className="space-y-8">
+          {grouped.map(({ region, items }) => (
+            <div key={region}>
+              {regionFilter === 'ALL' && (
+                <div className="flex items-center gap-2 mb-4">
+                  <AdminRegionBadge region={region} lang={lang} />
+                  <span className="text-xs font-bold text-slate-500">{regionLabel(region, lang)}</span>
+                  <span className="text-[10px] font-black text-slate-300 uppercase">{items.length}</span>
                 </div>
-              </div>
-              <p className="text-xs text-slate-500 line-clamp-2 mb-3">{c.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase text-slate-400">
-                  {c.memberCount || 0} {lang === 'en' ? 'members' : 'üye'}
-                </span>
-                <CheckCircle2 size={16} className="text-emerald-500" />
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {items.map((c) => (
+                  <CommunityAdminCard
+                    key={c.id}
+                    lang={lang}
+                    community={c}
+                    onUpdateCommunity={onUpdateCommunity}
+                  />
+                ))}
               </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -27,6 +27,7 @@ import {
   ANNOUNCEMENT_ALL_CATEGORY_STYLE,
   getCategoryToneStyle,
 } from './categoryStyles';
+import { BusinessSocialLinksBar } from './businessSocialMedia';
 
 type CategoryFlatIconProps = {
   style?: CategoryCardStyle;
@@ -216,7 +217,7 @@ type CategoryPillProps = {
   isSelected: boolean;
   onClick: () => void;
   layout?: 'scroll' | 'grid';
-  tone?: 'primary' | 'accent';
+  tone?: 'primary' | 'accent' | 'primary-soft';
 };
 
 /** Compact pill chips — directory / companies feel */
@@ -246,8 +247,12 @@ export function CategoryPill({
         isSelected
           ? tone === 'accent'
             ? 'bg-accent text-white border-accent shadow-md shadow-accent/25'
-            : 'bg-primary text-white border-primary shadow-md shadow-primary/25'
-          : 'bg-white/90 text-slate-600 border-slate-200/90 hover:border-primary/35 hover:bg-white'
+            : tone === 'primary-soft'
+              ? 'bg-primary/32 text-primary border-primary shadow-sm shadow-primary/14'
+              : 'bg-primary text-white border-primary shadow-md shadow-primary/25'
+          : tone === 'primary-soft'
+            ? 'bg-primary/22 text-primary border-primary hover:bg-primary/28 hover:border-primary'
+            : 'bg-white/90 text-slate-600 border-slate-200/90 hover:border-primary/35 hover:bg-white'
       }`}
     >
       {!isSelected && (
@@ -547,9 +552,9 @@ type CompanyCategoryFilterBarProps = {
   lang: 'en' | 'tr';
 };
 
-const COMPANY_CATEGORY_PREVIEW = 6;
+const COMPANY_CATEGORY_GRID_THRESHOLD = 8;
 
-/** Company category pills — arrow expands to show all categories */
+/** Company category pills — horizontal scroll (all categories) + optional expandable grid */
 export function CompanyCategoryFilterBar({
   selected,
   onSelect,
@@ -566,12 +571,12 @@ export function CompanyCategoryFilterBar({
     return labelA.localeCompare(labelB, lang);
   });
 
-  const hasHiddenCategories = sortedCategories.length > COMPANY_CATEGORY_PREVIEW;
+  const hasManyCategories = sortedCategories.length > COMPANY_CATEGORY_GRID_THRESHOLD;
   const collapseCategories = () => setIsExpanded(false);
 
   return (
-    <div className="relative mb-3 sm:mb-4">
-      {hasHiddenCategories && isExpanded && (
+    <div className="relative mb-3 sm:mb-4 min-w-0 w-full max-w-full">
+      {hasManyCategories && isExpanded && (
         <CompanyCategoryExpandArrow
           isExpanded
           onToggle={collapseCategories}
@@ -582,8 +587,8 @@ export function CompanyCategoryFilterBar({
       <div
         className={
           isExpanded
-            ? 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 px-0.5 animate-in fade-in slide-in-from-top-1 duration-200'
-            : 'flex overflow-x-auto gap-2 pb-1 no-scrollbar px-0.5 snap-x'
+            ? 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 px-0.5 animate-in fade-in slide-in-from-top-1 duration-200 w-full min-w-0'
+            : 'flex w-full min-w-0 overflow-x-auto overflow-y-hidden gap-2 pb-1 pe-6 no-scrollbar px-0.5 snap-x snap-proximity scroll-smooth touch-pan-x overscroll-x-contain'
         }
       >
         <CategoryPill
@@ -592,8 +597,9 @@ export function CompanyCategoryFilterBar({
           isSelected={selected === 'All'}
           onClick={() => (onAllSelect ? onAllSelect() : onSelect('All'))}
           layout={isExpanded ? 'grid' : 'scroll'}
+          tone="primary-soft"
         />
-        {(isExpanded ? sortedCategories : sortedCategories.slice(0, COMPANY_CATEGORY_PREVIEW)).map((cat) => (
+        {sortedCategories.map((cat) => (
           <CategoryPill
             key={cat}
             label={categoryLabels[cat] || cat}
@@ -604,7 +610,7 @@ export function CompanyCategoryFilterBar({
           />
         ))}
       </div>
-      {hasHiddenCategories && (
+      {hasManyCategories && (
         <CompanyCategoryExpandArrow
           isExpanded={isExpanded}
           onToggle={() => (isExpanded ? collapseCategories() : setIsExpanded(true))}
@@ -625,9 +631,9 @@ type AnnouncementCategoryFilterBarProps = {
   lang: 'en' | 'tr';
 };
 
-const ANNOUNCEMENT_CATEGORY_PREVIEW = 6;
+const ANNOUNCEMENT_CATEGORY_GRID_THRESHOLD = 8;
 
-/** Announcement category pills — scroll preview + expandable grid (matches companies UX) */
+/** Announcement category pills — horizontal scroll (all categories) + optional expandable grid */
 export function AnnouncementCategoryFilterBar({
   selected,
   onSelect,
@@ -644,13 +650,13 @@ export function AnnouncementCategoryFilterBar({
     return labelA.localeCompare(labelB, lang);
   });
 
-  const hasHiddenCategories = sortedCategories.length > ANNOUNCEMENT_CATEGORY_PREVIEW;
+  const hasManyCategories = sortedCategories.length > ANNOUNCEMENT_CATEGORY_GRID_THRESHOLD;
   const collapseCategories = () => setIsExpanded(false);
   const cardVariant = isExpanded ? 'grid' : 'scroll';
 
   return (
-    <div className="relative mb-3 sm:mb-4">
-      {hasHiddenCategories && isExpanded && (
+    <div className="relative mb-3 sm:mb-4 min-w-0 w-full max-w-full">
+      {hasManyCategories && isExpanded && (
         <CompanyCategoryExpandArrow
           isExpanded
           onToggle={collapseCategories}
@@ -659,10 +665,10 @@ export function AnnouncementCategoryFilterBar({
         />
       )}
       <div
-        className={`announcements-tabs rounded-xl px-1 pt-2 pb-2 min-h-[5.5rem] ${
+        className={`announcements-tabs rounded-xl px-1 pt-2 pb-2 min-h-[5.5rem] w-full min-w-0 ${
           isExpanded
             ? 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 animate-in fade-in slide-in-from-top-1 duration-200'
-            : 'flex overflow-x-auto gap-1 no-scrollbar snap-x'
+            : 'flex overflow-x-auto overflow-y-hidden gap-1.5 no-scrollbar snap-x snap-proximity scroll-smooth touch-pan-x overscroll-x-contain pe-6'
         }`}
       >
         <CategoryFilterCard
@@ -672,7 +678,7 @@ export function AnnouncementCategoryFilterBar({
           onClick={() => (onAllSelect ? onAllSelect() : onSelect('All'))}
           variant={cardVariant}
         />
-        {(isExpanded ? sortedCategories : sortedCategories.slice(0, ANNOUNCEMENT_CATEGORY_PREVIEW)).map((cat) => (
+        {sortedCategories.map((cat) => (
           <CategoryFilterCard
             key={cat}
             label={categoryLabels[cat] || cat}
@@ -683,7 +689,7 @@ export function AnnouncementCategoryFilterBar({
           />
         ))}
       </div>
-      {hasHiddenCategories && (
+      {hasManyCategories && (
         <CompanyCategoryExpandArrow
           isExpanded={isExpanded}
           onToggle={() => (isExpanded ? collapseCategories() : setIsExpanded(true))}
@@ -813,6 +819,13 @@ function CompanyFeaturedCard({
           <FeaturedStarRating rating={biz.rating} size={9} />
           <span className="text-[10px] font-black text-primary">{biz.rating}</span>
         </div>
+        <BusinessSocialLinksBar
+          links={biz.socialLinks}
+          lang={lang}
+          size="sm"
+          className="mt-1.5"
+          onLinkClick={(e) => e.stopPropagation()}
+        />
         <p className={`text-[7px] sm:text-[8px] font-black uppercase tracking-tight truncate mt-1 ${categoryStyle.textColor}`}>
           {categoryLabel}
         </p>
@@ -888,74 +901,259 @@ type AnnouncementCategoryPageProps = {
   categoryLabels: Record<string, string>;
   lang: 'en' | 'tr';
   notifications: Notification[];
-  contactLabel: string;
+  contactLabel?: string;
   onSelect: (notif: Notification) => void;
   onBack: () => void;
   headerActions?: React.ReactNode;
 };
 
-/** Full-page view for a single announcement category */
-export function AnnouncementCategoryPage({
-  category,
+type AnnouncementsListingsPageProps = {
+  notifications: Notification[];
+  categoryLabels: Record<string, string>;
+  lang: 'en' | 'tr';
+  onSelect: (notif: Notification) => void;
+  onBack: () => void;
+  headerActions?: React.ReactNode;
+  category?: NotificationCategory;
+};
+
+/** Minimal listings page — HEPSİ or single category, listings only */
+export function AnnouncementsListingsPage({
+  notifications,
   categoryLabels,
   lang,
+  onSelect,
+  onBack,
+  headerActions,
+  category,
+}: AnnouncementsListingsPageProps) {
+  const items = notifications.filter(
+    (n) => n && n.approved && (!category || n.category === category),
+  );
+
+  return (
+    <section className="animate-in fade-in duration-300 w-full max-w-3xl mx-auto">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="shrink-0 w-10 h-10 rounded-xl bg-white border border-accent/15 text-accent-vivid flex items-center justify-center shadow-sm hover:bg-accent-soft/50 active:scale-95 transition-all outline-none"
+          aria-label={lang === 'en' ? 'Back' : 'Geri'}
+        >
+          <ChevronLeft size={22} strokeWidth={2.5} />
+        </button>
+        {headerActions}
+      </div>
+
+      {items.length === 0 ? (
+        <div className="bg-white/80 p-10 rounded-2xl border border-accent/10 text-center">
+          <Bell size={28} className="mx-auto text-accent/35 mb-2" strokeWidth={2} />
+          <p className="text-[13px] font-bold text-slate-400">
+            {lang === 'en' ? 'No listings yet.' : 'Henüz ilan yok.'}
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3 w-full">
+          {items.map((notif) => {
+            const categoryStyle = ANNOUNCEMENT_CATEGORY_STYLES[notif.category] || ALL_CATEGORY_STYLE;
+            const categoryLabel = categoryLabels[notif.category] || notif.category;
+            return (
+              <AnnouncementListingCard
+                key={notif.id}
+                notif={notif}
+                categoryStyle={categoryStyle}
+                categoryLabel={categoryLabel}
+                onSelect={onSelect}
+                density="full"
+              />
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/** @deprecated Use AnnouncementsListingsPage */
+export function AnnouncementCategoryPage({
+  category,
   notifications,
-  contactLabel,
+  categoryLabels,
+  lang,
   onSelect,
   onBack,
   headerActions,
 }: AnnouncementCategoryPageProps) {
-  const categoryStyle = ANNOUNCEMENT_CATEGORY_STYLES[category] || ALL_CATEGORY_STYLE;
-  const categoryLabel = categoryLabels[category] || category;
-  const approved = notifications.filter((n) => n?.approved);
-  const items = approved.filter((n) => n.category === category);
+  return (
+    <AnnouncementsListingsPage
+      notifications={notifications}
+      categoryLabels={categoryLabels}
+      lang={lang}
+      onSelect={onSelect}
+      onBack={onBack}
+      headerActions={headerActions}
+      category={category}
+    />
+  );
+}
+
+function getListingPreviewImages(notif: Notification): string[] {
+  const urls: string[] = [];
+  const add = (url?: string) => {
+    const trimmed = url?.trim();
+    if (trimmed && !urls.includes(trimmed)) urls.push(trimmed);
+  };
+  add(notif.imageUrl);
+  notif.gallery?.forEach((item) => add(item));
+  return urls;
+}
+
+type ListingPreviewMediaProps = {
+  images: string[];
+  categoryStyle: CategoryCardStyle;
+};
+
+function ListingPreviewMedia({ images, categoryStyle, size = 'compact' }: ListingPreviewMediaProps & { size?: 'compact' | 'large' }) {
+  const mediaBoxClass =
+    size === 'large'
+      ? 'shrink-0 w-[88px] sm:w-[96px] h-[88px] sm:h-[96px] rounded-xl overflow-hidden border border-accent/10 bg-slate-100'
+      : 'shrink-0 w-[72px] sm:w-[80px] h-[72px] sm:h-[80px] rounded-xl overflow-hidden border border-accent/10 bg-slate-100';
+
+  if (images.length === 0) {
+    return (
+      <div className={`${mediaBoxClass} flex items-center justify-center bg-gradient-to-br from-accent-soft/80 to-primary-soft/60`}>
+        <CategoryFlatIcon style={categoryStyle} size={20} boxSize={40} variant="badge" />
+      </div>
+    );
+  }
+
+  if (images.length === 1) {
+    return (
+      <div className={mediaBoxClass}>
+        <img
+          src={images[0]}
+          className="w-full h-full object-cover"
+          referrerPolicy="no-referrer"
+          alt=""
+        />
+      </div>
+    );
+  }
 
   return (
-    <section className="announcements-zone animate-in fade-in duration-700 rounded-[2rem] sm:rounded-[3rem] border border-accent/15 bg-gradient-to-br from-accent-soft/40 via-white to-primary-soft/30 p-5 sm:p-8 md:p-10 shadow-sm relative overflow-hidden">
-      <div className="mb-6 sm:mb-8 relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start gap-3 sm:gap-4 min-w-0">
-          <button
-            type="button"
-            onClick={onBack}
-            className="shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white border border-accent/20 text-accent-vivid flex items-center justify-center shadow-sm hover:bg-accent-soft/60 hover:border-accent/35 active:scale-95 transition-all outline-none"
-            aria-label={lang === 'en' ? 'Back to all listings' : 'Tüm ilanlara dön'}
-          >
-            <ChevronLeft size={22} strokeWidth={2.5} />
-          </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5 mb-1.5">
-              <CategoryFlatIcon style={categoryStyle} size={22} boxSize={40} variant="badge" />
-              <h3 className="text-lg sm:text-2xl md:text-3xl font-black uppercase tracking-tight-brand text-accent-vivid font-display italic leading-tight truncate">
-                {categoryLabel}
-              </h3>
-            </div>
-            <p className="text-accent/70 text-[11px] sm:text-[13px] font-black uppercase tracking-brand">
-              {lang === 'en' ? 'Listings in this category' : 'Bu kategorideki ilanlar'}
-            </p>
-            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-wider mt-1">
-              {items.length} {lang === 'en' ? 'live posts' : 'aktif ilan'}
-            </p>
+    <div
+      className={`${mediaBoxClass} relative`}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
+      <div className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar touch-pan-x overscroll-x-contain">
+        {images.map((url, index) => (
+          <div key={`${url}-${index}`} className="snap-center shrink-0 w-full min-w-full h-full basis-full">
+            <img
+              src={url}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              alt=""
+              draggable={false}
+            />
           </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
-          {headerActions}
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-accent text-white flex items-center justify-center shadow-lg shadow-accent/25">
-            <Megaphone size={24} strokeWidth={2.5} />
+        ))}
+      </div>
+      <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-0.5 pointer-events-none">
+        {images.slice(0, 6).map((url, index) => (
+          <span key={`${url}-dot-${index}`} className="w-1 h-1 rounded-full bg-white/90 shadow-sm" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type AnnouncementListingCardProps = {
+  notif: Notification;
+  categoryStyle: CategoryCardStyle;
+  categoryLabel: string;
+  onSelect: (notif: Notification) => void;
+  density?: 'preview' | 'full';
+};
+
+function AnnouncementListingCard({
+  notif,
+  categoryStyle,
+  categoryLabel,
+  onSelect,
+  density = 'preview',
+}: AnnouncementListingCardProps) {
+  const previewImages = getListingPreviewImages(notif);
+  const isFull = density === 'full';
+  const mediaWidth = isFull ? 'w-[88px] sm:w-[96px]' : 'w-[72px] sm:w-[80px]';
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(notif)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(notif);
+        }
+      }}
+      className={`w-full bg-white rounded-2xl border border-accent/10 shadow-sm hover:shadow-md hover:border-accent/25 duration-300 transition-all text-left group outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-accent/40 ${
+        isFull ? '' : 'snap-start shrink-0'
+      }`}
+    >
+      <div className={isFull ? 'p-4' : 'p-3.5'}>
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="shrink-0 flex flex-col items-start gap-1.5">
+            <p
+              className={`block ${mediaWidth} text-[9px] sm:text-[10px] font-black uppercase tracking-wide px-1 py-0.5 rounded-md border leading-tight line-clamp-2 ${categoryStyle.textColor}`}
+              style={getCategoryToneStyle(categoryStyle.textColor)}
+            >
+              {categoryLabel}
+            </p>
+            <ListingPreviewMedia
+              images={previewImages}
+              categoryStyle={categoryStyle}
+              size={isFull ? 'large' : 'compact'}
+            />
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h4
+              className={`font-black text-slate-900 leading-snug group-hover:text-accent-vivid transition-colors mb-1.5 ${
+                isFull
+                  ? 'text-[15px] sm:text-[16px] line-clamp-3'
+                  : 'text-[13px] sm:text-[14px] line-clamp-2'
+              }`}
+            >
+              {notif.title}
+            </h4>
+            <p
+              className={`text-slate-600 font-medium leading-relaxed whitespace-pre-line ${
+                isFull
+                  ? 'text-[13px] sm:text-[14px] line-clamp-6'
+                  : 'text-[12px] sm:text-[13px] line-clamp-2'
+              }`}
+            >
+              {notif.description}
+            </p>
+            {notif.price ? (
+              <span className="inline-block mt-2.5 text-[11px] sm:text-[12px] font-black text-accent-vivid bg-accent-soft border border-accent/15 rounded-lg px-2 py-0.5">
+                {notif.price}
+              </span>
+            ) : null}
           </div>
         </div>
       </div>
-
-      <AnnouncementFeedList
-        notifications={approved}
-        categoryFilter={category}
-        lang={lang}
-        categoryLabels={categoryLabels}
-        contactLabel={contactLabel}
-        onSelect={onSelect}
-        variant="page"
-      />
-    </section>
+    </div>
   );
+}
+
+type AnnouncementsAllPageProps = Omit<AnnouncementsListingsPageProps, 'category'>;
+
+/** Opened from HEPSİ — all listings */
+export function AnnouncementsAllPage(props: AnnouncementsAllPageProps) {
+  return <AnnouncementsListingsPage {...props} />;
 }
 
 type AnnouncementFeedListProps = {
@@ -994,10 +1192,12 @@ export function AnnouncementFeedList({
     <div className="relative mt-4 group/ann-feed">
       <div className="relative mb-3 px-0.5 w-fit max-w-full">
         <div className="inline-flex items-center gap-1 text-[11px] sm:text-[12px] font-black uppercase text-accent-vivid leading-none whitespace-nowrap">
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-vivid opacity-60" />
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-vivid" />
-          </span>
+          {isPage && (
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent-vivid opacity-60" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-accent-vivid" />
+            </span>
+          )}
           <span className="inline leading-none whitespace-nowrap">
             <span className="inline">{lang === 'en' ? 'Live Listings' : 'Canlı İlanlar'}</span>
             {onMultiCategoryFilterChange && (
@@ -1030,12 +1230,28 @@ export function AnnouncementFeedList({
       ) : (
         <>
           <div
-            className={`flex flex-col gap-2 w-full pr-1 scroll-smooth [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-primary-soft/40 [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-thumb]:rounded-full ${
-              isPage ? 'max-h-none' : 'max-h-[320px] overflow-y-auto'
+            className={`flex flex-col gap-2.5 w-full ${
+              isPage
+                ? 'pr-1 scroll-smooth max-h-none [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-primary-soft/40 [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-thumb]:rounded-full'
+                : 'max-h-[min(390px,48vh)] overflow-y-auto snap-y snap-mandatory scroll-smooth pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-primary-soft/40 [&::-webkit-scrollbar-thumb]:bg-accent/30 [&::-webkit-scrollbar-thumb]:rounded-full'
             }`}
           >
             {items.map((notif) => {
               const categoryStyle = ANNOUNCEMENT_CATEGORY_STYLES[notif.category] || ALL_CATEGORY_STYLE;
+              const categoryLabel = categoryLabels[notif.category] || notif.category;
+
+              if (variant !== 'page') {
+                return (
+                  <AnnouncementListingCard
+                    key={notif.id}
+                    notif={notif}
+                    categoryStyle={categoryStyle}
+                    categoryLabel={categoryLabel}
+                    onSelect={onSelect}
+                    density="preview"
+                  />
+                );
+              }
 
               return (
                 <div
@@ -1063,7 +1279,7 @@ export function AnnouncementFeedList({
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <CategoryBadge style={categoryStyle} label={categoryLabels[notif.category] || notif.category} />
+                        <CategoryBadge style={categoryStyle} label={categoryLabel} />
                         <span className="text-[10px] sm:text-[11px] font-bold text-slate-400 flex items-center gap-0.5">
                           <Clock size={10} /> {notif.date}
                         </span>
@@ -1071,7 +1287,7 @@ export function AnnouncementFeedList({
                       <h4 className="font-black text-slate-800 text-[12px] sm:text-[13px] mb-0.5 uppercase tracking-tight group-hover:text-accent-vivid transition-colors truncate">
                         {notif.title}
                       </h4>
-                      <p className="text-slate-500 text-[11px] sm:text-[12px] font-medium line-clamp-1 leading-normal">
+                      <p className="text-slate-500 text-[11px] sm:text-[12px] font-medium line-clamp-2 leading-normal">
                         {notif.description}
                       </p>
                     </div>
@@ -1090,7 +1306,7 @@ export function AnnouncementFeedList({
               );
             })}
           </div>
-          {!isPage && (
+          {isPage && (
             <div className="absolute bottom-0 left-0 right-1 h-10 bg-gradient-to-t from-primary-soft/50 via-accent-soft/20 to-transparent pointer-events-none" />
           )}
         </>

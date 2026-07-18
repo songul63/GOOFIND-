@@ -295,6 +295,8 @@ type AnnouncementHeaderActionsProps = {
   onPostListing: () => void;
   onOpenMyAds: () => void;
   variant?: 'landing' | 'page';
+  canParticipate?: boolean;
+  onParticipationBlocked?: () => void;
 };
 
 export function AnnouncementHeaderActions({
@@ -304,6 +306,8 @@ export function AnnouncementHeaderActions({
   onPostListing,
   onOpenMyAds,
   variant = 'landing',
+  canParticipate = true,
+  onParticipationBlocked,
 }: AnnouncementHeaderActionsProps) {
   const isLanding = variant === 'landing';
 
@@ -317,10 +321,16 @@ export function AnnouncementHeaderActions({
 
   return (
     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-      <button type="button" onClick={onPostListing} className={postBtnClass}>
-        <PenSquare size={isLanding ? 12 : 14} strokeWidth={2.5} />
-        {lang === 'en' ? 'Post Ad' : 'İlan Ver'}
-      </button>
+      {!hasOwnListings && (
+        <button
+          type="button"
+          onClick={onPostListing}
+          className={`${postBtnClass}${canParticipate ? '' : ' opacity-85'}`}
+        >
+          <PenSquare size={isLanding ? 12 : 14} strokeWidth={2.5} />
+          {lang === 'en' ? 'Post Ad' : 'İlan Ver'}
+        </button>
+      )}
       {hasOwnListings && (
         <button type="button" onClick={onOpenMyAds} className={myAdsBtnClass}>
           <MessageSquare size={isLanding ? 12 : 14} strokeWidth={2.5} />

@@ -65,6 +65,24 @@ npm run dev
    npm run app:open:ios
    ```
 
+## App Store (iOS)
+
+Full step-by-step guide: **[docs/APP_STORE_RELEASE.md](docs/APP_STORE_RELEASE.md)**
+
+Quick start on Mac:
+
+```bash
+npm run release:check   # pre-flight validation
+npm run deploy          # publish web app to Firebase
+npm run app:sync:ios    # sync Capacitor iOS shell
+npm run app:open:ios    # open Xcode → Archive → Upload
+```
+
+Required public URLs for App Store Connect:
+- Privacy: `https://gen-lang-client-0422005049.firebaseapp.com/?page=privacy`
+- Support: `https://gen-lang-client-0422005049.firebaseapp.com/?page=support`
+- Account deletion: `https://gen-lang-client-0422005049.firebaseapp.com/?page=delete-account`
+
 ## Deployment
 
 Deploy to Cloud Run or Firebase:

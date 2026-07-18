@@ -47,6 +47,10 @@ import {
   HelpCircle,
   HandHelping,
   Bell,
+  BookOpen,
+  PawPrint,
+  HeartHandshake,
+  Stamp,
   type LucideIcon,
 } from 'lucide-react';
 import { CategoryType, NotificationCategory } from '../types';
@@ -119,6 +123,13 @@ export const ANNOUNCEMENT_CATEGORY_STYLES: Record<string, CategoryCardStyle> = {
   [NotificationCategory.LOST_FOUND]: withStyle('❓', HelpCircle, 'text-[#C62828]'),
   [NotificationCategory.NEWCOMER_HELP]: withStyle('🤝', HandHelping, 'text-[#F9A825]'),
   [NotificationCategory.ANNOUNCEMENTS]: withStyle('📢', Bell, 'text-[#F9A825]'),
+  [NotificationCategory.SECOND_HAND]: withStyle('♻️', ShoppingBag, 'text-[#2E7D32]'),
+  [NotificationCategory.EDUCATION_LESSONS]: withStyle('📚', BookOpen, 'text-[#283593]'),
+  [NotificationCategory.MOM_BABY_KIDS]: withStyle('🍼', Baby, 'text-[#EC407A]'),
+  [NotificationCategory.PETS]: withStyle('🐾', PawPrint, 'text-[#6D4C41]'),
+  [NotificationCategory.MUTUAL_AID]: withStyle('💛', HeartHandshake, 'text-[#F9A825]'),
+  [NotificationCategory.TRAVEL_VISA]: withStyle('✈️', Plane, 'text-[#0288D1]'),
+  [NotificationCategory.IMMIGRATION]: withStyle('🛂', Stamp, 'text-[#5D4037]'),
 };
 
 export const ALL_CATEGORY_STYLE: CategoryCardStyle = {
@@ -130,7 +141,7 @@ export const ALL_CATEGORY_STYLE: CategoryCardStyle = {
 export const COMPANY_ALL_CATEGORY_STYLE: CategoryCardStyle = {
   emoji: '🏢',
   icon: Building2,
-  textColor: 'text-[#1565C0]',
+  textColor: 'text-primary',
 };
 
 export const ANNOUNCEMENT_ALL_CATEGORY_STYLE: CategoryCardStyle = {

@@ -26,6 +26,16 @@ type GeocoderCaResponse = {
   };
 };
 
+const POSTAL_RE = /\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/i;
+
+/** Paid geocoder.ca — only for postal codes or street addresses with a house number. */
+export function shouldUsePaidGeocoder(query: string): boolean {
+  const trimmed = query.trim();
+  if (POSTAL_RE.test(trimmed)) return true;
+  if (/^\d+\s+\S/.test(trimmed) && trimmed.length >= 8) return true;
+  return false;
+}
+
 export function normalizeQuery(query: string): string {
   return query.trim().toLowerCase().replace(/\s+/g, ' ');
 }
@@ -45,6 +55,16 @@ function formatCanadianPostal(postal?: string): string | null {
   const compact = postal.replace(/\s+/g, '').toUpperCase();
   if (!/^[A-Z]\d[A-Z]\d[A-Z]\d$/.test(compact)) return postal.trim();
   return `${compact.slice(0, 3)} ${compact.slice(3)}`;
+}
+
+function coerceField(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || undefined;
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return undefined;
 }
 
 function formatLabel(parts: {
@@ -76,13 +96,18 @@ function buildSuggestion(data: GeocoderCaResponse): GeocodeSuggestion | null {
   if (confidence < 0.35) return null;
 
   const postal = formatCanadianPostal(data.postal) ?? undefined;
+  const houseNumber = coerceField(std.stnumber);
+  const street = coerceField(std.staddress);
+  const city = coerceField(std.city);
+  const province = coerceField(std.prov);
+
   return {
-    id: `gc-${std.stnumber || ''}-${std.staddress || ''}-${std.city || ''}-${data.postal || ''}`,
+    id: `gc-${houseNumber || ''}-${street || ''}-${city || ''}-${data.postal || ''}`,
     label: formatLabel({
-      houseNumber: std.stnumber,
-      street: std.staddress,
-      city: std.city,
-      province: std.prov,
+      houseNumber,
+      street,
+      city,
+      province,
       postal,
     }),
     postal,
@@ -122,5 +147,42 @@ export async function fetchFromGeocoderCa(
 export function buildLocateQuery(query: string): string {
   const trimmed = query.trim();
   if (/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(trimmed)) return trimmed;
-  return /ontario|\bon\b/i.test(trimmed) ? `${trimmed}, Canada` : `${trimmed}, ON, Canada`;
+  if (
+    /,\s*(Canada|QC|ON|AB|BC|MB|SK|NS|NB|NL|PE|Quebec|Ontario|Alberta|British Columbia|Manitoba|Saskatchewan|Nova Scotia|New Brunswick|Newfoundland|Prince Edward Island)/i.test(
+      trimmed,
+    )
+  ) {
+    return /,\s*Canada\b/i.test(trimmed) ? trimmed : `${trimmed}, Canada`;
+  }
+  if (/quebec|\bqc\b|montr[eé]al|laval|gatineau|longueuil|sherbrooke|trois[- ]rivi/i.test(trimmed)) {
+    return `${trimmed}, QC, Canada`;
+  }
+  if (/british columbia|\bbc\b|vancouver|victoria|surrey|burnaby|kelowna|richmond/i.test(trimmed)) {
+    return `${trimmed}, BC, Canada`;
+  }
+  if (/alberta|\bab\b|calgary|edmonton|lethbridge|red deer|medicine hat|fort mcmurray/i.test(trimmed)) {
+    return `${trimmed}, AB, Canada`;
+  }
+  if (/manitoba|\bmb\b|winnipeg|brandon|steinbach|thompson|portage la prairie|selkirk/i.test(trimmed)) {
+    return `${trimmed}, MB, Canada`;
+  }
+  if (/saskatchewan|\bsk\b|saskatoon|regina|prince albert|moose jaw|swift current|yorkton/i.test(trimmed)) {
+    return `${trimmed}, SK, Canada`;
+  }
+  if (/nova scotia|\bns\b|halifax|dartmouth|sydney|truro|new glasgow|bridgewater/i.test(trimmed)) {
+    return `${trimmed}, NS, Canada`;
+  }
+  if (/new brunswick|\bnb\b|moncton|saint john|fredericton|dieppe|miramichi|edmundston/i.test(trimmed)) {
+    return `${trimmed}, NB, Canada`;
+  }
+  if (/newfoundland|\bnl\b|labrador|st\.?\s*john'?s|mount pearl|corner brook|gander|goose bay/i.test(trimmed)) {
+    return `${trimmed}, NL, Canada`;
+  }
+  if (/prince edward|\bpe\b|charlottetown|summerside|montague|kensington/i.test(trimmed)) {
+    return `${trimmed}, PE, Canada`;
+  }
+  if (/ontario|\bon\b|toronto|ottawa|mississauga|brampton|hamilton/i.test(trimmed)) {
+    return `${trimmed}, ON, Canada`;
+  }
+  return `${trimmed}, Canada`;
 }

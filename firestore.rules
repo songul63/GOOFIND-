@@ -24,7 +24,8 @@ service cloud.firestore {
     }
 
     function isValidNotification(data) {
-      return data.title is string && data.title.size() <= 600;
+      return data.title is string && data.title.size() >= 1 && data.title.size() <= 600 &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128;
     }
 
     function isValidEvent(data) {
@@ -64,7 +65,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow get: if isSignedIn() && isValidId(userId);
-      allow list: if isSignedIn() && resource.data.uid == request.auth.uid;
+      allow list: if isAdmin();
       allow create: if isOwner(userId);
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
@@ -83,7 +84,10 @@ service cloud.firestore {
     match /notifications/{id} {
       allow get: if isValidId(id);
       allow list: if true; // Public list
-      allow create: if isVerified() || isAdmin();
+      allow create: if isSignedIn()
+        && incoming().userId == request.auth.uid
+        && isValidNotification(incoming());
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -91,6 +95,7 @@ service cloud.firestore {
       allow get: if isValidId(id);
       allow list: if true; // Public list
       allow create: if isVerified() || isAdmin();
+      allow update: if isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -109,6 +114,7 @@ service cloud.firestore {
       allow get: if isValidId(id);
       allow list: if true; // Public list
       allow create: if isAdmin();
+      allow update: if isAdmin();
 
       match /messages/{msgId} {
         allow get: if isValidId(msgId);

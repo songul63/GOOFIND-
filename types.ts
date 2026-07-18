@@ -53,8 +53,27 @@ export enum NotificationCategory {
   REPAIR_MAINTENANCE = 'Repair & Maintenance',
   LOST_FOUND = 'Lost & Found',
   NEWCOMER_HELP = 'Newcomer Help',
-  ANNOUNCEMENTS = 'Announcements'
+  ANNOUNCEMENTS = 'Announcements',
+  SECOND_HAND = 'Second Hand',
+  EDUCATION_LESSONS = 'Education & Lessons',
+  MOM_BABY_KIDS = 'Mom, Baby & Kids',
+  PETS = 'Pets',
+  MUTUAL_AID = 'Mutual Aid & Support',
+  TRAVEL_VISA = 'Travel & Visa',
+  IMMIGRATION = 'Immigration',
 }
+
+export type CanadianRegion =
+  | 'ON'
+  | 'QC'
+  | 'AB'
+  | 'BC'
+  | 'MB'
+  | 'SK'
+  | 'NS'
+  | 'NB'
+  | 'NL'
+  | 'PE';
 
 export interface Review {
   id: string;
@@ -83,6 +102,9 @@ export interface Business {
   addedBy: 'user' | 'admin';
   latitude?: number;
   longitude?: number;
+  region?: CanadianRegion;
+  province?: string;
+  socialLinks?: import('./lib/businessSocialMedia').BusinessSocialLinks;
 }
 
 export interface BusinessMessage {
@@ -113,6 +135,7 @@ export interface Notification {
   location?: string;
   latitude?: number;
   longitude?: number;
+  region?: CanadianRegion;
 }
 
 export interface BannerAd {
@@ -152,6 +175,7 @@ export interface Event {
   approved: boolean;
   latitude?: number;
   longitude?: number;
+  region?: CanadianRegion;
 }
 
 export interface MediaItem {
@@ -187,6 +211,7 @@ export interface PlaceToVisit {
   category?: PlaceCategory;
   approved?: boolean;
   createdAt?: number;
+  region?: CanadianRegion;
 }
 
 export interface TravelerRecommendation {
@@ -219,6 +244,7 @@ export interface Community {
   description: string;
   memberCount: number;
   imageUrl?: string;
+  region?: CanadianRegion;
 }
 
 export interface CommunityMessage {

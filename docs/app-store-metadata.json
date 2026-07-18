@@ -1,0 +1,32 @@
+{
+  "appName": "Goofind",
+  "bundleId": "com.goofind.app",
+  "version": "1.0.0",
+  "buildNumber": "1",
+  "firebaseProject": "gen-lang-client-0422005049",
+  "liveUrl": "https://gen-lang-client-0422005049.firebaseapp.com",
+  "urls": {
+    "privacyPolicy": "https://gen-lang-client-0422005049.firebaseapp.com/?page=privacy",
+    "support": "https://gen-lang-client-0422005049.firebaseapp.com/?page=support",
+    "accountDeletion": "https://gen-lang-client-0422005049.firebaseapp.com/?page=delete-account"
+  },
+  "appleSignIn": {
+    "servicesId": "ca.goofind.signin",
+    "teamId": "F87MJ6JG2M",
+    "keyId": "925DL7X37N",
+    "authDomain": "gen-lang-client-0422005049.firebaseapp.com"
+  },
+  "appStoreConnect": {
+    "primaryCategory": "Social Networking",
+    "secondaryCategory": "Lifestyle",
+    "subtitleEn": "Canada Turkish Community Hub",
+    "subtitleTr": "Kanada Türk Topluluk Merkezi",
+    "keywordsEn": "turkish,canada,business,directory,community,chat,events",
+    "supportEmail": "songululuca02@gmail.com"
+  },
+  "screenshotSizes": {
+    "iphone67": "1290x2796",
+    "iphone65": "1284x2778",
+    "ipad129": "2048x2732"
+  }
+}

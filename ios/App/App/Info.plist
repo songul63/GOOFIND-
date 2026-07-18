@@ -49,5 +49,15 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Goofind uses the camera so you can add photos to business listings, reviews, and chat messages.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Goofind accesses your photo library so you can upload images to listings, reviews, and messages.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Goofind can save images to your photo library when you choose to download or share content.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Goofind uses your location to show nearby businesses and help you pick an address on the map.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Goofind uses the microphone when you record video or audio messages in chat.</string>
 </dict>
 </plist>

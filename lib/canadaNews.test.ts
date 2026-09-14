@@ -53,8 +53,8 @@ assert.equal(enNews.length, 3);
 assert.equal(trNews.length, 3);
 assert.match(enNews[0].title, /FTA|Türkiye/);
 assert.match(trNews[0].title, /STA|Türkiye/);
-assert.match(enNews[1].title, /Express Entry|French/);
-assert.match(trNews[1].title, /Express Entry|Fransızca/);
+assert.match(enNews[1].title, /Express Entry|STEM/);
+assert.match(trNews[1].title, /Express Entry|STEM/);
 assert.match(enNews[2].title, /Anatolia Fest/);
 assert.match(trNews[2].title, /Anatolia Fest/);
 for (const item of [...enNews, ...trNews]) {

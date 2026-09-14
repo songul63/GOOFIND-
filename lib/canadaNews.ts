@@ -53,68 +53,68 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
   if (lang === 'en') {
     return [
       {
-        id: 'fallback-immigration',
-        title: 'IRCC 2025–2027 Immigration Levels',
-        desc: 'Housing-aligned arrivals and targeted draws continue.',
+        id: 'fallback-trade',
+        title: 'Canada–Türkiye FTA now in negotiations',
+        desc: 'Global Affairs lists the deal as in negotiations; TCE is the contact.',
         content:
-          'Canada’s 2025–2027 Immigration Levels Plan remains the main roadmap for newcomer intake. IRCC is keeping permanent-resident targets aligned with housing and public-service capacity, with more emphasis on in-Canada pathways, French-speaking candidates, and workers in health care, construction, and skilled trades. Turkish newcomers should watch Express Entry and provincial nominee updates closely, because category-based draws can change from round to round.',
-        category: 'Immigration',
+          'Global Affairs Canada lists the Canada–Türkiye free trade agreement’s current status as in negotiations. On July 7, 2026, on the margins of the NATO Summit in Ankara, Prime Minister Mark Carney and President Recep Tayyip Erdoğan announced the launch of talks toward a comprehensive, modern, and mutually beneficial FTA. Technical teams are defining the scope and ambition of the agreement and preparing the first round of negotiations. The Government of Canada invited public comments from July 31 to September 14, 2026, from Canadian businesses, industry associations, provinces and territories, and the public. Questions can go to Global Affairs Canada’s Trade Negotiations Division (TCE) at 111 Sussex Drive, Ottawa, or TCE-Consultations@international.gc.ca. In 2025, two-way merchandise trade reached over CA$4.3 billion.',
+        category: 'Economy',
         color: 'bg-primary',
-        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/news/2024/10/government-of-canada-reduces-immigration.html',
+        link: 'https://www.international.gc.ca/trade-commerce/trade-agreements-accords-commerciaux/agr-acc/turkiye/fta-ale/info.aspx?lang=eng',
       },
       {
-        id: 'fallback-express-entry',
-        title: 'Express Entry: Health and Trades Draws',
-        desc: 'Category-based rounds still prioritize in-demand jobs.',
+        id: 'fallback-senior-managers',
+        title: 'Express Entry 2026: senior managers with Canadian experience',
+        desc: 'NOC 00012–00015 executives with 12 months in Canada may be invited.',
         content:
-          'Express Entry continues to use category-based selection alongside Comprehensive Ranking System (CRS) score rounds. Health care, trades, and French-language proficiency have been recurring priorities. Applicants in the Turkish community who work in nursing, early childhood education, construction, or skilled trades should keep language tests, educational credential assessments, and provincial nominee profiles current.',
+          'IRCC’s current Express Entry category-based rounds include a 2026 category for senior managers with Canadian work experience. To be eligible for a category-based invitation you must meet the minimum criteria for Express Entry, including being eligible for one of the three immigration programs it covers, and meet all requirements in the instructions for that round. For this category, you must have accumulated, within the past three years, at least 12 months of full-time work experience (or an equal amount of part-time) in Canada in a single listed occupation — the experience does not need to be continuous, and it need not be your primary occupation. The 2021 NOC codes are senior managers in financial, communications and other business services (00012); health, education, social and community services and membership organizations (00013); trade, broadcasting and other services (00014); and construction, transportation, production and utilities (00015). Full details appear in each round’s instructions; IRCC publishes rounds after they run.',
         category: 'Immigration',
         color: 'bg-primary',
-        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html',
+        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
       },
       {
         id: 'fallback-community',
-        title: 'Turkish Community Fall Calendar',
-        desc: 'Cultural nights, newcomer meetups, and food events.',
+        title: 'Anatolia Fest This Sunday at Sankofa Square',
+        desc: 'Free 12 p.m.–8 p.m. festival this Sunday at 1 Dundas Street East.',
         content:
-          'Turkish associations across Toronto, Montreal, Calgary, and Vancouver are publishing fall programs: cultural nights, Turkish language classes, newcomer orientation, and weekend food markets. These gatherings remain one of the fastest ways for families to find housing leads, job referrals, and weekend plans. Check local association pages and Goofind community rooms for dates in your province.',
+          'Anatolia Fest returns this Sunday, September 20, 2026, from 12 p.m. to 8 p.m. at Sankofa Square, 1 Dundas Street East in downtown Toronto. Sankofa Square lists the 3rd edition as a free, family-friendly festival of Turkish cuisine, traditional arts, live music and cultural performances, hands-on activities, and a Turkish book fair, sponsored by Turkish Airlines and GoTürkiye. After editions in 2016 and 2017, kutuphane.ca is hosting the reunion. The Turkish-Canadian community and newcomers can meet neighbours, families, and local businesses in the square.',
         category: 'Community',
         color: 'bg-primary',
-        link: 'https://www.google.com/search?q=Turkish+community+events+Canada',
+        link: 'https://www.anatoliafest.ca/',
       },
     ];
   }
 
   return [
     {
-      id: 'fallback-immigration',
-      title: 'IRCC 2025–2027 Göçmenlik Planı',
-      desc: 'Konut kapasitesine uyumlu alımlar ve hedefli çekilişler sürüyor.',
+      id: 'fallback-trade',
+      title: 'Kanada–Türkiye STA müzakereleri sürüyor',
+      desc: 'Küresel İşler anlaşmayı müzakerede listeliyor; iletişim TCE.',
       content:
-        'Kanada’nın 2025–2027 Göçmenlik Seviyeleri Planı, yeni gelen alımının ana çerçevesi olmaya devam ediyor. IRCC kalıcı oturum hedeflerini konut ve kamu hizmeti kapasitesiyle dengelemeyi sürdürüyor; Kanada içi geçişler, Fransızca konuşan adaylar ile sağlık, inşaat ve nitelikli meslek çalışanlarına daha fazla ağırlık veriliyor. Türk toplumundaki adayların Express Entry ve eyalet aday programı duyurularını yakından izlemesi önemli; kategori bazlı çekilişler turdan tura değişebiliyor.',
-      category: 'Göçmenlik',
+        'Küresel İşler Kanada, Kanada–Türkiye serbest ticaret anlaşmasının güncel durumunu müzakerede olarak listeliyor. 7 Temmuz 2026’da, Ankara’daki NATO Zirvesi marjında Başbakan Mark Carney ve Cumhurbaşkanı Recep Tayyip Erdoğan kapsamlı, modern ve karşılıklı yarar sağlayan bir STA müzakeresinin başladığını duyurdu. Teknik ekipler anlaşmanın kapsamını ve hedefini belirliyor ve ilk müzakere turuna hazırlanıyor. Kanada hükümeti, 31 Temmuz–14 Eylül 2026 arasında işletmeler, sektör kuruluşları, eyalet ve bölgeler ile halktan kamu görüşü topladı. Sorular Ottawa’daki 111 Sussex Drive adresindeki Ticaret Müzakereleri Bölümü’ne (TCE) veya TCE-Consultations@international.gc.ca adresine iletilebilir. 2025’te iki yönlü mal ticareti 4,3 milyar CA$’ı aştı.',
+      category: 'Ekonomi',
       color: 'bg-primary',
-      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/news/2024/10/government-of-canada-reduces-immigration.html',
+      link: 'https://www.international.gc.ca/trade-commerce/trade-agreements-accords-commerciaux/agr-acc/turkiye/fta-ale/info.aspx?lang=eng',
     },
     {
-      id: 'fallback-express-entry',
-      title: 'Express Entry: Sağlık ve Meslek Çekilişleri',
-      desc: 'Kategori bazlı turlarda aranan meslekler öne çıkıyor.',
+      id: 'fallback-senior-managers',
+      title: 'Express Entry 2026: Kanada deneyimli üst düzey yöneticiler',
+      desc: 'Kanada’da 12 ay çalışmış NOC 00012–00015 yöneticiler davet edilebilir.',
       content:
-        'Express Entry, CRS puanına dayalı turlara ek olarak kategori bazlı seçimi kullanmaya devam ediyor. Sağlık, nitelikli meslekler ve Fransızca yeterlilik tekrarlayan öncelikler arasında. Hemşirelik, okul öncesi eğitim, inşaat veya nitelikli mesleklerde çalışan Türk toplumundaki adayların dil sınavı, eğitim denkliği ve eyalet aday profillerini güncel tutması önerilir.',
+        'IRCC’nin güncel Express Entry kategori bazlı turları, 2026’da Kanada iş deneyimine sahip üst düzey yöneticiler kategorisini kapsıyor. Kategori bazlı davet için Express Entry asgari ölçütlerini, kapsadığı üç göçmenlik programından birine uygunluğu ve o turun talimatlarındaki tüm şartları karşılamanız gerekir. Bu kategoride, son üç yılda Kanada’da listelenen tek bir meslekte en az 12 ay tam zamanlı (veya eşdeğer yarı zamanlı) deneyim biriktirmeniz gerekir; deneyimin kesintisiz olması şart değildir ve birincil mesleğiniz olması gerekmez. 2021 NOC kodları finans, iletişim ve diğer iş hizmetlerinde üst düzey yöneticiler (00012); sağlık, eğitim, sosyal ve toplum hizmetleri ile üyelik kuruluşlarında üst düzey yöneticiler (00013); ticaret, yayıncılık ve diğer hizmetlerde üst düzey yöneticiler (00014); inşaat, ulaşım, üretim ve kamu hizmetlerinde üst düzey yöneticilerdir (00015). Ayrıntılar her turun talimatlarında yer alır; turlar gerçekleştikten sonra yayımlanır.',
       category: 'Göçmenlik',
       color: 'bg-primary',
-      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry.html',
+      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
     },
     {
       id: 'fallback-community',
-      title: 'Türk Toplumu Güz Takvimi',
-      desc: 'Kültür geceleri, yeni gelen buluşmaları ve yemek etkinlikleri.',
+      title: 'Anatolia Fest bu Pazar Toronto’da',
+      desc: 'Ücretsiz festival bu Pazar 12.00–20.00, 1 Dundas Street East.',
       content:
-        'Toronto, Montreal, Calgary ve Vancouver’daki Türk dernekleri güz programlarını yayımlıyor: kültür geceleri, Türkçe kursları, yeni gelen oryantasyonu ve hafta sonu yemek pazarları. Bu buluşmalar konut, iş ve sosyal çevre arayan aileler için hâlâ en hızlı kaynaklardan biri. Tarihler için yerel dernek sayfalarını ve Goofind topluluk odalarını takip edin.',
+        'Anatolia Fest bu Pazar, 20 Eylül 2026, 12.00–20.00 saatleri arasında Toronto merkezindeki Sankofa Square’de, 1 Dundas Street East adresinde geri dönüyor. Sankofa Square, 3. edisyonu Türk mutfağı, geleneksel sanatlar, canlı müzik ve kültürel gösteriler, uygulamalı etkinlikler ve bir Türk kitap fuarıyla ücretsiz, aile dostu bir festival olarak listeliyor; sponsorlar Turkish Airlines ve GoTürkiye. 2016 ve 2017 edisyonlarının ardından kutuphane.ca bu buluşmaya ev sahipliği yapıyor. Türk-Kanada toplumu ile yeni gelenler meydanda komşu, aile ve yerel işletmelerle tanışabilir.',
       category: 'Topluluk',
       color: 'bg-primary',
-      link: 'https://www.google.com/search?q=Kanada+T%C3%BCrk+toplumu+etkinlikleri',
+      link: 'https://www.anatoliafest.ca/',
     },
   ];
 }

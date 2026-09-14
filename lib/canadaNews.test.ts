@@ -55,8 +55,10 @@ assert.match(enNews[0].title, /FTA|Türkiye/);
 assert.match(trNews[0].title, /STA|Türkiye/);
 assert.doesNotMatch(enNews[0].title, /Last day|comments/i);
 assert.doesNotMatch(trNews[0].title, /Son gün|görüşleri/i);
-assert.match(enNews[1].title, /Express Entry|transport/i);
-assert.match(trNews[1].title, /Express Entry|ulaşım/);
+assert.match(enNews[1].title, /Express Entry|physician/i);
+assert.match(trNews[1].title, /Express Entry|hekim/);
+assert.match(enNews[1].content, /31100|31101|31102/);
+assert.match(trNews[1].content, /31100|31101|31102/);
 assert.match(enNews[2].title, /Anatolia Fest/);
 assert.match(trNews[2].title, /Anatolia Fest/);
 for (const item of [...enNews, ...trNews]) {

@@ -55,19 +55,19 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
       {
         id: 'fallback-trade',
         title: 'Canada–Türkiye FTA now in negotiations',
-        desc: 'July 7 launch; public comments ran to 14 September.',
+        desc: 'Technical teams are scoping the deal after the July 7 launch.',
         content:
-          'Global Affairs Canada lists the Canada–Türkiye free trade agreement as in negotiations. On July 7, 2026, Prime Minister Mark Carney and President Recep Tayyip Erdoğan announced the launch of talks toward a comprehensive, modern, and mutually beneficial FTA. The Government of Canada invited public comments from July 31 to September 14, 2026, to inform those talks. In 2025, two-way merchandise trade reached over CA$4.3 billion (Canadian exports about $1.1 billion; imports from Türkiye about $3.2 billion). Canadian direct investment in Türkiye was $3.3 billion in 2025, up from $1 billion in 2022; Türkiye’s FDI stock in Canada was $233 million — the 24th-largest European source and 54th globally. The Trade Negotiations Division remains at 111 Sussex Drive, Ottawa (TCE-consultations@international.gc.ca).',
+          'Global Affairs Canada lists the Canada–Türkiye free trade agreement as in negotiations. On July 7, 2026, on the margins of the NATO Summit in Ankara, Prime Minister Mark Carney and President Recep Tayyip Erdoğan announced the launch of talks toward a comprehensive, modern, and mutually beneficial FTA. That followed a June 2026 Joint Ministerial Statement by Trade Ministers Ömer Bolat and Maninder Sidhu opening exploratory discussions. In the coming months, technical teams will define the scope and ambition of the agreement and prepare for the first round of negotiations. The Government of Canada invited public comments from July 31 to September 14, 2026, to inform those talks. In 2025, two-way merchandise trade reached over CA$4.3 billion (Canadian exports about $1.1 billion; imports from Türkiye about $3.2 billion). Canadian direct investment in Türkiye was $3.3 billion in 2025; Türkiye’s FDI stock in Canada was $233 million.',
         category: 'Economy',
         color: 'bg-primary',
         link: 'https://www.international.gc.ca/trade-commerce/trade-agreements-accords-commerciaux/agr-acc/turkiye/fta-ale/info.aspx?lang=eng',
       },
       {
-        id: 'fallback-transport',
-        title: 'Express Entry 2026: transport occupations',
-        desc: 'Pilots, aircraft mechanics, and vehicle technicians remain eligible.',
+        id: 'fallback-physicians',
+        title: 'Express Entry 2026: physicians with Canadian experience',
+        desc: 'Family doctors and specialists who have practised in Canada may be invited.',
         content:
-          'IRCC’s current Express Entry category-based rounds include transport occupations. Eligible candidates generally need at least 12 months of full-time experience (or equal part-time) in the past three years in a single listed occupation — in Canada or abroad; the experience does not need to be continuous. The current list is aircraft mechanics and aircraft inspectors (NOC 72404), air pilots, flight engineers and flying instructors (72600), aircraft instrument, electrical and avionics mechanics, technicians and inspectors (22313), and automotive service technicians, truck and bus mechanics, and mechanical repairers (72410). IRCC’s February 2026 announcement highlighted pilots, aircraft mechanics, and inspectors among 2026 labour-shortage priorities. Turkish-community applicants in these fields should keep NOC codes and Express Entry profiles current — IRCC publishes each round after it runs.',
+          'IRCC’s current Express Entry category-based rounds include a 2026 category for physicians with Canadian work experience. To be eligible, you must qualify for an Express Entry program and have accumulated, within the past three years, at least 12 months of full-time work experience (or an equal amount of part-time) in Canada in a single listed occupation — the experience does not need to be continuous. The occupations are specialists in clinical and laboratory medicine (NOC 31100), specialists in surgery (31101), and general practitioners and family physicians (31102). IRCC’s medical-doctors pathway notes that if you are invited, you generally have 60 days to apply for permanent residence. Turkish-community physicians already practising in Canada should keep NOC codes and Express Entry profiles current — IRCC publishes each round after it runs.',
         category: 'Immigration',
         color: 'bg-primary',
         link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
@@ -75,9 +75,9 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
       {
         id: 'fallback-community',
         title: 'Anatolia Fest This Sunday at Sankofa Square',
-        desc: 'Sunday 12 p.m.–8 p.m. at 1 Dundas Street East, Toronto.',
+        desc: '3rd edition this Sunday, 12 p.m.–8 p.m. at 1 Dundas Street East.',
         content:
-          'Anatolia Fest’s 3rd edition is this Sunday, September 20, 2026, from 12 p.m. to 8 p.m. at Sankofa Square, 1 Dundas Street East in downtown Toronto (formerly Yonge-Dundas Square). Hosted by kutuphane.ca, the free cultural festival brings Turkish coffee, baklava, crafts, music, and regional art. It is a reunion for the Turkish-Canadian community and a welcoming day for newcomers looking to meet neighbours, families, and local businesses.',
+          'Anatolia Fest returns this Sunday, September 20, 2026, from 12 p.m. to 8 p.m. at Sankofa Square, 1 Dundas Street East in downtown Toronto (formerly Yonge-Dundas Square). After editions in 2016 and 2017, the 3rd edition is hosted by kutuphane.ca as a reunion of Turkish coffee, baklava, crafts, music, and regional art. The free cultural festival is open to the Turkish-Canadian community and to newcomers looking to meet neighbours, families, and local businesses.',
         category: 'Community',
         color: 'bg-primary',
         link: 'https://www.anatoliafest.ca/',
@@ -89,19 +89,19 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
     {
       id: 'fallback-trade',
       title: 'Kanada–Türkiye STA müzakereleri sürüyor',
-      desc: '7 Temmuz’da başladı; kamu görüşleri 14 Eylül’e kadardı.',
+      desc: 'Teknik ekipler, 7 Temmuz’daki başlangıcın ardından kapsamı belirliyor.',
       content:
-        'Küresel İşler Kanada, Kanada–Türkiye serbest ticaret anlaşmasını müzakerede olarak listeliyor. 7 Temmuz 2026’da Başbakan Mark Carney ve Cumhurbaşkanı Recep Tayyip Erdoğan kapsamlı, modern ve karşılıklı yarar sağlayan bir STA müzakeresinin başladığını duyurdu. Kanada hükümeti, bu müzakereleri bilgilendirmek için 31 Temmuz–14 Eylül 2026 arasında kamu görüşü topladı. 2025’te iki yönlü mal ticareti 4,3 milyar CA$’ı aştı (Kanada ihracatı yaklaşık 1,1 milyar $; Türkiye’den ithalat yaklaşık 3,2 milyar $). Kanada’nın Türkiye’deki doğrudan yatırımı 2025’te 3,3 milyar $ oldu (2022’de 1 milyar $); Türkiye’nin Kanada’daki DYY stoku 233 milyon $ — Avrupa’da 24., dünyada 54. kaynak. Ticaret Müzakereleri Birimi hâlâ 111 Sussex Drive, Ottawa adresinde (TCE-consultations@international.gc.ca).',
+        'Küresel İşler Kanada, Kanada–Türkiye serbest ticaret anlaşmasını müzakerede olarak listeliyor. 7 Temmuz 2026’da, Ankara’daki NATO Zirvesi marjında Başbakan Mark Carney ve Cumhurbaşkanı Recep Tayyip Erdoğan kapsamlı, modern ve karşılıklı yarar sağlayan bir STA müzakeresinin başladığını duyurdu. Bunun öncesinde Ticaret Bakanları Ömer Bolat ve Maninder Sidhu, Haziran 2026’da keşif görüşmelerine dair Ortak Bakanlar Bildirisi yayımlamıştı. Önümüzdeki aylarda teknik ekipler anlaşmanın kapsamını ve hedefini belirleyecek ve ilk müzakere turuna hazırlanacak. Kanada hükümeti, bu müzakereleri bilgilendirmek için 31 Temmuz–14 Eylül 2026 arasında kamu görüşü topladı. 2025’te iki yönlü mal ticareti 4,3 milyar CA$’ı aştı (Kanada ihracatı yaklaşık 1,1 milyar $; Türkiye’den ithalat yaklaşık 3,2 milyar $). Kanada’nın Türkiye’deki doğrudan yatırımı 2025’te 3,3 milyar $; Türkiye’nin Kanada’daki DYY stoku 233 milyon $ oldu.',
       category: 'Ekonomi',
       color: 'bg-primary',
       link: 'https://www.international.gc.ca/trade-commerce/trade-agreements-accords-commerciaux/agr-acc/turkiye/fta-ale/info.aspx?lang=eng',
     },
     {
-      id: 'fallback-transport',
-      title: 'Express Entry 2026: ulaşım meslekleri',
-      desc: 'Pilotlar, uçak teknisyenleri ve araç tamircileri hâlâ uygun.',
+      id: 'fallback-physicians',
+      title: 'Express Entry 2026: Kanada deneyimli hekimler',
+      desc: 'Kanada’da çalışmış aile hekimleri ve uzmanlar davet edilebilir.',
       content:
-        'IRCC’nin güncel Express Entry kategori bazlı turları ulaşım meslekleri kategorisini kapsıyor. Adayların genellikle son üç yılda listelenen tek bir meslekte, Kanada’da veya yurt dışında, en az 12 ay tam zamanlı (veya eşdeğer yarı zamanlı) deneyim göstermesi gerekiyor; deneyimin kesintisiz olması şart değil. Güncel listede uçak mekanikçileri ve uçak müfettişleri (NOC 72404), hava pilotları, uçuş mühendisleri ve uçuş eğitmenleri (72600), uçak alet, elektrik ve aviyonik mekanikçileri, teknisyenleri ve müfettişleri (22313) ile otomotiv servis teknisyenleri, kamyon ve otobüs tamircileri ve mekanik tamirciler (72410) yer alıyor. IRCC’nin Şubat 2026 duyurusu pilotlar, uçak mekanikçileri ve müfettişlerini 2026 iş gücü açığı öncelikleri arasında vurguladı. Bu alanlardaki Türk toplumundaki adayların NOC kodları ve Express Entry profillerini güncel tutması önerilir; turlar gerçekleştikten sonra yayımlanır.',
+        'IRCC’nin güncel Express Entry kategori bazlı turları, 2026’da Kanada iş deneyimine sahip hekimler kategorisini kapsıyor. Uygun olmak için bir Express Entry programına hak kazanmanız ve son üç yılda Kanada’da listelenen tek bir meslekte en az 12 ay tam zamanlı (veya eşdeğer yarı zamanlı) deneyim biriktirmeniz gerekiyor; deneyimin kesintisiz olması şart değil. Meslekler klinik ve laboratuvar tıbbı uzmanları (NOC 31100), cerrahi uzmanları (31101) ile pratisyen hekimler ve aile hekimleridir (31102). IRCC’nin hekim yolu, davet alırsanız daimi oturum başvurusunu genellikle 60 gün içinde vermeniz gerektiğini belirtiyor. Kanada’da halihazırda çalışan Türk toplumundaki hekimlerin NOC kodları ve Express Entry profillerini güncel tutması önerilir; turlar gerçekleştikten sonra yayımlanır.',
       category: 'Göçmenlik',
       color: 'bg-primary',
       link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
@@ -109,9 +109,9 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
     {
       id: 'fallback-community',
       title: 'Anatolia Fest bu Pazar Toronto’da',
-      desc: 'Pazar 12.00–20.00, 1 Dundas Street East, Toronto.',
+      desc: '3. edisyon bu Pazar 12.00–20.00, 1 Dundas Street East.',
       content:
-        'Anatolia Fest’in 3. edisyonu bu Pazar, 20 Eylül 2026, 12.00–20.00 saatleri arasında Toronto merkezindeki Sankofa Square’de, 1 Dundas Street East adresinde (eski Yonge-Dundas Square) düzenleniyor. kutuphane.ca’nın ev sahipliğindeki ücretsiz kültür festivali Türk kahvesi, baklava, el sanatları, müzik ve yöresel sanatı bir araya getiriyor. Türk-Kanada toplumu için bir buluşma; komşu, aile ve yerel işletmelerle tanışmak isteyen yeni gelenler için de açık bir gün.',
+        'Anatolia Fest bu Pazar, 20 Eylül 2026, 12.00–20.00 saatleri arasında Toronto merkezindeki Sankofa Square’de, 1 Dundas Street East adresinde (eski Yonge-Dundas Square) geri dönüyor. 2016 ve 2017 edisyonlarının ardından 3. edisyona kutuphane.ca ev sahipliği yapıyor; Türk kahvesi, baklava, el sanatları, müzik ve yöresel sanat bir araya geliyor. Ücretsiz kültür festivali Türk-Kanada toplumu ile komşu, aile ve yerel işletmelerle tanışmak isteyen yeni gelenlere açık.',
       category: 'Topluluk',
       color: 'bg-primary',
       link: 'https://www.anatoliafest.ca/',

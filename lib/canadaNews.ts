@@ -54,23 +54,23 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
     return [
       {
         id: 'fallback-trade',
-        title: 'Canada–Türkiye FTA: Comment by Sept 14',
-        desc: 'Global Affairs is consulting Canadians on a potential trade deal.',
+        title: 'Last day: Canada–Türkiye FTA comments',
+        desc: 'Global Affairs consultations close today, September 14.',
         content:
-          'On July 7, 2026, Prime Minister Mark Carney and President Recep Tayyip Erdoğan announced negotiations toward a comprehensive Canada–Türkiye free trade agreement. Global Affairs Canada is inviting the public, businesses, and community groups to comment from July 31 through September 14, 2026. Two-way merchandise trade was over CA$4.3 billion in 2025. Turkish-Canadian entrepreneurs and families can send views to TCE-consultations@international.gc.ca; the department says that input will inform Canada’s negotiating priorities.',
+          'Today, September 14, 2026, is the last day to comment on a potential Canada–Türkiye free trade agreement. Global Affairs Canada has listed the consultation as open from July 31 through September 14. Prime Minister Mark Carney and President Recep Tayyip Erdoğan announced the talks on July 7, 2026. Two-way merchandise trade was over CA$4.3 billion in 2025. Turkish-Canadian entrepreneurs and families can still send views to TCE-consultations@international.gc.ca; the department says that input will inform Canada’s negotiating priorities.',
         category: 'Economy',
         color: 'bg-primary',
         link: 'https://international.canada.ca/en/global-affairs/consultations/trade/2026-07-29-turkiye',
       },
       {
-        id: 'fallback-immigration',
-        title: 'IRCC 2026: 9% Francophone PR Outside Quebec',
-        desc: 'French-speaking admissions are set at 30,267 this year.',
+        id: 'fallback-express-entry',
+        title: 'Express Entry 2026: Health, STEM, French',
+        desc: 'IRCC is inviting candidates across 10 economic categories.',
         content:
-          'Canada’s 2026–2028 Immigration Levels Plan keeps overall permanent-resident admissions at 380,000 a year and sets French-speaking PR admissions outside Quebec at 9% in 2026 (30,267 people), 9.5% in 2027, and 10.5% in 2028, toward a 12% goal by 2029. Temporary-resident arrival targets fall to 385,000 in 2026. Express Entry and French-speaking streams remain core routes in this plan. Turkish-community applicants with French or in-Canada work experience should keep language tests and profiles current.',
+          'IRCC’s current Express Entry category-based rounds cover French-language proficiency, healthcare and social services, STEM, trades, education, and transport, plus physicians, researchers, and senior managers with Canadian work experience, and skilled military recruits. Category rounds invite people already in the pool who meet the Minister’s economic-goal criteria and then rank by CRS. French-language invitations require NCLC 7 in all four abilities. Turkish-community applicants in nursing, construction, early childhood education, engineering, or with French should keep language tests, educational credential assessments, and profiles current — rounds are posted after they run.',
         category: 'Immigration',
         color: 'bg-primary',
-        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/corporate-initiatives/levels/supplementary-immigration-levels-2026-2028.html',
+        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
       },
       {
         id: 'fallback-community',
@@ -88,23 +88,23 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
   return [
     {
       id: 'fallback-trade',
-      title: 'Kanada–Türkiye STA: 14 Eylül’e kadar görüş bildirin',
-      desc: 'Küresel İşler, olası bir serbest ticaret anlaşması için görüş topluyor.',
+      title: 'Son gün: Kanada–Türkiye STA görüşleri',
+      desc: 'Küresel İşler istişaresi bugün, 14 Eylül’de kapanıyor.',
       content:
-        '7 Temmuz 2026’da Başbakan Mark Carney ve Cumhurbaşkanı Recep Tayyip Erdoğan, kapsamlı bir Kanada–Türkiye serbest ticaret anlaşması müzakerelerinin başladığını duyurdu. Küresel İşler Kanada, 31 Temmuz–14 Eylül 2026 arasında kamu, işletme ve toplum kuruluşlarından görüş bekliyor. 2025’te iki yönlü mal ticareti 4,3 milyar CA$’ı aştı. Türk-Kanadalı girişimci ve aileler görüşlerini TCE-consultations@international.gc.ca adresine iletebilir; bakanlık bu katkının müzakere önceliklerini şekillendireceğini belirtiyor.',
+        'Bugün, 14 Eylül 2026, olası bir Kanada–Türkiye serbest ticaret anlaşması için görüş bildirmenin son günü. Küresel İşler Kanada istişareyi 31 Temmuz–14 Eylül arasında açık gösteriyor. Başbakan Mark Carney ve Cumhurbaşkanı Recep Tayyip Erdoğan müzakereleri 7 Temmuz 2026’da duyurmuştu. 2025’te iki yönlü mal ticareti 4,3 milyar CA$’ı aştı. Türk-Kanadalı girişimci ve aileler görüşlerini hâlâ TCE-consultations@international.gc.ca adresine iletebilir; bakanlık bu katkının müzakere önceliklerini şekillendireceğini belirtiyor.',
       category: 'Ekonomi',
       color: 'bg-primary',
       link: 'https://international.canada.ca/en/global-affairs/consultations/trade/2026-07-29-turkiye',
     },
     {
-      id: 'fallback-immigration',
-      title: 'IRCC 2026: Quebec dışı %9 Fransızca PR hedefi',
-      desc: 'Bu yıl Fransızca konuşan alım 30.267 kişi olarak planlandı.',
+      id: 'fallback-express-entry',
+      title: 'Express Entry 2026: Sağlık, STEM, Fransızca',
+      desc: 'IRCC 10 ekonomik kategoride aday davet ediyor.',
       content:
-        'Kanada’nın 2026–2028 Göçmenlik Seviyeleri Planı kalıcı oturumu yılda 380.000’de tutuyor ve Quebec dışı Fransızca konuşan kalıcı oturum alımlarını 2026’da %9 (30.267 kişi), 2027’de %9,5 ve 2028’de %10,5 olarak belirliyor; 2029’da %12 hedefi var. Yeni geçici sakin hedefi 2026’da 385.000’e iniyor. Express Entry ve Fransızca konuşan akışlar bu plandaki ana yollar arasında. Fransızcası veya Kanada iş deneyimi olan Türk toplumundaki adayların dil sınavı ve profillerini güncel tutması önerilir.',
+        'IRCC’nin güncel Express Entry kategori bazlı turları Fransızca yeterlilik, sağlık ve sosyal hizmetler, STEM, meslekler, eğitim ve ulaşımı; Kanada iş deneyimli hekim, araştırmacı ve üst düzey yöneticileri; nitelikli askeri adayları kapsıyor. Kategori turları havuzdaki, bakanlığın ekonomik hedef ölçütlerini karşılayan adayları CRS sırasıyla davet eder. Fransızca davetler dört dil becerisinde NCLC 7 ister. Hemşirelik, inşaat, okul öncesi eğitim, mühendislik veya Fransızcası olan Türk toplumundaki adayların dil sınavı, eğitim denkliği ve profillerini güncel tutması önerilir; turlar gerçekleştikten sonra yayımlanır.',
       category: 'Göçmenlik',
       color: 'bg-primary',
-      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/corporate-initiatives/levels/supplementary-immigration-levels-2026-2028.html',
+      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
     },
     {
       id: 'fallback-community',

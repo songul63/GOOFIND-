@@ -19,7 +19,7 @@ const ads: BannerAd[] = [
   },
   {
     id: 'news-dup',
-    title: 'Canada–Türkiye FTA: Comment by Sept 14',
+    title: 'Last day: Canada–Türkiye FTA comments',
     url: 'https://img.example/news.jpg',
     type: 'news',
     link: '#',
@@ -33,7 +33,7 @@ assert.equal(withNews[0].type, 'news');
 assert.equal(withNews[0].isLiveNews, true);
 assert.ok(withNews.some((item) => item.id === 'ad-1'));
 assert.equal(
-  withNews.filter((item) => item.title === 'Canada–Türkiye FTA: Comment by Sept 14').length,
+  withNews.filter((item) => item.title === 'Last day: Canada–Türkiye FTA comments').length,
   1,
   'approved news should not be duplicated by live feed',
 );
@@ -53,8 +53,8 @@ assert.equal(enNews.length, 3);
 assert.equal(trNews.length, 3);
 assert.match(enNews[0].title, /FTA|Türkiye/);
 assert.match(trNews[0].title, /STA|Türkiye/);
-assert.match(enNews[1].title, /9%|Francophone|2026/);
-assert.match(trNews[1].title, /%9|Fransızca|2026/);
+assert.match(enNews[1].title, /Express Entry|STEM|French/);
+assert.match(trNews[1].title, /Express Entry|STEM|Fransızca/);
 assert.match(enNews[2].title, /Anatolia Fest/);
 assert.match(trNews[2].title, /Anatolia Fest/);
 for (const item of [...enNews, ...trNews]) {

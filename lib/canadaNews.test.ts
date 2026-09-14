@@ -19,7 +19,7 @@ const ads: BannerAd[] = [
   },
   {
     id: 'news-dup',
-    title: 'IRCC 2025–2027 Immigration Levels',
+    title: 'Canada–Türkiye FTA now in negotiations',
     url: 'https://img.example/news.jpg',
     type: 'news',
     link: '#',
@@ -33,7 +33,7 @@ assert.equal(withNews[0].type, 'news');
 assert.equal(withNews[0].isLiveNews, true);
 assert.ok(withNews.some((item) => item.id === 'ad-1'));
 assert.equal(
-  withNews.filter((item) => item.title === 'IRCC 2025–2027 Immigration Levels').length,
+  withNews.filter((item) => item.title === 'Canada–Türkiye FTA now in negotiations').length,
   1,
   'approved news should not be duplicated by live feed',
 );
@@ -46,6 +46,30 @@ const emptyAds = combineBannerItems([], [], true, 'tr', fallback);
 assert.equal(emptyAds.length, 3);
 assert.ok(emptyAds.every((item) => item.isLiveNews && item.type === 'news'));
 assert.ok(emptyAds[0].title.length > 0);
+
+const enNews = getDefaultCanadaNews('en');
+const trNews = getDefaultCanadaNews('tr');
+assert.equal(enNews.length, 3);
+assert.equal(trNews.length, 3);
+assert.match(enNews[0].title, /FTA|Türkiye/);
+assert.match(trNews[0].title, /STA|Türkiye/);
+assert.doesNotMatch(enNews[0].title, /Last day|comments/i);
+assert.doesNotMatch(trNews[0].title, /Son gün|görüşleri/i);
+assert.match(enNews[0].content, /Sidhu|Bolat|Air Transport|1\.1 billion|3\.2 billion|3\.3 billion/);
+assert.match(trNews[0].content, /Sidhu|Bolat|Hava Taşımacılığı|1,1 milyar|3,2 milyar|3,3 milyar/);
+assert.match(enNews[1].title, /Express Entry|researcher/i);
+assert.match(trNews[1].title, /Express Entry|araştırmacı/);
+assert.match(enNews[1].content, /41200|41201/);
+assert.match(trNews[1].content, /41200|41201/);
+assert.match(enNews[2].title, /Anatolia Fest/);
+assert.match(trNews[2].title, /Anatolia Fest/);
+assert.match(enNews[2].content, /kutuphane\.ca|baklava|coffee/i);
+assert.match(trNews[2].content, /kutuphane\.ca|baklava|kahve/i);
+for (const item of [...enNews, ...trNews]) {
+  assert.ok(item.link && /^https:\/\//.test(item.link), `sourced link required: ${item.title}`);
+  assert.ok(!item.link.includes('google.com/search'), `search-page links are not sources: ${item.title}`);
+  assert.ok(item.content && item.content.length > 80, `article body required: ${item.title}`);
+}
 
 const mapped = mapNewsToBannerItem(
   { title: 'Toronto Turkish Festival', desc: 'Weekend food market', category: 'Community', link: 'https://example.com' },

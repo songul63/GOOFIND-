@@ -59,12 +59,12 @@ assert.match(enNews[0].content, /in negotiations|NATO Summit|4\.3 billion|TCE-Co
 assert.match(trNews[0].content, /müzakerede|NATO Zirvesi|4,3 milyar|TCE-Consultations/);
 assert.doesNotMatch(enNews[0].content, /\$3\.3B|3\.3 billion/i);
 assert.doesNotMatch(trNews[0].content, /3,3 milyar/i);
-assert.match(enNews[0].content, /420 million|4,650|flat-rolled iron|JETCO/);
-assert.match(trNews[0].content, /420 milyon|4\.650|yassı haddelenmiş|JETCO/);
-assert.match(enNews[1].title, /Express Entry|STEM/i);
-assert.match(trNews[1].title, /Express Entry|STEM/i);
-assert.match(enNews[1].content, /12 months|NOC 20011|21220|STEM|in Canada or abroad|does not need to be continuous|5,942/);
-assert.match(trNews[1].content, /12 aylık|NOC 20011|21220|STEM|Kanada’da veya yurt dışında|kesintisiz olması|5\.942/);
+assert.match(enNews[0].content, /65,000|lentils and chickpeas|1944|KFOR/);
+assert.match(trNews[0].content, /65\.000|mercimek ve nohut|1944|KFOR/);
+assert.match(enNews[1].title, /Express Entry|trade/i);
+assert.match(trNews[1].title, /Express Entry|ticaret/i);
+assert.match(enNews[1].content, /12 months|NOC 22303|72310|carpenters|in Canada or abroad|does not need to be continuous|4,589/);
+assert.match(trNews[1].content, /12 aylık|NOC 22303|72310|marangoz|Kanada’da veya yurt dışında|kesintisiz olması|4\.589/);
 assert.match(enNews[2].title, /Anatolia Fest/);
 assert.match(trNews[2].title, /Anatolia Fest/);
 assert.match(enNews[2].content, /Sankofa Square|kutuphane\.ca|baklava/i);

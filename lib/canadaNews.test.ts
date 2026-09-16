@@ -59,12 +59,12 @@ assert.match(enNews[0].content, /in negotiations|NATO Summit|4\.3 billion|TCE-Co
 assert.match(trNews[0].content, /müzakerede|NATO Zirvesi|4,3 milyar|TCE-Consultations/);
 assert.doesNotMatch(enNews[0].content, /\$3\.3B|3\.3 billion/i);
 assert.doesNotMatch(trNews[0].content, /3,3 milyar/i);
-assert.match(enNews[0].content, /lentils and chickpeas|65,000|KFOR|soybeans|Bolat|Sidhu/);
-assert.match(trNews[0].content, /mercimek ve nohut|65\.000|KFOR|soya|Bolat|Sidhu/);
-assert.match(enNews[1].title, /Express Entry|researcher/i);
-assert.match(trNews[1].title, /Express Entry|araştırmacı/i);
-assert.match(enNews[1].content, /12 months|NOC 41200|41201|in Canada|does not need to be continuous|1\.7 billion/);
-assert.match(trNews[1].content, /12 aylık|NOC 41200|41201|Kanada’da|kesintisiz olması|1,7 milyar/);
+assert.match(enNews[0].content, /Sidhu|Anand|Fidan|JETCO|420 million|4,650/);
+assert.match(trNews[0].content, /Sidhu|Anand|Fidan|JETCO|420 milyon|4\.650/);
+assert.match(enNews[1].title, /Express Entry|military/i);
+assert.match(trNews[1].title, /Express Entry|askeri/i);
+assert.match(enNews[1].content, /FSMA|ten years|NOC 40042|42102|43204|Canadian Armed Forces|three years/);
+assert.match(trNews[1].content, /FSMA|on yıl|NOC 40042|42102|43204|Kanada Silahlı Kuvvetleri|üç yıl/);
 assert.match(enNews[2].title, /Anatolia Fest/);
 assert.match(trNews[2].title, /Anatolia Fest/);
 assert.match(enNews[2].content, /Sankofa Square|kutuphane\.ca|baklava|Turkish Airlines/i);

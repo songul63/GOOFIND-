@@ -59,12 +59,12 @@ assert.match(enNews[0].content, /in negotiations|NATO Summit|4\.3 billion|TCE-Co
 assert.match(trNews[0].content, /müzakerede|NATO Zirvesi|4,3 milyar|TCE-Consultations/);
 assert.doesNotMatch(enNews[0].content, /\$3\.3B|3\.3 billion/i);
 assert.doesNotMatch(trNews[0].content, /3,3 milyar/i);
-assert.match(enNews[0].content, /lentils and chickpeas|65,000|KFOR|soybeans/);
-assert.match(trNews[0].content, /mercimek ve nohut|65\.000|KFOR|soya/);
-assert.match(enNews[1].title, /Express Entry|physicians/i);
-assert.match(trNews[1].title, /Express Entry|hekim/i);
-assert.match(enNews[1].content, /12 months|31100|31101|31102|in Canada|5,000|60 days/);
-assert.match(trNews[1].content, /12 aylık|31100|31101|31102|Kanada’da|5\.000|60 gün/);
+assert.match(enNews[0].content, /lentils and chickpeas|65,000|KFOR|soybeans|Bolat and Sidhu|technical teams/);
+assert.match(trNews[0].content, /mercimek ve nohut|65\.000|KFOR|soya|Bolat ve Sidhu|teknik ekipler/);
+assert.match(enNews[1].title, /Express Entry|researchers/i);
+assert.match(trNews[1].title, /Express Entry|araştırmacı/i);
+assert.match(enNews[1].content, /12 months|41200|41201|in Canada|1\.7 billion|Global Impact\+/);
+assert.match(trNews[1].content, /12 aylık|41200|41201|Kanada’da|1,7 milyar|Global Impact\+/);
 assert.match(enNews[2].title, /Anatolia Fest/);
 assert.match(trNews[2].title, /Anatolia Fest/);
 assert.match(enNews[2].content, /Sankofa Square|kutuphane\.ca|baklava|Turkish Airlines/i);

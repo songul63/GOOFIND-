@@ -2225,8 +2225,8 @@ const App: React.FC = () => {
         return;
       }
 
-      const finalLink = hasRealLink
-        ? selectedNews.link
+      const finalLink = hasRealLink 
+        ? selectedNews.link 
         : `https://www.google.com/search?q=${encodeURIComponent((selectedNews.title || '') + ' Canada')}`;
 
       setIsGeneratingSummary(true);

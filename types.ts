@@ -142,9 +142,14 @@ export interface BannerAd {
   id: string;
   title: string;
   url: string;
-  type: 'image' | 'video';
+  type: 'image' | 'video' | 'news';
   link: string;
   active: boolean;
+  desc?: string;
+  content?: string;
+  category?: string;
+  mediaType?: 'image' | 'video';
+  createdAt?: number;
 }
 
 export interface AdminBroadcast {

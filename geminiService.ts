@@ -54,14 +54,25 @@ export const moderateContent = async (text: string): Promise<boolean> => {
   }
 };
 
+const getNewsReferenceDate = () => {
+  const now = new Date();
+  return now.toLocaleDateString('en-CA', {
+    timeZone: 'America/Toronto',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+};
+
 export const getLatestCanadaTurkishNews = async (lang: 'en' | 'tr') => {
   try {
     const ai = getAI();
     if (!ai) return [];
+    const todayLabel = getNewsReferenceDate();
     const prompt =
       lang === 'en'
-        ? 'Find the latest news (last 7 days) about the Turkish community in Canada, immigration updates for Turks, or events involving Turks in Canada. Provide a list of 3 items with Title, a brief Description (max 100 chars), a detailed Content (long version for reading), a Category, and a Link (real source URL of a trusted news article or official resource covering this topic). Format as JSON array of objects with keys: title, desc, content, category, link, color (pick a tailwind color like \'bg-red-600\').'
-        : "Kanada Türk toplumu, Türkler için göçmenlik güncellemeleri veya Kanada'daki Türkleri ilgilendiren son 7 günlük haberleri bul. Başlık, kısa açıklama (max 100 karakter), detaylı İçerik (okuma için uzun versiyon), kategori ve Bağlantı (bu konuyu kapsayan güvenilir bir haber kaynağının gerçek kaynak URL (link) adresi) içeren 3 maddelik bir liste oluştur. JSON formatında dizi olarak döndür: keys: title, desc, content, category, link, color (bg-red-600 gibi bir tailwind rengi seç).";
+        ? `Today is ${todayLabel} (Canada/Eastern). Find the latest news from the last 7 days (prioritize stories from today or the most recent days) about the Turkish community in Canada, immigration updates affecting Turks, TS2023 earthquake survivors, or events involving Turks in Canada. Provide exactly 3 items with Title, a brief Description (max 100 chars), a detailed Content (long version for reading), a Category, and a Link (real source URL of a trusted news article or official resource covering this topic). Format as JSON array of objects with keys: title, desc, content, category, link, color (pick a tailwind color like 'bg-red-600'). Return JSON only.`
+        : `Bugün ${todayLabel} (Kanada/Doğu saati). Son 7 günün haberlerini bul (mümkünse bugünün veya en yeni günlerin başlıklarına öncelik ver): Kanada Türk toplumu, Türkler için göçmenlik güncellemeleri, TS2023 deprem mağdurları veya Kanada'daki Türkleri ilgilendiren gelişmeler. Tam 3 madde; her biri Başlık, kısa açıklama (max 100 karakter), detaylı İçerik (okuma için uzun versiyon), kategori ve Bağlantı (güvenilir haber veya resmi kaynağın gerçek URL'si). JSON dizi: keys title, desc, content, category, link, color (ör. bg-red-600). Yalnızca JSON döndür.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.5-flash',

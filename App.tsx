@@ -1399,35 +1399,38 @@ const App: React.FC = () => {
 
   const DEFAULT_CANADA_NEWS = useMemo(() => [
     {
-      id: 1,
-      title: lang === 'en' ? "2025-2027 Immigration Plan" : "2025-2027 Göçmenlik Planı",
-      desc: lang === 'en' ? "Sustainable growth and housing focus." : "Sürdürülebilir büyüme ve konut odaklı.",
-      content: lang === 'en' 
-        ? "Canada is shifting its immigration strategy to prioritize sustainable growth. The new 2025-2027 plan focuses on aligning newcomer arrivals with infrastructure capacity, particularly housing and healthcare. Expect more targeted draws for skilled trades and healthcare professionals." 
-        : "Kanada, göçmenlik stratejisini sürdürülebilir büyümeye öncelik verecek şekilde değiştiriyor. Yeni 2025-2027 planı, yeni gelenlerin sayısını konut ve sağlık altyapısı kapasitesiyle uyumlu hale getirmeyi hedefliyor. Teknik meslekler ve sağlık çalışanları için daha hedefli alımların yapılması bekleniyor.",
-      category: "Immigration",
-      color: "bg-primary"
+      id: 'curated-2026-10-06-1',
+      title: lang === 'en' ? 'TS2023: Nationwide MP Outreach' : 'TS2023: Milletvekillerine Ulusal Çağrı',
+      desc: lang === 'en' ? 'Fall sitting campaign for permit extensions.' : 'Sonbahar oturumu için izin uzatımı kampanyası.',
+      content: lang === 'en'
+        ? 'As Parliament returned for its fall sitting in late September 2026, TS2023 earthquake survivors launched a nationwide email campaign asking MPs to review a 14-page policy brief. The brief cites a community survey showing most households face permits expiring by the end of 2026 and requests a limited one-time extension with standard fees—not automatic permanent residence, but legal continuity while families use existing pathways.'
+        : 'Parlamento 2026 sonbahar oturumuna dönerken TS2023 deprem mağdurları, milletvekillerine 14 sayfalık politika özetini incelemeleri için ülke çapında e-posta kampanyası başlattı. Özet, anket verilerine göre hanehalklarının büyük kısmının 2026 sonuna kadar izinlerinin biteceğini vurguluyor; otomatik kalıcı oturum değil, standart ücretlerle sınırlı tek seferlik uzatım ve mevcut yollarla devam edebilmek için yasal süreklilik talep ediliyor.',
+      category: 'Immigration',
+      link: 'https://ts2023.ca/News/Detail/24',
+      color: 'bg-primary',
     },
     {
-      id: 2,
-      title: lang === 'en' ? "Ontario Small Business Grants" : "Ontario Küçük İşletme Hibeleri",
-      desc: lang === 'en' ? "New support for local entrepreneurs." : "Yerel girişimcilere yeni destek paketi.",
+      id: 'curated-2026-10-06-2',
+      title: lang === 'en' ? 'Petition e-7288: Official Response' : 'e-7288 Dilekçesi: Resmi Yanıt',
+      desc: lang === 'en' ? 'Ottawa declines 24-month TS2023 extension.' : 'Ottawa TS2023 için 24 ay uzatımı reddetti.',
       content: lang === 'en'
-        ? "Ontario has announced a new wave of grants for small businesses. Entrepreneurs in the tech, hospitality, and manufacturing sectors can apply for funding up to $25,000 for digital transformation and energy efficiency upgrades. Applications open next month."
-        : "Ontario, küçük işletmeler için yeni bir hibe paketi duyurdu. Teknoloji, hizmet ve üretim sektörlerindeki girişimciler; dijital dönüşüm ve enerji verimliliği güncellemeleri için 25.000 dolara kadar fon başvurusunda bulunabilecek. Başvurular önümüzdeki ay başlıyor.",
-      category: "Economy",
-      color: "bg-primary-mid"
+        ? 'In June 2026 the Government of Canada responded to House of Commons petition e-7288 (over 8,000 verified signatures). The response confirms TS2023 temporary measures ended in January 2024 and states that affected Turkish and Syrian nationals must renew status or apply for permanent residence through regular IRCC programs. Advocates say many families built careers and community ties in Canada and still lack a realistic PR option before permits lapse.'
+        : 'Haziran 2026\'da Kanada hükümeti, 8 binden fazla onaylı imzalı Meclis dilekçesi e-7288\'e yanıt verdi. Yanıt, TS2023 geçici önlemlerinin Ocak 2024\'te sona erdiğini ve etkilenen Türk ve Suriyeli vatandaşların statü yenilemesi veya kalıcı oturum için mevcut IRCC programlarına başvurması gerektiğini teyit ediyor. Savunucular, birçok ailenin Kanada\'da iş ve topluluk bağı kurduğunu ancak izinler bitmeden gerçekçi bir PR seçeneği bulamadığını söylüyor.',
+      category: 'Immigration',
+      link: 'https://www.ourcommons.ca/petitions/en/Petition/Details?Petition=e-7288',
+      color: 'bg-primary-mid',
     },
     {
-      id: 3,
-      title: lang === 'en' ? "Toronto Community Events" : "Toronto Toplum Etkinlikleri",
-      desc: lang === 'en' ? "Summer festivals and cultural meets." : "Yaz festivalleri ve kültürel buluşmalar.",
+      id: 'curated-2026-10-06-3',
+      title: lang === 'en' ? 'Toronto–Ottawa Advocacy March' : 'Toronto–Ottawa Dijital Yürüyüş',
+      desc: lang === 'en' ? 'Families highlight permit limbo on the road to Ottawa.' : 'Aileler Ottawa yolunda izin belirsizliğini gündeme taşıyor.',
       content: lang === 'en'
-        ? "The Toronto Turkish community is gearing up for a series of cultural festivals this summer. From food markets in Nathan Phillips Square to networking nights for newcomers, the calendar is packed. These events aim to foster unity and help newcomers integrate faster."
-        : "Toronto Türk toplumu, bu yaz bir dizi kültürel festival için hazırlıklara başladı. Nathan Phillips Square'deki yemek pazarlarından yeni gelenler için ağ kurma gecelerine kadar takvim oldukça yoğun. Bu etkinlikler birliği güçlendirmeyi ve yeni gelenlerin entegrasyonunu hızlandırmayı amaçlıyor.",
-      category: "Community",
-      color: "bg-primary"
-    }
+        ? 'Community members continue high-visibility advocacy—including long-distance walks from the GTA toward Ottawa—to press for clarity before more TS2023 open work permits expire. Organizers stress that children born in Canada and parents paying taxes should not fall into status gaps while humanitarian programs close. Legal experts note Ottawa may still design targeted temporary or H&C options, but no broad extension has been announced as of early October 2026.'
+        : 'Topluluk üyeleri, daha fazla TS2023 açık çalışma izni sona ermeden netlik için GTA\'dan Ottawa\'ya uzanan yürüyüşler de dahil görünür eylemlere devam ediyor. Organizatörler, insani programlar kapanırken Kanada\'da doğan çocukların ve vergi ödeyen ebeveynlerin statü boşluğuna düşmemesi gerektiğini vurguluyor. Hukuk uzmanları Ottawa\'nın hedefli geçici veya H&C seçenekleri tasarlayabileceğini belirtiyor; ancak Ekim 2026 başına kadar geniş bir uzatım duyurulmadı.',
+      category: 'Community',
+      link: 'https://ircc.com/news/mother-son-march-in-protest-as-turkish-syrian-nationals-face-immigration-limbo',
+      color: 'bg-primary',
+    },
   ], [lang]);
   const [showPostSuccess, setShowPostSuccess] = useState(false);
   const [isSubmittingListing, setIsSubmittingListing] = useState(false);
@@ -3706,11 +3709,12 @@ const App: React.FC = () => {
       setIsNewsLoading(true);
       const defaultNews = DEFAULT_CANADA_NEWS;
       try {
-        const cacheKey = `canada_news_${lang}`;
+        const todayKey = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Toronto' });
+        const cacheKey = `canada_news_${lang}_${todayKey}`;
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
           const { timestamp, data } = JSON.parse(cached);
-          if (Date.now() - timestamp < 4 * 60 * 60 * 1000) { // 4 hours cache
+          if (Date.now() - timestamp < 4 * 60 * 60 * 1000) { // 4 hours cache per calendar day
             setCommunityNews(data);
             setIsNewsLoading(false);
             return;
@@ -3832,11 +3836,36 @@ const App: React.FC = () => {
   const activeBanners = useMemo(() => banners.filter(b => b.active), [banners]);
   
   const combinedBannerItems = useMemo(() => {
-    return activeBanners.map(b => {
+    const fromBanners = activeBanners.map(b => {
       const finalType = (b.type === 'news') ? 'news' : 'ad';
       return { ...b, type: finalType };
     });
-  }, [activeBanners]);
+
+    if (!includeLiveNews || communityNews.length === 0) {
+      return fromBanners;
+    }
+
+    const existingTitles = new Set(
+      fromBanners.map(b => (b.title || '').trim().toLowerCase()),
+    );
+
+    const liveNewsItems = communityNews
+      .filter(n => !existingTitles.has((n.title || '').trim().toLowerCase()))
+      .map((n, index) => ({
+        id: String(n.id ?? `live-news-${index}`),
+        title: n.title || '',
+        desc: n.desc || '',
+        content: n.content || '',
+        category: n.category,
+        url: getBannerImageUrl(n.title || '', n.desc || n.category || ''),
+        link: n.link || '#',
+        type: 'news' as const,
+        mediaType: 'image' as const,
+        active: true,
+      }));
+
+    return [...liveNewsItems, ...fromBanners];
+  }, [activeBanners, communityNews, includeLiveNews]);
 
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 

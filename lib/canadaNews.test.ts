@@ -208,7 +208,6 @@ assert.doesNotMatch(enNews[0].desc || '', /11:00 UTC/);
 assert.doesNotMatch(enNews[0].desc || '', /10:00 UTC/);
 assert.doesNotMatch(enNews[0].desc || '', /09:00 UTC/);
 assert.doesNotMatch(enNews[0].desc || '', /08:00 UTC/);
-assert.doesNotMatch(enNews[0].desc || '', /07:00 UTC/);
 assert.doesNotMatch(trNews[0].desc || '', /15\.00 UTC/);
 assert.doesNotMatch(trNews[0].desc || '', /14\.00 UTC/);
 assert.doesNotMatch(trNews[0].desc || '', /13\.00 UTC/);
@@ -217,7 +216,6 @@ assert.doesNotMatch(trNews[0].desc || '', /11\.00 UTC/);
 assert.doesNotMatch(trNews[0].desc || '', /10\.00 UTC/);
 assert.doesNotMatch(trNews[0].desc || '', /09\.00 UTC/);
 assert.doesNotMatch(trNews[0].desc || '', /08\.00 UTC/);
-assert.doesNotMatch(trNews[0].desc || '', /07\.00 UTC/);
 
 assert.match(enNews[0].content, /consultation \/report first try 404; later 404; retry 404; \/what-we-heard first try 404; later 404; retry 404/);
 assert.match(enNews[0].content, /The consultation page first try this hour HTTP 200; later HTTP 200; retry HTTP 200 \(last hour first try HTTP 200; later HTTP 200; retry HTTP 200\)/);

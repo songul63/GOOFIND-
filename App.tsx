@@ -306,6 +306,7 @@ import {
   User as FirebaseUser
 } from 'firebase/auth';
 import { INITIAL_BUSINESSES, INITIAL_NOTIFICATIONS, INITIAL_EVENTS, INITIAL_BANNERS, INITIAL_CHAT_MESSAGES, INITIAL_COMMUNITIES, INITIAL_FLYERS, INITIAL_PLACES, hydrateCommunity, mergeCommunitiesWithSeed } from './constants';
+import { combineBannerItems, getDefaultCanadaNews } from './lib/canadaNews';
 import { getLatestCanadaTurkishNews, summarizeWebsiteInfo, translatePlaceFields } from './geminiService';
 
 // --- Reusable Components ---
@@ -1094,7 +1095,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [banners, setBanners] = useState<BannerAd[]>([]);
-  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(true);
+  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(false);
   const [isAddBannerOpen, setIsAddBannerOpen] = useState<boolean>(false);
   const [bannerTitle, setBannerTitle] = useState<string>('');
   const [bannerDesc, setBannerDesc] = useState<string>('');
@@ -1397,38 +1398,7 @@ const App: React.FC = () => {
   const [isNotifMessageModalOpen, setIsNotifMessageModalOpen] = useState(false);
   const [activeNotifMsgThread, setActiveNotifMsgThread] = useState<string | null>(null);
 
-  const DEFAULT_CANADA_NEWS = useMemo(() => [
-    {
-      id: 1,
-      title: lang === 'en' ? "2025-2027 Immigration Plan" : "2025-2027 Göçmenlik Planı",
-      desc: lang === 'en' ? "Sustainable growth and housing focus." : "Sürdürülebilir büyüme ve konut odaklı.",
-      content: lang === 'en' 
-        ? "Canada is shifting its immigration strategy to prioritize sustainable growth. The new 2025-2027 plan focuses on aligning newcomer arrivals with infrastructure capacity, particularly housing and healthcare. Expect more targeted draws for skilled trades and healthcare professionals." 
-        : "Kanada, göçmenlik stratejisini sürdürülebilir büyümeye öncelik verecek şekilde değiştiriyor. Yeni 2025-2027 planı, yeni gelenlerin sayısını konut ve sağlık altyapısı kapasitesiyle uyumlu hale getirmeyi hedefliyor. Teknik meslekler ve sağlık çalışanları için daha hedefli alımların yapılması bekleniyor.",
-      category: "Immigration",
-      color: "bg-primary"
-    },
-    {
-      id: 2,
-      title: lang === 'en' ? "Ontario Small Business Grants" : "Ontario Küçük İşletme Hibeleri",
-      desc: lang === 'en' ? "New support for local entrepreneurs." : "Yerel girişimcilere yeni destek paketi.",
-      content: lang === 'en'
-        ? "Ontario has announced a new wave of grants for small businesses. Entrepreneurs in the tech, hospitality, and manufacturing sectors can apply for funding up to $25,000 for digital transformation and energy efficiency upgrades. Applications open next month."
-        : "Ontario, küçük işletmeler için yeni bir hibe paketi duyurdu. Teknoloji, hizmet ve üretim sektörlerindeki girişimciler; dijital dönüşüm ve enerji verimliliği güncellemeleri için 25.000 dolara kadar fon başvurusunda bulunabilecek. Başvurular önümüzdeki ay başlıyor.",
-      category: "Economy",
-      color: "bg-primary-mid"
-    },
-    {
-      id: 3,
-      title: lang === 'en' ? "Toronto Community Events" : "Toronto Toplum Etkinlikleri",
-      desc: lang === 'en' ? "Summer festivals and cultural meets." : "Yaz festivalleri ve kültürel buluşmalar.",
-      content: lang === 'en'
-        ? "The Toronto Turkish community is gearing up for a series of cultural festivals this summer. From food markets in Nathan Phillips Square to networking nights for newcomers, the calendar is packed. These events aim to foster unity and help newcomers integrate faster."
-        : "Toronto Türk toplumu, bu yaz bir dizi kültürel festival için hazırlıklara başladı. Nathan Phillips Square'deki yemek pazarlarından yeni gelenler için ağ kurma gecelerine kadar takvim oldukça yoğun. Bu etkinlikler birliği güçlendirmeyi ve yeni gelenlerin entegrasyonunu hızlandırmayı amaçlıyor.",
-      category: "Community",
-      color: "bg-primary"
-    }
-  ], [lang]);
+  const DEFAULT_CANADA_NEWS = useMemo(() => getDefaultCanadaNews(lang), [lang]);
   const [showPostSuccess, setShowPostSuccess] = useState(false);
   const [isSubmittingListing, setIsSubmittingListing] = useState(false);
   const [businessImageUrlPreview, setBusinessImageUrlPreview] = useState('');
@@ -3831,12 +3801,17 @@ const App: React.FC = () => {
 
   const activeBanners = useMemo(() => banners.filter(b => b.active), [banners]);
   
-  const combinedBannerItems = useMemo(() => {
-    return activeBanners.map(b => {
-      const finalType = (b.type === 'news') ? 'news' : 'ad';
-      return { ...b, type: finalType };
-    });
-  }, [activeBanners]);
+  const combinedBannerItems = useMemo(
+    () =>
+      combineBannerItems(
+        activeBanners,
+        communityNews,
+        includeLiveNews,
+        lang,
+        getBannerImageUrl,
+      ),
+    [activeBanners, communityNews, includeLiveNews, lang],
+  );
 
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 

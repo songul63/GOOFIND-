@@ -21,7 +21,7 @@ const ads: BannerAd[] = [
     link: '#',
     active: true,
     desc: 'Already approved',
-  },
+  } as BannerAd,
 ];
 
 const withNews = combineBannerItems(ads, getDefaultCanadaNews('en'), true, 'en', fallback);
@@ -73,137 +73,368 @@ assert.doesNotMatch(enNews[0].content, /tugboats|4,650|Stewart|Tuzcu|Bolat and S
 assert.doesNotMatch(trNews[0].content, /römorkör|4\.650|Stewart|Tuzcu|Bolat ve Sidhu|teknik ekipler|NATO Zirvesi/);
 assert.match(enNews[0].link || '', /consultations\/trade\/2026-07-29-turkiye/);
 
-assert.match(enNews[1].title, /Express Entry #447|Trades Occupations/);
-assert.match(trNews[1].title, /Express Entry #447|Trades Occupations/);
-assert.match(enNews[1].content, /3,500 invitations|CRS score of 476|Trades Occupations, 2026-Version 3|#447/);
-assert.match(trNews[1].content, /3\.500 davet|476 CRS|#447|Trades Occupations, 2026-Version 3/);
-assert.match(enNews[1].content, /1080909|0980843|0980374|0980361/);
+assert.match(enNews[1].title, /Express Entry #450|French-language proficiency/);
+assert.match(trNews[1].title, /Express Entry #450|Fransızca yeterlilik/);
+assert.doesNotMatch(enNews[1].title, /#449|#448|#447|Trades Occupations|Provincial Nominee Program|Canadian Experience Class/);
+assert.match(enNews[1].content, /5,000 invitations|CRS score of 435|French-Language proficiency|#450/);
+assert.match(trNews[1].content, /5\.000 davet|435 CRS|#450|French-Language proficiency/);
+assert.match(enNews[1].content, /1081461|1081344|1081246|1080909|0980843|0980374|0980361/);
 assert.match(enNews[1].link || '', /express-entry-rounds\.html/);
+assert.match(enNews[1].content, /451 round records/);
+assert.match(enNews[1].content, /Friday, 16 October 2026 at 13:27:07 GMT/);
+assert.match(enNews[1].content, /693170 bytes/);
 
 assert.match(enNews[2].title, /skilled military recruits/i);
 assert.match(trNews[2].title, /nitelikli askeri adaylar/i);
 assert.match(enNews[2].content, /Foreign Skilled Military Applicant|NOC 40042|42102|43204/);
 assert.match(trNews[2].content, /FSMA|NOC 40042|42102|43204/);
 assert.match(enNews[2].link || '', /category-based-selection\.html/);
+assert.match(enNews[2].content, /latest official round is now #450/);
 
-// 22:00 UTC 11 Oct 2026 this-hour lock
 for (const item of enNews) {
-  assert.match(item.content || '', /22:00 UTC on 11 October 2026/);
-  assert.doesNotMatch(item.content || '', /21:00 UTC on 11 October 2026/);
-  assert.doesNotMatch(item.content || '', /20:00 UTC on 11 October 2026/);
-  assert.doesNotMatch(item.content || '', /17:00 UTC on 11 October 2026/);
-  assert.doesNotMatch(item.content || '', /16:00 UTC on 11 October 2026/);
-  assert.doesNotMatch(item.content || '', /15:00 UTC on 11 October 2026/);
-  assert.doesNotMatch(item.content || '', /13:00 UTC on 11 October 2026/);
-  assert.doesNotMatch(item.content || '', /12:00 UTC on 11 October 2026/);
+  assert.match(item.content || '', /14:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /13:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /12:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /11:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /10:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /09:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /08:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /07:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /06:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /05:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /04:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /03:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /02:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /00:00 UTC on 16 October 2026/);
+  assert.doesNotMatch(item.content || '', /23:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /22:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /21:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /20:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /19:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /18:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /17:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /16:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /15:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /14:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /13:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /12:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /11:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /10:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /09:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /08:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /07:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /06:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /05:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /04:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /03:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /02:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /01:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /00:00 UTC on 15 October 2026/);
+  assert.doesNotMatch(item.content || '', /23:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /22:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /21:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /20:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /19:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /18:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /17:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /16:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /15:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /14:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /13:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /12:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /09:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /08:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /07:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /06:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /01:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /00:00 UTC on 14 October 2026/);
+  assert.doesNotMatch(item.content || '', /23:00 UTC on 13 October 2026/);
+  assert.doesNotMatch(item.content || '', /22:00 UTC on 13 October 2026/);
+  assert.doesNotMatch(item.content || '', /21:00 UTC on 13 October 2026/);
+  assert.doesNotMatch(item.content || '', /00:00 UTC on 13 October 2026/);
 }
 for (const item of trNews) {
-  assert.match(item.content || '', /11 Ekim 2026 22\.00 UTC/);
-  assert.doesNotMatch(item.content || '', /11 Ekim 2026 21\.00 UTC/);
-  assert.doesNotMatch(item.content || '', /11 Ekim 2026 20\.00 UTC/);
-  assert.doesNotMatch(item.content || '', /11 Ekim 2026 17\.00 UTC/);
-  assert.doesNotMatch(item.content || '', /11 Ekim 2026 16\.00 UTC/);
-  assert.doesNotMatch(item.content || '', /11 Ekim 2026 15\.00 UTC/);
-  assert.doesNotMatch(item.content || '', /11 Ekim 2026 13\.00 UTC/);
-  assert.doesNotMatch(item.content || '', /11 Ekim 2026 12\.00 UTC/);
+  assert.match(item.content || '', /16 Ekim 2026 14\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 13\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 12\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 11\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 10\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 09\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 08\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 07\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 06\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 05\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 04\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 03\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 02\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /16 Ekim 2026 00\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 23\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 22\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 21\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 20\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 19\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 18\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 17\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 16\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 15\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 14\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 13\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 12\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 11\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 10\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 09\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 08\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 07\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 06\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 05\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 04\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 03\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 02\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 01\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /15 Ekim 2026 00\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 23\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 22\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 21\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 20\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 19\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 18\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 17\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 16\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 15\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 14\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 13\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 12\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 09\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 08\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 07\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 06\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 01\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /14 Ekim 2026 00\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /13 Ekim 2026 23\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /13 Ekim 2026 22\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /13 Ekim 2026 21\.00 UTC/);
+  assert.doesNotMatch(item.content || '', /13 Ekim 2026 00\.00 UTC/);
 }
 
-assert.match(enNews[0].desc || '', /22:00 UTC/);
-assert.match(trNews[0].desc || '', /22\.00 UTC/);
+assert.match(enNews[0].desc || '', /14:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /13:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /12:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /11:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /10:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /09:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /08:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /07:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /06:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /05:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /04:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /03:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /02:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /00:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /23:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /22:00 UTC/);
 assert.doesNotMatch(enNews[0].desc || '', /21:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /20:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /19:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /18:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /17:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /16:00 UTC/);
+assert.doesNotMatch(enNews[0].desc || '', /15:00 UTC/);
+assert.match(trNews[0].desc || '', /14\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /13\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /12\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /11\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /10\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /09\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /08\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /07\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /06\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /05\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /04\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /03\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /02\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /00\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /23\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /22\.00 UTC/);
 assert.doesNotMatch(trNews[0].desc || '', /21\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /20\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /19\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /18\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /17\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /16\.00 UTC/);
+assert.doesNotMatch(trNews[0].desc || '', /15\.00 UTC/);
 
-assert.match(enNews[0].content, /consultation \/report first try 404; later 404; retry 404; \/what-we-heard first try 404; later 404; retry 404/);
-assert.match(enNews[0].content, /last hour \/report first try 404; later 404; retry 404/);
-assert.match(enNews[0].content, /first try this hour HTTP 404; later HTTP 404; retry HTTP 404 \(last hour first try HTTP 404; later HTTP 404; retry HTTP 404\)/);
-assert.match(enNews[0].content, /Alternate no-lang first try this hour HTTP 404; later HTTP 404; retry HTTP 404 \(last hour first try HTTP 404; later HTTP 404; retry HTTP 404\)/);
-assert.doesNotMatch(enNews[0].content, /Alternate no-lang first try this hour timed out/);
-assert.doesNotMatch(enNews[0].content, /Alternate no-lang first try this hour HTTP 404; later HTTP 404; retry HTTP 404 \(last hour first try HTTP 404; later HTTP 404; retry timed out\)/);
-assert.match(trNews[0].content, /istişare \/report ilk denemede 404; sonraki 404; yeniden deneme 404/);
-assert.match(trNews[0].content, /\/what-we-heard ilk denemede 404; sonraki 404; yeniden deneme 404/);
-assert.match(trNews[0].content, /geçen saat \/report ilk denemede 404; sonraki 404; yeniden deneme 404/);
 
-assert.match(enNews[1].content, /curl HTTP\/2 failed with INTERNAL_ERROR this hour on first try, later, and retry/);
-assert.match(enNews[1].content, /curl HTTP\/1\.1 timed out this hour on first try, later, and retry/);
-assert.doesNotMatch(enNews[1].content, /curl HTTP\/2 succeeded this hour on first try, later, and retry/);
-assert.doesNotMatch(enNews[1].content, /curl HTTP\/1\.1 succeeded this hour on first try, later, and retry/);
-assert.match(enNews[1].content, /Last hour curl HTTP\/2 failed with INTERNAL_ERROR on first try, later, and retry/);
-assert.match(enNews[1].content, /Last hour curl HTTP\/1\.1 timed out on first try, later, and retry/);
-assert.doesNotMatch(enNews[1].content, /Last hour curl HTTP\/2 succeeded on first try, later, and retry/);
-assert.doesNotMatch(enNews[1].content, /Last hour curl HTTP\/1\.1 succeeded on first try, later, and retry/);
-assert.match(enNews[1].content, /Python urllib succeeded this hour \(HTTP 200, 731813 bytes\) on first try, later, and retry/);
-assert.match(enNews[1].content, /Last hour official ee_rounds_123_en.json succeeded over Python urllib on first try, later, and retry \(HTTP 200, 731813 bytes\)/);
-assert.match(enNews[1].content, /Last hour Python urllib succeeded \(HTTP 200, 731813 bytes\) on first try, later, and retry/);
-assert.doesNotMatch(enNews[1].content, /Last hour Python urllib succeeded \(HTTP 200, 731813 bytes\) on first try; later timed out; retry timed out/);
-assert.match(enNews[1].content, /last confirmed successful official fetch is now 22:00 UTC on 11 October 2026/);
-assert.doesNotMatch(enNews[1].content, /last confirmed successful official fetch is now 21:00 UTC on 11 October 2026/);
-
-assert.match(trNews[1].content, /curl HTTP\/2 bu saatte ilk denemede, sonraki indirmede ve yeniden denemede INTERNAL_ERROR ile başarısız oldu/);
-assert.doesNotMatch(trNews[1].content, /curl HTTP\/2 bu saatte ilk denemede, sonraki indirmede ve yeniden denemede başarılı oldu/);
-assert.match(trNews[1].content, /Geçen saat curl HTTP\/2 ilk denemede, sonraki indirmede ve yeniden denemede INTERNAL_ERROR ile başarısız oldu/);
-assert.match(trNews[1].content, /Geçen saat curl HTTP\/1\.1 ilk denemede, sonraki indirmede ve yeniden denemede zaman aşımına uğradı/);
-assert.doesNotMatch(trNews[1].content, /Geçen saat curl HTTP\/2 ilk denemede, sonraki indirmede ve yeniden denemede başarılı oldu/);
-assert.match(trNews[1].content, /Son teyit edilen başarılı resmi indirme artık 11 Ekim 2026 22\.00 UTC/);
-
-assert.match(enNews[1].content, /The 1080909 article first try this hour HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:20:39 GMT; later HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:20:39 GMT; retry HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:20:39 GMT/);
-assert.match(enNews[1].content, /Last hour the 1080909 article first try HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:20:39 GMT; later HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:20:39 GMT; retry HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:20:39 GMT/);
-assert.match(trNews[1].content, /1080909 yazısı bu saatte ilk denemede HTTP 200 Last-Modified 11 Ekim 2026 Pazar 18\.20\.39 GMT; sonraki HTTP 200 Last-Modified 11 Ekim 2026 Pazar 18\.20\.39 GMT/);
-assert.match(trNews[1].content, /Geçen saat 1080909 yazısı ilk denemede HTTP 200 Last-Modified 11 Ekim 2026 Pazar 18\.20\.39 GMT/);
-assert.doesNotMatch(enNews[1].content, /04:58:36 GMT/);
-assert.doesNotMatch(trNews[1].content, /04\.58\.36 GMT/);
-
-assert.match(enNews[1].content, /The CIC 0980374 article first try this hour HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:30:00 GMT; later HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:30:00 GMT; retry HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:30:00 GMT/);
-assert.match(enNews[1].content, /last hour first try HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:21:08 GMT; later HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:21:08 GMT; retry HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:21:08 GMT/);
-assert.match(trNews[1].content, /CIC 0980374 yazısı bu saatte ilk denemede HTTP 200 Last-Modified 11 Ekim 2026 Pazar 18\.30\.00 GMT/);
-
-assert.match(enNews[1].content, /CIC News homepage Last-Modified this hour is Sunday, 11 October 2026 at 18:26:50 GMT on first try, Sunday, 11 October 2026 at 18:26:50 GMT on later, and Sunday, 11 October 2026 at 18:26:50 GMT on retry/);
-assert.match(enNews[1].content, /last hour Sunday, 11 October 2026 at 18:26:50 GMT on first try/);
-assert.match(trNews[1].content, /11 Ekim 2026 Pazar 18\.26\.50 GMT/);
-assert.match(enNews[1].content, /The CIC 0980843 article first try this hour HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:52:16 GMT/);
-assert.doesNotMatch(enNews[1].content, /The CIC 0980843 article first try this hour HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:25:58 GMT/);
-assert.match(enNews[1].content, /last hour first try HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:52:16 GMT/);
-assert.match(trNews[1].content, /CIC 0980843 yazısı bu saatte ilk denemede HTTP 200 Last-Modified 11 Ekim 2026 Pazar 18\.52\.16 GMT/);
-assert.match(enNews[1].content, /canonical 0980361 URL\) first try this hour HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:21:45 GMT/);
-assert.match(enNews[1].content, /last hour first try HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:21:45 GMT; later HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:21:45 GMT; retry HTTP 200 Last-Modified Sunday, 11 October 2026 at 18:21:45 GMT/);
-assert.doesNotMatch(enNews[1].content, /06:07:46 GMT/);
-assert.doesNotMatch(enNews[1].content, /17:06:53 GMT/);
-assert.match(enNews[1].content, /Official Express Entry rounds HTML first try this hour HTTP 200 \(Last-Modified Sunday, 11 October 2026 at 21:10:44 GMT\)/);
-assert.match(enNews[1].content, /Last hour that page first try HTTP 200 \(Last-Modified Sunday, 11 October 2026 at 16:52:00 GMT\)/);
-assert.doesNotMatch(enNews[1].content, /16:51:55 GMT/);
-assert.match(enNews[1].content, /Official category-based selection page first try this hour HTTP 200 \(Last-Modified Sunday, 11 October 2026 at 21:15:32 GMT\)/);
-assert.match(enNews[2].content, /that page first try Sunday, 11 October 2026 at 21:15:32 GMT, later Sunday, 11 October 2026 at 21:15:32 GMT, and retry Sunday, 11 October 2026 at 16:55:02 GMT/);
-assert.match(enNews[2].content, /last hour first try Sunday, 11 October 2026 at 16:55:02 GMT, later Sunday, 11 October 2026 at 16:55:02 GMT, and retry Sunday, 11 October 2026 at 16:55:02 GMT/);
-assert.doesNotMatch(enNews[2].content, /02:26:22 GMT/);
-
+assert.match(enNews[1].content, /1081246 article first try this hour HTTP 200 Last-Modified Friday, 16 October 2026 at 13:54:00 GMT/);
+assert.match(enNews[1].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 13:54:00 GMT; retry HTTP 200 Last-Modified Friday, 16 October 2026 at 13:54:00 GMT/);
+assert.match(enNews[1].content, /extra confirmation Last-Modified Friday, 16 October 2026 at 13:54:00 GMT \/ 13:54:00 GMT/);
+assert.match(enNews[1].content, /Last hour the 1081246 article[\s\S]*extra confirmation Last-Modified Friday, 16 October 2026 at 11:56:38 GMT \/ 11:56:38 GMT/);
+assert.match(enNews[1].content, /last hour the 1081246 article first try HTTP 200 Last-Modified Friday, 16 October 2026 at 11:56:38 GMT/i);
+assert.match(enNews[1].content, /1080909 article first try this hour HTTP 200 Last-Modified Friday, 16 October 2026 at 14:03:27 GMT/);
+assert.match(enNews[1].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 14:03:27 GMT; retry HTTP 200 Last-Modified Friday, 16 October 2026 at 14:03:27 GMT/);
+assert.match(enNews[1].content, /extra2 HTTP 200 Last-Modified Friday, 16 October 2026 at 14:03:27 GMT/);
+assert.match(enNews[1].content, /Last hour the 1080909 article first try HTTP 200 Last-Modified Friday, 16 October 2026 at 12:04:25 GMT/);
+assert.match(enNews[1].content, /CIC News homepage Last-Modified this hour is Friday, 16 October 2026 at 13:55:25 GMT on first try/);
+assert.match(enNews[1].content, /Friday, 16 October 2026 at 14:03:47 GMT on later/);
+assert.match(enNews[1].content, /Friday, 16 October 2026 at 14:03:47 GMT on retry/);
+assert.match(enNews[1].content, /last hour Friday, 16 October 2026 at 12:03:44 GMT/);
+assert.match(enNews[1].content, /The CIC 0980843 article first try this hour HTTP 200 Last-Modified Friday, 16 October 2026 at 13:53:21 GMT/);
+assert.match(enNews[1].content, /retry HTTP 200 Last-Modified Friday, 16 October 2026 at 13:53:21 GMT/);
+assert.match(enNews[1].content, /extra confirmation Last-Modified Friday, 16 October 2026 at 13:53:21 GMT \/ 13:53:21 GMT/);
+assert.match(enNews[1].content, /last hour first try HTTP 200 Last-Modified Friday, 16 October 2026 at 12:01:06 GMT/);
+assert.match(enNews[1].content, /The CIC 0980374 article first try this hour HTTP 200 Last-Modified Friday, 16 October 2026 at 14:03:51 GMT/);
+assert.match(enNews[1].content, /canonical 0980361 URL\) first try this hour HTTP 200 Last-Modified Friday, 16 October 2026 at 14:04:41 GMT/);
+assert.match(enNews[1].content, /last hour first try HTTP 200 Last-Modified Friday, 16 October 2026 at 12:04:25 GMT/);
+assert.match(enNews[1].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 14:04:41 GMT; retry HTTP 200 Last-Modified Friday, 16 October 2026 at 14:04:41 GMT/);
+assert.match(enNews[1].content, /extra confirmation Last-Modified Friday, 16 October 2026 at 14:04:41 GMT \/ 14:04:41 GMT/);
+assert.match(enNews[1].content, /table now starts with October 15 Canadian Experience Class 2,500 invitations \/ CRS 519/);
+assert.match(enNews[1].content, /Official Express Entry rounds HTML returned HTTP 200 over Python urllib on first try, later, and retry this hour/);
+assert.match(enNews[1].content, /urllib first try HTTP 200 Last-Modified Friday, 16 October 2026 at 14:01:59 GMT/);
+assert.match(enNews[1].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 14:01:59 GMT; retry HTTP 200 Last-Modified Friday, 16 October 2026 at 14:01:59 GMT/);
+assert.match(enNews[1].content, /wget first try HTTP 200 Last-Modified Friday, 16 October 2026 at 14:01:59 GMT/);
+assert.match(enNews[1].content, /Last hour wget first try HTTP 200 Last-Modified Friday, 16 October 2026 at 13:07:00 GMT/);
+assert.match(enNews[1].content, /extra confirmation wget HTTP 200 \/ HTTP 200 Last-Modified Friday, 16 October 2026 at 14:06:31 GMT \/ 14:06:31 GMT/);
+assert.match(enNews[1].content, /extra confirmation urllib HTTP 200 \/ HTTP 200 Last-Modified Friday, 16 October 2026 at 14:06:31 GMT \/ 14:06:31 GMT/);
+assert.match(enNews[1].content, /Last hour that page returned HTTP 200 over Python urllib on first try, later, and retry/);
+assert.match(enNews[1].content, /urllib first try HTTP 200 Last-Modified Friday, 16 October 2026 at 13:02:13 GMT/);
+assert.match(enNews[1].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 03:01:27 GMT; retry HTTP 200 Last-Modified Friday, 16 October 2026 at 13:02:13 GMT/);
+assert.match(enNews[1].content, /last hour urllib first try HTTP 200 Last-Modified Friday, 16 October 2026 at 11:30:23 GMT/);
+assert.match(enNews[1].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 12:19:50 GMT; retry HTTP 200 Last-Modified Friday, 16 October 2026 at 11:30:23 GMT/);
+assert.match(enNews[1].content, /wget first try HTTP 200 Last-Modified Friday, 16 October 2026 at 11:30:23 GMT/);
+assert.match(enNews[2].content, /wget first try HTTP 200 Last-Modified Friday, 16 October 2026 at 13:02:13 GMT/);
+assert.match(enNews[2].content, /last hour wget first try HTTP 200 Last-Modified Friday, 16 October 2026 at 11:30:23 GMT/);
+assert.match(enNews[2].content, /last hour urllib first try HTTP 200 Last-Modified Friday, 16 October 2026 at 11:30:23 GMT/);
+assert.match(enNews[2].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 12:19:50 GMT/);
+assert.match(enNews[1].content, /ee_rounds_123_en.json returned HTTP 200 over Python urllib on first try, later, and retry/);
+assert.match(enNews[1].content, /curl HTTP\/2 returned HTTP 200 this hour on first try, later, and retry/);
+assert.match(enNews[1].content, /curl HTTP\/1.1 returned HTTP 200 this hour on first try, later, and retry/);
+assert.match(enNews[1].content, /Python urllib returned HTTP 200 this hour on first try, later, and retry/);
+assert.match(enNews[1].content, /wget first\/later\/retry HTTP 200/);
+assert.match(enNews[1].content, /Last hour wget first\/later\/retry HTTP 200/);
+assert.match(trNews[1].content, /wget ilk\/sonraki\/yeniden denemede HTTP 200 verdi/);
+assert.match(trNews[1].content, /Geçen saat wget ilk\/sonraki\/yeniden denemede HTTP 200 verdi/);
+assert.match(enNews[1].content, /Last hour curl HTTP\/2 returned INTERNAL_ERROR/);
+assert.match(enNews[1].content, /Last hour curl HTTP\/1.1 timed out/);
+assert.match(enNews[1].content, /extra confirmation urllib HTTP 200 \/ HTTP 200/);
+assert.match(enNews[1].content, /Last hour extra confirmation urllib HTTP 200 \/ HTTP 200/);
+assert.match(enNews[1].content, /invitations.html\?q=450/);
+assert.match(enNews[1].content, /dedicated homepage article for official round #450/);
+assert.match(enNews[1].content, /1081461 on homepage/);
+assert.match(enNews[1].content, /1081430 unused/);
+assert.match(enNews[1].content, /1081434 unused/);
+assert.match(enNews[1].content, /1081415 unused/);
+assert.match(enNews[1].content, /1081337 unused/);
+assert.match(enNews[1].content, /1081344 on homepage/);
+assert.match(enNews[1].content, /1081246 on homepage/);
 assert.match(enNews[1].content, /1080909 on homepage/);
-assert.match(enNews[1].content, /1081199 unused/);
+assert.match(enNews[1].content, /0980361 NOT on homepage/);
+assert.match(enNews[1].content, /0980374 NOT on homepage/);
+assert.match(enNews[1].content, /1081461 article first try this hour HTTP 200 Last-Modified Friday, 16 October 2026 at 13:53:53 GMT/);
+assert.match(enNews[1].content, /later HTTP 200 Last-Modified Friday, 16 October 2026 at 13:53:53 GMT; retry HTTP 200 Last-Modified Friday, 16 October 2026 at 13:53:53 GMT/);
+assert.match(enNews[1].content, /1081241 unused/);
+assert.match(enNews[1].content, /1081284 unused/);
+assert.match(enNews[1].content, /1081301 NOT on homepage/);
+assert.match(enNews[1].content, /1081349 unused/);
+assert.match(enNews[1].content, /1081387 unused/);
+assert.match(enNews[1].content, /1081365 unused/);
+assert.match(enNews[1].content, /1081123 NOT on homepage/);
+assert.match(enNews[1].content, /1080995 NOT on homepage/);
 assert.match(enNews[1].content, /PEI 195 not listed/);
-assert.match(enNews[1].content, /Thursday, 1 October 2026 at 15:30:46 GMT/);
-assert.match(enNews[1].content, /448 round records/);
+assert.match(enNews[1].content, /1081053 NOT on homepage/);
+assert.match(enNews[1].content, /article:published_time 2026-10-16T13:50:05\+00:00/);
+
+assert.match(trNews[1].content, /1081246 yazısı bu saatte ilk denemede HTTP 200 Last-Modified 16 Ekim 2026 Cuma 13\.54\.00 GMT/);
+assert.match(trNews[1].content, /ek teyit Last-Modified 16 Ekim 2026 Cuma 13\.54\.00 GMT/);
+assert.match(trNews[1].content, /Geçen saat 1081246 yazısı[\s\S]*ek teyit Last-Modified 16 Ekim 2026 Cuma 11\.56\.38 GMT/);
+assert.match(trNews[1].content, /geçen saat urllib ilk denemede HTTP 200 Last-Modified 16 Ekim 2026 Cuma 11\.30\.23 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 14\.01\.59 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 14\.03\.47 GMT/);
+assert.match(trNews[1].content, /CIC 0980843 yazısı bu saatte ilk denemede HTTP 200 Last-Modified 16 Ekim 2026 Cuma 13\.53\.21 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 14\.03\.51 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 14\.06\.31 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 13\.00\.27 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 13\.02\.13 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 03\.01\.27 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 11\.30\.23 GMT/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 13\.27\.07 GMT/);
 
 const staleHours = [
-  '21:00 UTC on 11 October 2026',
-  '20:00 UTC on 11 October 2026',
-  '19:00 UTC on 11 October 2026',
-  '17:00 UTC on 11 October 2026',
-  '16:00 UTC on 11 October 2026',
-  '15:00 UTC on 11 October 2026',
-  '14:00 UTC on 11 October 2026',
-  '13:00 UTC on 11 October 2026',
-  '12:00 UTC on 11 October 2026',
-  '11:00 UTC on 11 October 2026',
-  '10:00 UTC on 11 October 2026',
-  '09:00 UTC on 11 October 2026',
-  '08:00 UTC on 11 October 2026',
-  '07:00 UTC on 11 October 2026',
-  '00:00 UTC on 11 October 2026',
-  '23:00 UTC on 10 October 2026',
-  '22:00 UTC on 10 October 2026',
-  '21:00 UTC on 10 October 2026',
-  '18:00 UTC on 10 October 2026',
+  '13:00 UTC on 16 October 2026',
+  '12:00 UTC on 16 October 2026',
+  '11:00 UTC on 16 October 2026',
+  '10:00 UTC on 16 October 2026',
+  '09:00 UTC on 16 October 2026',
+  '08:00 UTC on 16 October 2026',
+  '07:00 UTC on 16 October 2026',
+  '06:00 UTC on 16 October 2026',
+  '05:00 UTC on 16 October 2026',
+  '04:00 UTC on 16 October 2026',
+  '03:00 UTC on 16 October 2026',
+  '02:00 UTC on 16 October 2026',
+  '00:00 UTC on 16 October 2026',
+  '23:00 UTC on 15 October 2026',
+  '22:00 UTC on 15 October 2026',
+  '21:00 UTC on 15 October 2026',
+  '20:00 UTC on 15 October 2026',
+  '19:00 UTC on 15 October 2026',
+  '18:00 UTC on 15 October 2026',
+  '17:00 UTC on 15 October 2026',
+  '16:00 UTC on 15 October 2026',
+  '15:00 UTC on 15 October 2026',
+  '14:00 UTC on 15 October 2026',
+  '13:00 UTC on 15 October 2026',
+  '12:00 UTC on 15 October 2026',
+  '11:00 UTC on 15 October 2026',
+  '10:00 UTC on 15 October 2026',
+  '09:00 UTC on 15 October 2026',
+  '08:00 UTC on 15 October 2026',
+  '07:00 UTC on 15 October 2026',
+  '06:00 UTC on 15 October 2026',
+  '05:00 UTC on 15 October 2026',
+  '04:00 UTC on 15 October 2026',
+  '03:00 UTC on 15 October 2026',
+  '02:00 UTC on 15 October 2026',
+  '01:00 UTC on 15 October 2026',
+  '00:00 UTC on 15 October 2026',
+  '23:00 UTC on 14 October 2026',
+  '22:00 UTC on 14 October 2026',
+  '21:00 UTC on 14 October 2026',
+  '20:00 UTC on 14 October 2026',
+  '19:00 UTC on 14 October 2026',
+  '18:00 UTC on 14 October 2026',
+  '17:00 UTC on 14 October 2026',
+  '16:00 UTC on 14 October 2026',
+  '15:00 UTC on 14 October 2026',
+  '14:00 UTC on 14 October 2026',
+  '13:00 UTC on 14 October 2026',
+  '12:00 UTC on 14 October 2026',
+  '11:00 UTC on 14 October 2026',
+  '10:00 UTC on 14 October 2026',
+  '09:00 UTC on 14 October 2026',
+  '08:00 UTC on 14 October 2026',
+  '07:00 UTC on 14 October 2026',
+  '06:00 UTC on 14 October 2026',
+  '05:00 UTC on 14 October 2026',
+  '04:00 UTC on 14 October 2026',
+  '03:00 UTC on 14 October 2026',
+  '02:00 UTC on 14 October 2026',
+  '01:00 UTC on 14 October 2026',
+  '00:00 UTC on 14 October 2026',
+  '23:00 UTC on 13 October 2026',
+  '22:00 UTC on 13 October 2026',
+  '21:00 UTC on 13 October 2026',
+  '20:00 UTC on 13 October 2026',
+  '18:00 UTC on 13 October 2026',
+  '17:00 UTC on 13 October 2026',
+  '16:00 UTC on 13 October 2026',
+  '14:00 UTC on 13 October 2026',
+  '00:00 UTC on 13 October 2026',
+  '23:00 UTC on 12 October 2026',
+  '22:00 UTC on 12 October 2026',
 ];
 for (const stamp of staleHours) {
   for (const item of enNews) {
     assert.doesNotMatch(item.content || '', new RegExp(stamp.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   }
 }
+
+console.log('canadaNews tests passed');

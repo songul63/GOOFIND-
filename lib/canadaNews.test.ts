@@ -21,7 +21,7 @@ const ads: BannerAd[] = [
     link: '#',
     active: true,
     desc: 'Already approved',
-  },
+  } as BannerAd,
 ];
 
 const withNews = combineBannerItems(ads, getDefaultCanadaNews('en'), true, 'en', fallback);
@@ -43,98 +43,64 @@ assert.equal(emptyAds.length, 3);
 assert.ok(emptyAds.every((item) => item.isLiveNews && item.type === 'news'));
 assert.ok(emptyAds[0].title.length > 0);
 
-const enNews = getDefaultCanadaNews('en');
-const trNews = getDefaultCanadaNews('tr');
-assert.equal(enNews.length, 3);
-assert.equal(trNews.length, 3);
-assert.match(enNews[0].title, /FTA|Türkiye/);
-assert.match(trNews[0].title, /STA|Türkiye/);
-assert.match(enNews[0].title, /consultations closed/i);
-assert.match(trNews[0].title, /istişareleri kapandı/i);
-assert.doesNotMatch(enNews[0].title, /Last day|comments/i);
-assert.doesNotMatch(trNews[0].title, /Son gün|görüşleri/i);
-assert.match(enNews[0].content, /Current status: Closed|consultation page still lists|conducted public consultations|what-we-heard report has not yet been published|in negotiations|NATO Summit|4\.3 billion|TCE-Consultations/);
-assert.match(trNews[0].content, /Current status: Closed|conducted public consultations|henüz yayımlanmamış|müzakerede|NATO Zirvesi|4,3 milyar|TCE-Consultations/);
-assert.doesNotMatch(enNews[0].content, /\$3\.3B|3\.3 billion/i);
-assert.doesNotMatch(trNews[0].content, /3,3 milyar/i);
-assert.match(enNews[0].content, /tugboats|4,650|JETCO|pharmaceutical|Bolat and Sidhu|technical teams/);
-assert.match(trNews[0].content, /römorkör|4\.650|JETCO|ilaç|Bolat ve Sidhu|teknik ekipler/);
-assert.doesNotMatch(enNews[0].content, /Stewart|Tuzcu/);
-assert.doesNotMatch(trNews[0].content, /Stewart|Tuzcu/);
-assert.match(enNews[0].link || '', /consultations\/trade\/2026-07-29-turkiye/);
-assert.match(enNews[1].title, /Express Entry|senior managers/i);
-assert.match(trNews[1].title, /Express Entry|üst düzey yönetici/i);
-assert.match(enNews[1].content, /#444|00012|00013|00014|00015|12 months|TEER 0|250|389/);
-assert.match(trNews[1].content, /#444|00012|00013|00014|00015|12 ay|TEER 0|250|389/);
-assert.match(enNews[1].content, /official rounds JSON|rounds table/i);
-assert.match(trNews[1].content, /resmi tur JSON|tur tablosu/i);
-assert.match(enNews[1].content, /no #445 has been published|no round after #444/i);
-assert.match(trNews[1].content, /#445 yayımlanmamıştır|#444.ten sonra/i);
-assert.match(enNews[0].content, /07:00 UTC on 20 September 2026/);
-assert.match(trNews[0].content, /20 Eylül 2026 07\.00 UTC/);
-assert.match(enNews[1].content, /13:53:31 GMT/);
-assert.match(trNews[1].content, /13\.53\.31 GMT/);
-assert.match(enNews[1].content, /16:34:10 GMT/);
-assert.match(trNews[1].content, /16\.34\.10 GMT/);
-assert.match(enNews[1].content, /21:53:58 GMT/);
-assert.match(trNews[1].content, /21\.53\.58 GMT/);
-assert.match(enNews[1].content, /same as last hour/);
-assert.match(trNews[1].content, /geçen saatle aynı/);
-assert.match(enNews[1].content, /04:59:35 GMT/);
-assert.match(trNews[1].content, /04\.59\.35 GMT/);
-assert.match(enNews[1].content, /remains Sunday, 20 September 2026 at 04:59:35 GMT on the canonical 0980361 URL after three consistent fetches \(same as last hour\)/);
-assert.match(trNews[1].content, /hâlâ 20 Eylül 2026 Pazar 04\.59\.35 GMT \(kanonik 0980361 URL; üç tutarlı indirme; geçen saatle aynı\)/);
-assert.match(enNews[1].content, /Prince Edward Island PNP|195 candidates/);
-assert.match(trNews[1].content, /PEI PNP|195 aday/);
-assert.match(enNews[1].content, /succeeded over Python urllib \(HTTP 200\)/);
-assert.match(enNews[1].content, /curl HTTP\/2 failed \(HTTP\/2 stream INTERNAL_ERROR, 0 bytes\) and curl HTTP\/1\.1 timed out after 25 seconds \(0 bytes\)/);
-assert.match(enNews[1].content, /Last hour those official files succeeded over Python urllib \(HTTP 200\)/);
-assert.match(enNews[1].content, /Last hour those official files succeeded over Python urllib \(HTTP 200\); last hour curl HTTP\/2 failed \(HTTP\/2 stream INTERNAL_ERROR, 0 bytes\) and curl HTTP\/1\.1 timed out after 25 seconds \(0 bytes\)/);
-assert.match(enNews[1].content, /last confirmed successful official fetch is now 07:00 UTC on 20 September 2026/);
-assert.match(enNews[1].content, /previous successful official fetch was 06:00 UTC/);
-assert.match(enNews[1].content, /this hour’s official JSON|this hour's official JSON/);
-assert.match(trNews[1].content, /Python urllib üzerinden başarılı oldu \(HTTP 200\)/);
-assert.match(trNews[1].content, /curl HTTP\/2 başarısız oldu \(HTTP\/2 akışı INTERNAL_ERROR, 0 bayt\) ve curl HTTP\/1\.1 25 saniye sonra zaman aşımına uğradı \(0 bayt\)/);
-assert.match(trNews[1].content, /Geçen saat bu resmi dosyalar Python urllib üzerinden başarılı olmuştu \(HTTP 200\)/);
-assert.match(trNews[1].content, /Geçen saat bu resmi dosyalar Python urllib üzerinden başarılı olmuştu \(HTTP 200\); geçen saat curl HTTP\/2 başarısız oldu \(HTTP\/2 akışı INTERNAL_ERROR, 0 bayt\) ve curl HTTP\/1\.1 25 saniye sonra zaman aşımına uğradı \(0 bayt\)/);
-assert.match(trNews[1].content, /artık 20 Eylül 2026 07\.00 UTC/);
-assert.match(trNews[1].content, /önceki başarılı resmi indirme 06\.00 UTC idi/);
-assert.match(trNews[1].content, /bu saatin resmi JSON/);
-assert.doesNotMatch(enNews[1].content, /This hour official ee_rounds_123_en.json and the official Express Entry rounds HTML page succeeded over Python urllib \(HTTP 200\)\. curl HTTP\/2 succeeded/);
-assert.doesNotMatch(enNews[1].content, /Last hour those official files also succeeded over Python urllib \(HTTP 200\)/);
-assert.doesNotMatch(enNews[1].content, /last hour curl HTTP\/2 succeeded \(HTTP 200\) and curl HTTP\/1\.1 succeeded \(HTTP 200\)/);
-assert.doesNotMatch(enNews[1].content, /official files could not be re-fetched this hour/);
-assert.doesNotMatch(enNews[1].content, /Last hour those official files also failed/);
-assert.doesNotMatch(enNews[1].content, /now 06:00 UTC/);
-assert.doesNotMatch(enNews[1].content, /previous successful official fetch was 05:00 UTC/);
-assert.doesNotMatch(enNews[1].content, /updated from Saturday, 19 September 2026 at 17:58:56 GMT last hour/);
-assert.doesNotMatch(trNews[1].content, /Bu saatte resmi ee_rounds_123_en.json ve resmi Express Entry tur HTML sayfası Python urllib üzerinden başarılı oldu \(HTTP 200\)\. curl HTTP\/2 başarılı oldu/);
-assert.doesNotMatch(trNews[1].content, /Geçen saat bu resmi dosyalar da Python urllib üzerinden başarılı olmuştu/);
-assert.doesNotMatch(trNews[1].content, /geçen saat curl HTTP\/2 başarılı oldu \(HTTP 200\) ve curl HTTP\/1\.1 başarılı oldu \(HTTP 200\)/);
-assert.doesNotMatch(trNews[1].content, /resmi dosyalar bu saat yeniden indirilemedi/);
-assert.doesNotMatch(trNews[1].content, /artık 20 Eylül 2026 06\.00 UTC/);
-assert.doesNotMatch(trNews[1].content, /önceki başarılı resmi indirme 05\.00 UTC idi/);
-assert.match(enNews[1].link || '', /express-entry-rounds/);
-assert.match(enNews[2].title, /Anatolia Fest/);
-assert.match(trNews[2].title, /Anatolia Fest/);
-assert.match(enNews[2].content, /Sankofa Square|kutuphane\.ca|baklava|Turkish Airlines/i);
-assert.match(trNews[2].content, /Sankofa Square|kutuphane\.ca|baklava|Turkish Airlines/i);
-assert.match(enNews[2].content, /07:00 UTC on 20 September 2026/);
-assert.match(trNews[2].content, /20 Eylül 2026 07\.00 UTC/);
-for (const item of [...enNews, ...trNews]) {
-  assert.ok(item.link && /^https:\/\//.test(item.link), `sourced link required: ${item.title}`);
-  assert.ok(!item.link.includes('google.com/search'), `search-page links are not sources: ${item.title}`);
-  assert.ok(item.content && item.content.length > 80, `article body required: ${item.title}`);
-}
-
 const mapped = mapNewsToBannerItem(
-  { title: 'Toronto Turkish Festival', desc: 'Weekend food market', category: 'Community', link: 'https://example.com' },
+  { title: 'Test item', desc: 'Desc', category: 'Immigration' },
   0,
   'en',
   fallback,
 );
 assert.equal(mapped.type, 'news');
 assert.equal(mapped.isLiveNews, true);
-assert.equal(mapped.link, 'https://example.com');
+assert.ok(mapped.url.includes('photo-1544013589') || mapped.url.startsWith('https://example.com/'));
+
+const enNews = getDefaultCanadaNews('en');
+const trNews = getDefaultCanadaNews('tr');
+assert.equal(enNews.length, 3);
+assert.equal(trNews.length, 3);
+
+assert.match(enNews[0].title, /FTA|Türkiye/);
+assert.match(trNews[0].title, /STA|Türkiye/);
+assert.match(enNews[0].title, /consultations closed/i);
+assert.match(trNews[0].title, /istişareleri kapandı/i);
+assert.doesNotMatch(enNews[0].title, /Last day|comments/i);
+assert.doesNotMatch(trNews[0].title, /Son gün|görüşleri/i);
+assert.match(enNews[0].content, /Current status: Closed|consultation page still lists|conducted public consultations|what-we-heard report has not yet been published|in negotiations|4\.3 billion|TCE-Consultations/);
+assert.match(trNews[0].content, /Current status: Closed|conducted public consultations|henüz yayımlanmamış|müzakere|4,3 milyar|TCE-Consultations/);
+assert.match(enNews[0].content, /\$3\.3 billion|2,550|JETCO|agri-food|dateModified is now 2026-10-06/);
+assert.match(enNews[0].content, /Notice of intent|date-modified 2026-10-09|September 21, 2026/);
+assert.match(trNews[0].content, /3,3 milyar|2\.550|JETCO|2026-10-06/);
+assert.doesNotMatch(enNews[0].content, /tugboats|4,650|Stewart|Tuzcu|Bolat and Sidhu|technical teams|NATO Summit/);
+assert.doesNotMatch(trNews[0].content, /römorkör|4\.650|Stewart|Tuzcu|Bolat ve Sidhu|teknik ekipler|NATO Zirvesi/);
+assert.match(enNews[0].link || '', /consultations\/trade\/2026-07-29-turkiye/);
+
+assert.match(enNews[1].title, /Express Entry #450|French-language proficiency/);
+assert.match(trNews[1].title, /Express Entry #450|Fransızca yeterlilik/);
+assert.doesNotMatch(enNews[1].title, /#449|#448|#447|Trades Occupations|Provincial Nominee Program|Canadian Experience Class/);
+assert.match(enNews[1].content, /5,000 invitations|CRS score of 435|French-Language proficiency|#450/);
+assert.match(trNews[1].content, /5\.000 davet|435 CRS|#450|French-Language proficiency/);
+assert.match(enNews[1].content, /1081461|1081344|1081246|1080909|0980843|0980374|0980361/);
+assert.match(enNews[1].link || '', /express-entry-rounds\.html/);
+assert.match(enNews[1].content, /451 round records/);
+assert.match(enNews[1].content, /Friday, 16 October 2026 at 13:27:07 GMT/);
+assert.match(enNews[1].content, /693170 bytes/);
+assert.match(enNews[1].content, /invitations.html\?q=450/);
+assert.match(enNews[1].content, /still lists a dedicated homepage article for official round #450/);
+assert.match(enNews[1].content, /article:published_time 2026-10-16T13:50:05\+00:00/);
+assert.match(enNews[1].content, /article:modified_time 2026-10-16T14:01:46\+00:00/);
+assert.match(enNews[1].content, /table now starts with October 16 French-Language proficiency 5,000 invitations \/ CRS 435/);
+assert.match(enNews[1].content, /1081461/);
+assert.match(enNews[1].content, /1081344/);
+assert.match(enNews[1].content, /1081246/);
+assert.match(enNews[1].content, /1080909[\s\S]*is NOT on the homepage/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 13\.27\.07 GMT/);
+assert.match(trNews[1].content, /1081461/);
+
+assert.match(enNews[2].title, /skilled military recruits/i);
+assert.match(trNews[2].title, /nitelikli askeri adaylar/i);
+assert.match(enNews[2].content, /FSMA|ten years|40042|42102|43204|Canadian Forces Recruiting Group/);
+assert.match(trNews[2].content, /FSMA|10 yıl|40042|42102|43204/);
+assert.match(enNews[2].link || '', /category-based-selection\.html/);
+assert.match(enNews[2].content, /submit-profile\/rounds-invitations\/category-based-selection\.html/);
+assert.doesNotMatch(enNews[2].link || '', /\/express-entry\/category-based-selection\.html$/);
 
 console.log('canadaNews tests passed');

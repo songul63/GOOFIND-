@@ -1095,7 +1095,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [banners, setBanners] = useState<BannerAd[]>([]);
-  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(true);
+  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(false);
   const [isAddBannerOpen, setIsAddBannerOpen] = useState<boolean>(false);
   const [bannerTitle, setBannerTitle] = useState<string>('');
   const [bannerDesc, setBannerDesc] = useState<string>('');

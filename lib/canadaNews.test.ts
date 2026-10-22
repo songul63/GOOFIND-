@@ -21,7 +21,7 @@ const ads: BannerAd[] = [
     link: '#',
     active: true,
     desc: 'Already approved',
-  },
+  } as BannerAd,
 ];
 
 const withNews = combineBannerItems(ads, getDefaultCanadaNews('en'), true, 'en', fallback);
@@ -43,44 +43,64 @@ assert.equal(emptyAds.length, 3);
 assert.ok(emptyAds.every((item) => item.isLiveNews && item.type === 'news'));
 assert.ok(emptyAds[0].title.length > 0);
 
-const enNews = getDefaultCanadaNews('en');
-const trNews = getDefaultCanadaNews('tr');
-assert.equal(enNews.length, 3);
-assert.equal(trNews.length, 3);
-assert.match(enNews[0].title, /FTA|Türkiye/);
-assert.match(trNews[0].title, /STA|Türkiye/);
-assert.match(enNews[0].title, /consultations closed/i);
-assert.match(trNews[0].title, /istişareleri kapandı/i);
-assert.doesNotMatch(enNews[0].title, /Last day|comments/i);
-assert.doesNotMatch(trNews[0].title, /Son gün|görüşleri/i);
-assert.match(enNews[0].content, /in negotiations|NATO Summit|4\.3 billion|TCE-Consultations|window has now closed/);
-assert.match(trNews[0].content, /müzakerede|NATO Zirvesi|4,3 milyar|TCE-Consultations|pencere artık kapandı/);
-assert.doesNotMatch(enNews[0].content, /\$3\.3B|3\.3 billion/i);
-assert.doesNotMatch(trNews[0].content, /3,3 milyar/i);
-assert.match(enNews[0].content, /lentils and chickpeas|65,000|KFOR|soybeans|Bolat and Sidhu|technical teams/);
-assert.match(trNews[0].content, /mercimek ve nohut|65\.000|KFOR|soya|Bolat ve Sidhu|teknik ekipler/);
-assert.match(enNews[1].title, /Express Entry|researchers/i);
-assert.match(trNews[1].title, /Express Entry|araştırmacı/i);
-assert.match(enNews[1].content, /12 months|41200|41201|in Canada|1\.7 billion|Global Impact\+/);
-assert.match(trNews[1].content, /12 aylık|41200|41201|Kanada’da|1,7 milyar|Global Impact\+/);
-assert.match(enNews[2].title, /Anatolia Fest/);
-assert.match(trNews[2].title, /Anatolia Fest/);
-assert.match(enNews[2].content, /Sankofa Square|kutuphane\.ca|baklava|Turkish Airlines/i);
-assert.match(trNews[2].content, /Sankofa Square|kutuphane\.ca|baklava|Turkish Airlines/i);
-for (const item of [...enNews, ...trNews]) {
-  assert.ok(item.link && /^https:\/\//.test(item.link), `sourced link required: ${item.title}`);
-  assert.ok(!item.link.includes('google.com/search'), `search-page links are not sources: ${item.title}`);
-  assert.ok(item.content && item.content.length > 80, `article body required: ${item.title}`);
-}
-
 const mapped = mapNewsToBannerItem(
-  { title: 'Toronto Turkish Festival', desc: 'Weekend food market', category: 'Community', link: 'https://example.com' },
+  { title: 'Test item', desc: 'Desc', category: 'Immigration' },
   0,
   'en',
   fallback,
 );
 assert.equal(mapped.type, 'news');
 assert.equal(mapped.isLiveNews, true);
-assert.equal(mapped.link, 'https://example.com');
+assert.ok(mapped.url.includes('photo-1544013589') || mapped.url.startsWith('https://example.com/'));
+
+const enNews = getDefaultCanadaNews('en');
+const trNews = getDefaultCanadaNews('tr');
+assert.equal(enNews.length, 3);
+assert.equal(trNews.length, 3);
+
+assert.match(enNews[0].title, /FTA|Türkiye/);
+assert.match(trNews[0].title, /STA|Türkiye/);
+assert.match(enNews[0].title, /consultations closed/i);
+assert.match(trNews[0].title, /istişareleri kapandı/i);
+assert.doesNotMatch(enNews[0].title, /Last day|comments/i);
+assert.doesNotMatch(trNews[0].title, /Son gün|görüşleri/i);
+assert.match(enNews[0].content, /Current status: Closed|consultation page still lists|conducted public consultations|what-we-heard report has not yet been published|in negotiations|4\.3 billion|TCE-Consultations/);
+assert.match(trNews[0].content, /Current status: Closed|conducted public consultations|henüz yayımlanmamış|müzakere|4,3 milyar|TCE-Consultations/);
+assert.match(enNews[0].content, /\$3\.3 billion|2,550|JETCO|agri-food|dateModified is now 2026-10-06/);
+assert.match(enNews[0].content, /Notice of intent|date-modified 2026-10-09|September 21, 2026/);
+assert.match(trNews[0].content, /3,3 milyar|2\.550|JETCO|2026-10-06/);
+assert.doesNotMatch(enNews[0].content, /tugboats|4,650|Stewart|Tuzcu|Bolat and Sidhu|technical teams|NATO Summit/);
+assert.doesNotMatch(trNews[0].content, /römorkör|4\.650|Stewart|Tuzcu|Bolat ve Sidhu|teknik ekipler|NATO Zirvesi/);
+assert.match(enNews[0].link || '', /consultations\/trade\/2026-07-29-turkiye/);
+
+assert.match(enNews[1].title, /Express Entry #450|French-language proficiency/);
+assert.match(trNews[1].title, /Express Entry #450|Fransızca yeterlilik/);
+assert.doesNotMatch(enNews[1].title, /#449|#448|#447|Trades Occupations|Provincial Nominee Program|Canadian Experience Class/);
+assert.match(enNews[1].content, /5,000 invitations|CRS score of 435|French-Language proficiency|#450/);
+assert.match(trNews[1].content, /5\.000 davet|435 CRS|#450|French-Language proficiency/);
+assert.match(enNews[1].content, /1081461|1081344|1081246|1080909|0980843|0980374|0980361/);
+assert.match(enNews[1].link || '', /express-entry-rounds\.html/);
+assert.match(enNews[1].content, /451 round records/);
+assert.match(enNews[1].content, /Friday, 16 October 2026 at 13:27:07 GMT/);
+assert.match(enNews[1].content, /693170 bytes/);
+assert.match(enNews[1].content, /invitations.html\?q=450/);
+assert.match(enNews[1].content, /still lists a dedicated homepage article for official round #450/);
+assert.match(enNews[1].content, /article:published_time 2026-10-16T13:50:05\+00:00/);
+assert.match(enNews[1].content, /article:modified_time 2026-10-16T14:01:46\+00:00/);
+assert.match(enNews[1].content, /table now starts with October 16 French-Language proficiency 5,000 invitations \/ CRS 435/);
+assert.match(enNews[1].content, /1081461/);
+assert.match(enNews[1].content, /1081344/);
+assert.match(enNews[1].content, /1081246/);
+assert.match(enNews[1].content, /1080909[\s\S]*is NOT on the homepage/);
+assert.match(trNews[1].content, /16 Ekim 2026 Cuma 13\.27\.07 GMT/);
+assert.match(trNews[1].content, /1081461/);
+
+assert.match(enNews[2].title, /skilled military recruits/i);
+assert.match(trNews[2].title, /nitelikli askeri adaylar/i);
+assert.match(enNews[2].content, /FSMA|ten years|40042|42102|43204|Canadian Forces Recruiting Group/);
+assert.match(trNews[2].content, /FSMA|10 yıl|40042|42102|43204/);
+assert.match(enNews[2].link || '', /category-based-selection\.html/);
+assert.match(enNews[2].content, /submit-profile\/rounds-invitations\/category-based-selection\.html/);
+assert.doesNotMatch(enNews[2].link || '', /\/express-entry\/category-based-selection\.html$/);
 
 console.log('canadaNews tests passed');

@@ -1095,7 +1095,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [banners, setBanners] = useState<BannerAd[]>([]);
-  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(true);
+  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(false);
   const [isAddBannerOpen, setIsAddBannerOpen] = useState<boolean>(false);
   const [bannerTitle, setBannerTitle] = useState<string>('');
   const [bannerDesc, setBannerDesc] = useState<string>('');
@@ -2214,19 +2214,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (selectedNews) {
-      const isNewsItem = selectedNews.type === 'news' || selectedNews.isLiveNews;
-      const hasArticleContent = !!(selectedNews.content && String(selectedNews.content).trim());
       const hasRealLink = selectedNews.link && selectedNews.link !== '#' && selectedNews.link.trim() !== '';
-
-      // News already has a readable article — don't block the reader on website synthesis.
-      if (isNewsItem && hasArticleContent) {
-        setAiSummary(null);
-        setIsGeneratingSummary(false);
-        return;
-      }
-
-      const finalLink = hasRealLink
-        ? selectedNews.link
+      const finalLink = hasRealLink 
+        ? selectedNews.link 
         : `https://www.google.com/search?q=${encodeURIComponent((selectedNews.title || '') + ' Canada')}`;
 
       setIsGeneratingSummary(true);
@@ -2480,6 +2470,7 @@ const App: React.FC = () => {
     setZoomLevel(Math.min(Math.max(nextZoom, 0.5), 4));
   };
 
+  const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
   const [communityNews, setCommunityNews] = useState<any[]>([]);
   const [isNewsLoading, setIsNewsLoading] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -3679,14 +3670,8 @@ const App: React.FC = () => {
     }
   }, [messageCommunityId]);
 
-  // --- Live News Fetching (homepage banner) ---
+  // --- Live News Fetching ---
   useEffect(() => {
-    if (!includeLiveNews) {
-      setIsNewsLoading(false);
-      setCommunityNews((prev) => (prev.length === 0 ? DEFAULT_CANADA_NEWS : prev));
-      return;
-    }
-
     const fetchNews = async () => {
       setIsNewsLoading(true);
       const defaultNews = DEFAULT_CANADA_NEWS;
@@ -3727,7 +3712,7 @@ const App: React.FC = () => {
     fetchNews();
     const interval = setInterval(fetchNews, 30 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [lang, DEFAULT_CANADA_NEWS, includeLiveNews]);
+  }, [lang, DEFAULT_CANADA_NEWS]);
 
   // --- Seeding Data (One-time check) ---
   useEffect(() => {
@@ -3815,7 +3800,7 @@ const App: React.FC = () => {
   }, []);
 
   const activeBanners = useMemo(() => banners.filter(b => b.active), [banners]);
-
+  
   const combinedBannerItems = useMemo(
     () =>
       combineBannerItems(
@@ -7467,23 +7452,6 @@ const App: React.FC = () => {
       {isHomeLandingView && !isAdminView && (
           <section className="relative bg-[#EFF6FF] border-b border-slate-100 pt-4 pb-6 sm:pb-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-              <div className="flex items-center justify-between gap-3 mb-3 px-0.5">
-                <p className="text-[11px] sm:text-xs font-black uppercase tracking-[0.18em] text-slate-500 flex items-center gap-2">
-                  <Newspaper size={14} className="text-primary" strokeWidth={2.5} />
-                  {t.sections.canadaNews}
-                </p>
-                {includeLiveNews && (
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-primary">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-60" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-                    </span>
-                    {isNewsLoading
-                      ? (lang === 'en' ? 'Updating' : 'Güncelleniyor')
-                      : (lang === 'en' ? 'Live' : 'Canlı')}
-                  </span>
-                )}
-              </div>
               {combinedBannerItems.length > 0 ? (
                 <AnimatePresence mode="wait">
                   {combinedBannerItems.map((item: any, idx: number) => {
@@ -7531,17 +7499,6 @@ const App: React.FC = () => {
                           )}
 
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-white/10" />
-
-                          <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5">
-                            <span className="px-2 py-0.5 rounded-md bg-black/45 backdrop-blur-sm text-[10px] font-black uppercase tracking-widest text-white">
-                              {categoryLabel}
-                            </span>
-                            {item.isLiveNews && (
-                              <span className="px-2 py-0.5 rounded-md bg-primary text-[10px] font-black uppercase tracking-widest text-white">
-                                {lang === 'en' ? 'Live' : 'Gündem'}
-                              </span>
-                            )}
-                          </div>
 
                           <div className="absolute inset-0 flex flex-col justify-end p-3 sm:p-5 md:p-6 z-10">
                             <h2 className="text-sm sm:text-xl md:text-2xl font-black tracking-tighter text-white uppercase leading-[1.08] sm:leading-[1.1] line-clamp-1 sm:line-clamp-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)]">
@@ -8248,22 +8205,7 @@ const App: React.FC = () => {
                           </p>
                         </div>
                         
-                        <div className="flex items-center gap-2 flex-wrap justify-end">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleIncludeLiveNews(includeLiveNews)}
-                            className={`text-[11px] font-black uppercase px-3 py-2 rounded-xl tracking-widest flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
-                              includeLiveNews
-                                ? 'bg-primary/10 text-primary border-primary/20'
-                                : 'bg-slate-100 text-slate-500 border-slate-200'
-                            }`}
-                            title={lang === 'en' ? 'Show live Canada news in the homepage banner' : 'Ana sayfa bannerında Kanada gündemini göster'}
-                          >
-                            <Newspaper size={14} strokeWidth={2.5} />
-                            {includeLiveNews
-                              ? (lang === 'en' ? 'Live news on' : 'Gündem açık')
-                              : (lang === 'en' ? 'Live news off' : 'Gündem kapalı')}
-                          </button>
+                        <div className="flex items-center gap-2">
                           <button 
                             type="button"
                             onClick={() => {

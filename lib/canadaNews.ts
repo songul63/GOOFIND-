@@ -53,68 +53,68 @@ export function getDefaultCanadaNews(lang: 'en' | 'tr'): CanadaNewsItem[] {
   if (lang === 'en') {
     return [
       {
-        id: 'fallback-trade',
-        title: 'Canada–Türkiye FTA now in negotiations',
-        desc: 'June 8 Sidhu–Bolat talks welcomed ATA expansion and CANDU; 2024 top imports iron sheet, tugboats and pharma.',
+        id: 'fallback-fta',
+        title: 'Canada–Türkiye FTA consultations closed',
+        desc: 'Public comments closed 14 September; negotiations are underway after a 21 September notice of intent.',
         content:
-          'Global Affairs Canada lists the Canada–Türkiye free trade agreement’s current status as in negotiations. On June 8, 2026 in Ottawa, International Trade Minister Maninder Sidhu and Türkiye’s Trade Minister Ömer Bolat issued a Joint Statement on Economic Partnership announcing exploratory discussions toward a free trade agreement. The ministers welcomed the recent expansion of the Air Transport Agreement, identified energy as a promising area for cooperation — including renewable energy and nuclear energy, and the potential of Canadian CANDU technology to support Türkiye’s diversification goals — and committed to exploring aerospace partnerships, including through defence, security and related industrial cooperation. On June 26 in Ottawa, Foreign Minister Anita Anand met Türkiye’s Foreign Minister Hakan Fidan; they explored increased economic engagement in the energy, defence, aerospace and mining sectors, and Anand delivered a letter from Energy Minister Tim Hodgson for Türkiye’s Energy Minister Alparslan Bayraktar on deepening energy-security collaboration. On July 7, 2026, on the margins of the NATO Summit in Ankara, Prime Minister Mark Carney and President Recep Tayyip Erdoğan announced the launch of talks toward a comprehensive, modern, and mutually beneficial FTA. Their joint statement said closer economic cooperation will support growth, job creation, competitiveness and supply chains, and that in the coming months technical teams will define the scope and ambition of the agreement and prepare for the first round of negotiations. Public consultations ran from July 31 to September 14, 2026. GAC’s relations page reports that in 2024 two-way merchandise trade was over $4.3 billion — Canadian merchandise exports totalling $1.3 billion and imports from Türkiye $3.1 billion — and Canada’s top 2024 imports from Türkiye were flat-rolled iron sheet products ($203 million), tugboats ($128 million) and pharmaceutical products ($107 million). The stock of Canadian direct investment in Türkiye, mostly in the mining sector, fell from $1 billion in 2022 to $420 million in 2023. On December 31, 2024, there were 4,650 Turkish citizens holding valid study permits in Canada, a return to 2022 levels and a 23% decrease from 2023. Canada hosted the second Joint Economic and Trade Committee (JETCO) meeting in Ottawa on January 20, 2026; the first meeting was held in Istanbul in 2019. The JETCO is a forum to enhance economic relations, strengthen cooperation on trade and investment, increase commercial engagement, and promote a favourable environment for private sector activity. Questions can be sent to Trade Negotiations Division (TCE), 111 Sussex Drive, Ottawa, ON K1N 1J1, or TCE-Consultations@international.gc.ca.',
+          'Global Affairs Canada’s consultation on a potential Canada–Türkiye free trade agreement is Closed. The TCE-Consultations page still lists the window as 31 July to 14 September 2026 and says a what-we-heard report has not yet been published (the /what-we-heard and /report paths remain unpublished). The official FTA info page (date-modified 2026-10-09) now shows Current status: In negotiations, after the government tabled a Notice of intent on September 21, 2026; negotiations were first announced in a 7 July joint statement. Official 2025 figures remain the latest on the relations page (dateModified is now 2026-10-06): two-way merchandise trade over $4.3 billion, Canadian direct investment stock in Türkiye of $3.3 billion, about 2,550 study permits for Turkish citizens, and agri-food among Canada’s leading exports. The relations page still describes the Canada–Türkiye JETCO forum; the documented 2026-01-20 JETCO country-news path is unpublished. Verified 11:00 UTC 25 October 2026 from international.canada.ca / www.international.gc.ca.',
         category: 'Economy',
-        color: 'bg-primary',
-        link: 'https://www.international.gc.ca/trade-commerce/trade-agreements-accords-commerciaux/agr-acc/turkiye/fta-ale/info.aspx?lang=eng',
+        color: 'bg-primary-mid',
+        link: 'https://international.canada.ca/en/global-affairs/consultations/trade/2026-07-29-turkiye',
       },
       {
-        id: 'fallback-senior-managers',
-        title: 'Express Entry 2026: senior managers with Canadian experience',
-        desc: 'NOC 00012–00015 executives need 12 months in Canada; 2026 federal high-skilled target is 109,000.',
+        id: 'fallback-express-entry-450',
+        title: 'Express Entry #450: French-language proficiency',
+        desc: 'Official Oct 16, 2026 round: 5,000 invitations, CRS 435; French-Language proficiency 2026-Version 2.',
         content:
-          'IRCC’s current Express Entry category-based rounds include senior managers with Canadian work experience, grouped on the 2026 consultations page under attracting and retaining talent. On February 18, 2026, Immigration Minister Lena Metlege Diab announced the 2026 categories, including new categories for researchers and senior managers with Canadian work experience. Diab’s speaking notes said the new categories recognize that in certain occupations, many years of experience are required to make meaningful contributions. Canada’s 2026–2028 Immigration Levels Plan sets a 2026 admissions target of 109,000 for federal high-skilled programs managed through Express Entry (Canadian Experience Class, Federal Skilled Worker and Federal Skilled Trades). The 2026 consultations page says this year’s invitations also focus on candidates eligible for the Canadian Experience Class, reflecting the priority to transition temporary residents to permanent residence. To be eligible for a category-based invitation you must meet the minimum criteria for Express Entry, including being eligible for one of the three immigration programs it covers, and meet all requirements in the instructions for that round. For this category, you must have accumulated, within the past three years, at least 12 months of full-time work experience (or an equal amount of part-time experience) in a single occupation on IRCC’s list — in Canada. This experience does not need to be continuous, and it does not have to be your primary occupation. The 2026 senior-manager list is senior managers in financial, communications and other business services (NOC 00012, TEER 0); health, education, social and community services and membership organizations (00013, TEER 0); trade, broadcasting and other services (00014, TEER 0); and construction, transportation, production and utilities (00015, TEER 0). Public consultations on economic priorities and categories for 2027 ran from August 4 to September 1, 2026; the department is considering a continued focus on attracting and retaining top talent. Full details appear in each round’s instructions; IRCC publishes rounds after they run.',
+          'IRCC’s official ee_rounds_123_en.json still lists #450 as the latest Express Entry round: French-Language proficiency 2026-Version 2, 5,000 invitations, CRS score of 435, drawn October 16, 2026 at 10:25:13 UTC (cut-off October 06, 2026 at 21:31:22 UTC). The rounds table now starts with October 16 French-Language proficiency 5,000 invitations / CRS 435. The JSON has 451 round records (693170 bytes; Last-Modified Friday, 16 October 2026 at 13:27:07 GMT). The official rounds HTML Last-Modified is still Saturday, 24 October 2026 at 18:25:37 GMT (unchanged from 10:00; official JSON still latest #450). The canonical invitations URL is invitations.html?q=450. CIC News still lists a dedicated homepage article for official round #450 (1081461; article:published_time 2026-10-16T13:50:05+00:00; article:modified_time 2026-10-16T14:01:46+00:00; Last-Modified Sunday, 25 October 2026 at 06:06:14 GMT; CIC homepage Last-Modified Sunday, 25 October 2026 at 06:03:16 GMT urllib first / later / wget / curl HTTP/2 and HTTP/1.1), with 1081344 (#449 Canadian Experience Class, 2,500 / CRS 519) and 1081246 (#448 Provincial Nominee Program, 752 / CRS 772) also on the homepage. 1080909 (#447 Trades Occupations, 3,500 / CRS 476) is NOT on the homepage. Earlier CIC articles 0980843, 0980374, and 0980361 remain published. Verified 11:00 UTC 25 October 2026 from canada.ca and www.cicnews.com.',
         category: 'Immigration',
         color: 'bg-primary',
-        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
+        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html',
       },
       {
-        id: 'fallback-community',
-        title: 'Anatolia Fest This Sunday at Sankofa Square',
-        desc: 'Free Turkish Culture, Art & Taste Festival this Sunday, 12 p.m.–8 p.m., with a book fair.',
+        id: 'fallback-military-category',
+        title: 'Express Entry 2026: skilled military recruits',
+        desc: 'FSMA: 10 years’ continuous service and a CAF offer in NOC 40042, 42102 or 43204.',
         content:
-          'Anatolia Fest: Turkish Culture, Art & Taste Festival returns this Sunday, September 20, 2026, from 12 p.m. to 8 p.m. at Sankofa Square, 1 Dundas Street East in downtown Toronto. Sankofa Square lists the free, family-friendly festival with Turkish cuisine, traditional arts, live music and cultural performances, hands-on activities, and a Turkish book fair, sponsored by Turkish Airlines and GoTürkiye. After festivals in 2016 and 2017, anatoliafest.ca frames the long-awaited 3rd edition as a reunion — Turkish coffee and baklava, music, crafts and regional art. Host kutuphane.ca (Anatolia Fest Vol. 3) invites everyone to traditional music, dance, cuisine and arts from Türkiye in the heart of the city. Follow @anatoliafestca or email info@anatoliafest.ca for updates.',
-        category: 'Community',
+          'IRCC’s 2026 category-based selection page still lists skilled military recruits as an Express Entry category. To be eligible as a Foreign Skilled Military Applicant (FSMA) you must be serving in a recognized foreign military with a minimum of ten years of continuous service, have training aligned with National Occupational Classification 40042 (Commissioned officers of the Canadian Armed Forces), 42102 (Specialized members), or 43204 (Operations members), and have an offer of arranged employment with the Canadian Armed Forces made by the Canadian Forces Recruiting Group. Other 2026 categories still include French-language proficiency, healthcare and social services, STEM, trades, education, transport, physicians with Canadian work experience, senior managers, and researchers. Dedicated category URLs under category-based-selection/{skilled-military-recruits,french-language-proficiency,researchers,medical-doctors}.html remain unpublished; the canonical page is submit-profile/rounds-invitations/category-based-selection.html (it 301s to /express-entry/rounds-invitations/category-based-selection.html). The old short path /express-entry/category-based-selection.html is 404. The official category page Last-Modified is still Saturday, 24 October 2026 at 18:44:03 GMT (unchanged from 10:00; skilled-military category unchanged). Verified 11:00 UTC 25 October 2026 from canada.ca.',
+        category: 'Immigration',
         color: 'bg-primary',
-        link: 'https://www.anatoliafest.ca/',
+        link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile/rounds-invitations/category-based-selection.html',
       },
     ];
   }
 
   return [
     {
-      id: 'fallback-trade',
-      title: 'Kanada–Türkiye STA müzakereleri sürüyor',
-      desc: '8 Haziran Sidhu–Bolat görüşmeleri ATA genişlemesini ve CANDU’yu karşıladı; 2024’te başlıca ithalat sac, römorkör ve ilaç.',
+      id: 'fallback-fta',
+      title: 'Kanada–Türkiye STA istişareleri kapandı',
+      desc: 'Kamu görüşleri 14 Eylül’de kapandı; 21 Eylül niyet bildiriminin ardından müzakereler sürüyor.',
       content:
-        'Küresel İşler Kanada, Kanada–Türkiye serbest ticaret anlaşmasının güncel durumunu müzakerede olarak listeliyor. 8 Haziran 2026’da Ottawa’da Uluslararası Ticaret Bakanı Maninder Sidhu ve Türkiye Ticaret Bakanı Ömer Bolat, serbest ticaret anlaşmasına yönelik keşif görüşmelerini duyuran Ekonomik Ortaklık Ortak Bildirisini yayımladı. Bakanlar Hava Ulaştırma Anlaşması’nın yakın zamandaki genişlemesini memnuniyetle karşıladı; yenilenebilir enerji ve nükleer enerji — Kanada CANDU teknolojisinin Türkiye’nin çeşitlendirme hedeflerini destekleme potansiyeli dahil — ile savunma, güvenlik ve ilgili sanayi iş birliği yoluyla havacılık-uzay ortaklıklarını araştırma taahhüdünü öne çıkardı. 26 Haziran’da Ottawa’da Dışişleri Bakanı Anita Anand, Türkiye Dışişleri Bakanı Hakan Fidan ile bir araya geldi; enerji, savunma, havacılık-uzay ve madencilik sektörlerinde ekonomik angajmanı ele aldılar ve Anand, Enerji Bakanı Tim Hodgson’dan Türkiye Enerji Bakanı Alparslan Bayraktar’a enerji güvenliği iş birliğini derinleştirmeye ilişkin bir mektup iletti. 7 Temmuz 2026’da, Ankara’daki NATO Zirvesi marjında Başbakan Mark Carney ve Cumhurbaşkanı Recep Tayyip Erdoğan kapsamlı, modern ve karşılıklı yarar sağlayan bir STA müzakeresinin başlatıldığını duyurdu. Ortak açıklamada daha yakın ekonomik iş birliğinin büyümeyi, istihdamı, rekabet gücünü ve tedarik zincirlerini destekleyeceği belirtildi; önümüzdeki aylarda teknik ekipler anlaşmanın kapsamı ve hedefini belirleyecek ve ilk müzakere turuna hazırlanacak. Kamu istişareleri 31 Temmuz–14 Eylül 2026 tarihleri arasında yapıldı. GAC ilişkiler sayfasına göre 2024’te iki yönlü mal ticareti 4,3 milyar doları aştı — Kanada mal ihracatı 1,3 milyar, Türkiye’den ithalat 3,1 milyar dolar — ve 2024’te Türkiye’den başlıca ithalat yassı haddelenmiş demir sac ürünleri (203 milyon dolar), römorkörler (128 milyon) ve eczacılık ürünleri (107 milyon) oldu. Kanada’nın Türkiye’deki doğrudan yatırımları, çoğunlukla madencilik sektöründe, 2022’de 1 milyar dolardan 2023’te 420 milyon dolara geriledi. 31 Aralık 2024’te Kanada’da geçerli öğrenim izni bulunan 4.650 Türk vatandaşı vardı; bu, 2022 düzeyine dönüş ve 2023’e göre %23 azalmadır. Kanada ikinci Ortak Ekonomi ve Ticaret Komitesi (JETCO) toplantısını 20 Ocak 2026’da Ottawa’da ağırladı; ilk toplantı 2019’da İstanbul’da yapılmıştı. JETCO ekonomik ilişkileri güçlendirme, ticaret ve yatırım iş birliğini artırma, ticari angajmanı genişletme ve özel sektör için elverişli bir ortamı teşvik etme forumudur. Sorular Ticaret Müzakereleri Birimi’ne (TCE), 111 Sussex Drive, Ottawa, ON K1N 1J1 veya TCE-Consultations@international.gc.ca adresine gönderilebilir.',
+        'Global Affairs Canada’nın olası Kanada–Türkiye serbest ticaret anlaşması istişaresi Closed. TCE-Consultations sayfası pencereyi hâlâ 31 Temmuz–14 Eylül 2026 olarak gösteriyor; what-we-heard raporu henüz yayımlanmamış (/what-we-heard ve /report yolları yok). Resmi STA bilgi sayfası (date-modified 2026-10-09) Current status: In negotiations diyor; hükümet 21 Eylül 2026’da Notice of intent yayımladı. İlişkiler sayfasındaki (dateModified 2026-10-06) 2025 rakamları güncel: ikili mal ticareti 4,3 milyar dolardan fazla, Türkiye’deki Kanada doğrudan yatırımı 3,3 milyar dolar, Türk vatandaşlarına yaklaşık 2.550 öğrenim izni ve önde gelen ihracatlar arasında tarım-gıda. İlişkiler sayfası JETCO forumunu anlatıyor; belgelenen 2026-01-20 JETCO yolu yayımlanmamış. 25 Ekim 2026 11.00 UTC’te international.canada.ca / www.international.gc.ca üzerinden doğrulandı.',
       category: 'Ekonomi',
-      color: 'bg-primary',
-      link: 'https://www.international.gc.ca/trade-commerce/trade-agreements-accords-commerciaux/agr-acc/turkiye/fta-ale/info.aspx?lang=eng',
+      color: 'bg-primary-mid',
+      link: 'https://international.canada.ca/en/global-affairs/consultations/trade/2026-07-29-turkiye',
     },
     {
-      id: 'fallback-senior-managers',
-      title: 'Express Entry 2026: Kanada deneyimli üst düzey yöneticiler',
-      desc: 'NOC 00012–00015 yöneticileri için Kanada’da 12 ay; 2026 federal yüksek nitelikli hedef 109.000.',
+      id: 'fallback-express-entry-450',
+      title: 'Express Entry #450: Fransızca yeterlilik',
+      desc: '16 Ekim 2026 resmi tur: 5.000 davet, CRS 435; French-Language proficiency 2026-Version 2.',
       content:
-        'IRCC’nin güncel Express Entry kategori bazlı turları Kanada iş deneyimli üst düzey yöneticileri kapsıyor; 2026 istişare sayfasında yetenek çekme ve elde tutma başlığı altında gruplanıyor. 18 Şubat 2026’da Göçmenlik Bakanı Lena Metlege Diab 2026 kategorilerini, Kanada iş deneyimli araştırmacılar ve üst düzey yöneticiler için yeni kategorileri de kapsayacak şekilde duyurdu. Diab’ın konuşma notlarında yeni kategorilerin, bazı mesleklerde anlamlı katkı için çok yıllık deneyim gerektiğini kabul ettiği belirtildi. Kanada’nın 2026–2028 Göçmenlik Seviyeleri Planı, Express Entry üzerinden yönetilen federal yüksek nitelikli programlar (Kanada Deneyim Sınıfı, Federal Nitelikli İşçi ve Federal Nitelikli Meslekler) için 2026 kabul hedefini 109.000 olarak belirliyor. 2026 istişare sayfasına göre bu yılki davetler ayrıca Kanada Deneyim Sınıfı’na uygun adaylara odaklanıyor; bu, geçici sakinleri kalıcı oturuma geçirme önceliğini yansıtır. Kategori bazlı davet için Express Entry asgari ölçütlerini, kapsadığı üç göçmenlik programından birine uygunluğu ve o turun talimatlarındaki tüm şartları karşılamanız gerekir. Bu kategoride, son üç yıl içinde IRCC listesindeki tek bir meslekte, Kanada’da, en az 12 aylık tam zamanlı (veya eşdeğer yarı zamanlı) iş deneyimi biriktirmiş olmalısınız; deneyimin kesintisiz olması veya asıl mesleğiniz olması gerekmez. 2026 üst düzey yönetici listesinde finans, iletişim ve diğer iş hizmetlerinde üst düzey yöneticiler (NOC 00012, TEER 0); sağlık, eğitim, sosyal ve toplum hizmetleri ile üyelik kuruluşlarında üst düzey yöneticiler (00013, TEER 0); ticaret, yayıncılık ve diğer hizmetlerde üst düzey yöneticiler (00014, TEER 0); inşaat, ulaşım, üretim ve kamu hizmetlerinde üst düzey yöneticiler (00015, TEER 0) yer alıyor. 2027 ekonomik öncelikleri ve kategorilerine ilişkin kamu istişareleri 4 Ağustos–1 Eylül 2026 tarihleri arasında yapıldı; bakanlık üst düzey yeteneği çekme ve elde tutmaya odaklanmayı sürdürmeyi değerlendiriyor. Ayrıntılar her turun talimatlarında yer alır; turlar gerçekleştikten sonra yayımlanır.',
+        'IRCC resmi ee_rounds_123_en.json hâlâ en son tur olarak #450’yi listeliyor: French-Language proficiency 2026-Version 2, 5.000 davet, 435 CRS, 16 Ekim 2026 10:25:13 UTC. JSON’da 451 tur kaydı var (693170 bayt; Last-Modified 16 Ekim 2026 Cuma 13.27.07 GMT). Resmi turlar HTML Last-Modified hâlâ 24 Ekim 2026 Cumartesi 18.25.37 GMT (10.00’dan değişmedi; resmi JSON hâlâ #450). Canonical davet URL’si invitations.html?q=450. CIC News hâlâ resmi #450 turu için 1081461 ana sayfa haberini gösteriyor; 1081344 (#449 CEC) ve 1081246 (#448 PNP) da ana sayfada. 1080909 (#447 meslekler) ana sayfada değil. 25 Ekim 2026 11.00 UTC’te canada.ca ve www.cicnews.com üzerinden doğrulandı.',
       category: 'Göçmenlik',
       color: 'bg-primary',
-      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html',
+      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html',
     },
     {
-      id: 'fallback-community',
-      title: 'Anatolia Fest bu Pazar Toronto’da',
-      desc: 'Ücretsiz Türk Kültürü, Sanat ve Tat Festivali bu Pazar 12.00–20.00; kitap fuarı da var.',
+      id: 'fallback-military-category',
+      title: 'Express Entry 2026: nitelikli askeri adaylar',
+      desc: 'FSMA: 10 yıl kesintisiz hizmet ve NOC 40042, 42102 veya 43204’te Kuvvetler teklifi.',
       content:
-        'Anatolia Fest: Türk Kültürü, Sanat ve Tat Festivali bu Pazar, 20 Eylül 2026, 12.00–20.00 saatleri arasında Toronto merkezindeki Sankofa Square’de, 1 Dundas Street East adresinde geri dönüyor. Sankofa Square ücretsiz, aile dostu festivali Türk mutfağı, geleneksel sanatlar, canlı müzik ve kültürel gösteriler, uygulamalı etkinlikler ve Türk kitap fuarı olarak listeliyor; etkinliğin sponsorları Turkish Airlines ve GoTürkiye. 2016 ve 2017 festivallerinin ardından anatoliafest.ca uzun zamandır beklenen 3. edisyonu bir yeniden birleşme olarak anlatıyor — Türk kahvesi ve baklava, müzik, el sanatları ve yöresel sanat. Ev sahibi kutuphane.ca (Anatolia Fest Vol. 3) herkesi kentin kalbinde Türkiye’den geleneksel müzik, dans, mutfak ve sanata davet ediyor. Güncellemeler için @anatoliafestca hesabını takip edin veya info@anatoliafest.ca adresine yazın.',
-      category: 'Topluluk',
+        'IRCC’nin 2026 kategori bazlı seçim sayfası nitelikli askeri adayları (skilled military recruits) hâlâ bir Express Entry kategorisi olarak listeliyor. Foreign Skilled Military Applicant (FSMA) için tanınmış bir yabancı orduda en az 10 yıl kesintisiz hizmet, NOC 40042, 42102 veya 43204 ile uyumlu eğitim ve Canadian Forces Recruiting Group tarafından verilen bir Canadian Armed Forces iş teklifi gerekiyor. Ayrı kategori URL’leri yayımlanmamış; canonical sayfa submit-profile/rounds-invitations/category-based-selection.html. Resmi kategori sayfası Last-Modified hâlâ 24 Ekim 2026 Cumartesi 18.44.03 GMT (10.00’dan değişmedi; askeri kategori değişmedi). 25 Ekim 2026 11.00 UTC’te canada.ca üzerinden doğrulandı.',
+      category: 'Göçmenlik',
       color: 'bg-primary',
-      link: 'https://www.anatoliafest.ca/',
+      link: 'https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/submit-profile/rounds-invitations/category-based-selection.html',
     },
   ];
 }
@@ -146,19 +146,27 @@ export function mapNewsToBannerItem(
   };
 }
 
+type StoredBanner = BannerAd & {
+  desc?: string;
+  content?: string;
+  category?: string;
+  mediaType?: 'image' | 'video';
+};
+
 export function mapStoredBannerToCarouselItem(banner: BannerAd): BannerCarouselItem {
-  const isNews = banner.type === 'news';
+  const stored = banner as StoredBanner;
+  const isNews = stored.type === 'news';
   return {
-    id: banner.id,
-    title: banner.title || '',
-    desc: banner.desc || '',
-    content: banner.content || '',
-    category: banner.category || (isNews ? 'News' : 'Sponsor'),
-    url: banner.url || '',
+    id: stored.id,
+    title: stored.title || '',
+    desc: stored.desc || '',
+    content: stored.content || '',
+    category: stored.category || (isNews ? 'News' : 'Sponsor'),
+    url: stored.url || '',
     type: isNews ? 'news' : 'ad',
-    mediaType: banner.mediaType || (banner.type === 'video' ? 'video' : 'image'),
-    link: banner.link || '#',
-    active: banner.active !== false,
+    mediaType: stored.mediaType || (stored.type === 'video' ? 'video' : 'image'),
+    link: stored.link || '#',
+    active: stored.active !== false,
     isLiveNews: false,
   };
 }

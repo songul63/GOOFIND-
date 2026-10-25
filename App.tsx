@@ -306,6 +306,7 @@ import {
   User as FirebaseUser
 } from 'firebase/auth';
 import { INITIAL_BUSINESSES, INITIAL_NOTIFICATIONS, INITIAL_EVENTS, INITIAL_BANNERS, INITIAL_CHAT_MESSAGES, INITIAL_COMMUNITIES, INITIAL_FLYERS, INITIAL_PLACES, hydrateCommunity, mergeCommunitiesWithSeed } from './constants';
+import { combineBannerItems, getDefaultCanadaNews } from './lib/canadaNews';
 import { getLatestCanadaTurkishNews, summarizeWebsiteInfo, translatePlaceFields } from './geminiService';
 import { combineBannerItems, getDefaultCanadaNews } from './lib/canadaNews';
 

@@ -306,8 +306,8 @@ import {
   User as FirebaseUser
 } from 'firebase/auth';
 import { INITIAL_BUSINESSES, INITIAL_NOTIFICATIONS, INITIAL_EVENTS, INITIAL_BANNERS, INITIAL_CHAT_MESSAGES, INITIAL_COMMUNITIES, INITIAL_FLYERS, INITIAL_PLACES, hydrateCommunity, mergeCommunitiesWithSeed } from './constants';
-import { combineBannerItems, getDefaultCanadaNews } from './lib/canadaNews';
 import { getLatestCanadaTurkishNews, summarizeWebsiteInfo, translatePlaceFields } from './geminiService';
+import { combineBannerItems, getDefaultCanadaNews } from './lib/canadaNews';
 
 // --- Reusable Components ---
 const StarRating = ({ rating, size = 12 }: { rating: number; size?: number }) => {
@@ -1095,7 +1095,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [banners, setBanners] = useState<BannerAd[]>([]);
-  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(false);
+  const [includeLiveNews, setIncludeLiveNews] = useState<boolean>(true);
   const [isAddBannerOpen, setIsAddBannerOpen] = useState<boolean>(false);
   const [bannerTitle, setBannerTitle] = useState<string>('');
   const [bannerDesc, setBannerDesc] = useState<string>('');
@@ -3802,15 +3802,12 @@ const App: React.FC = () => {
   const activeBanners = useMemo(() => banners.filter(b => b.active), [banners]);
   
   const combinedBannerItems = useMemo(
-    () =>
-      combineBannerItems(
-        activeBanners,
-        communityNews,
-        includeLiveNews,
-        lang,
-        getBannerImageUrl,
-      ),
-    [activeBanners, communityNews, includeLiveNews, lang],
+    () => combineBannerItems(
+      activeBanners,
+      communityNews.length > 0 ? communityNews : DEFAULT_CANADA_NEWS,
+      includeLiveNews,
+    ),
+    [activeBanners, communityNews, DEFAULT_CANADA_NEWS, includeLiveNews],
   );
 
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -8206,6 +8203,21 @@ const App: React.FC = () => {
                         </div>
                         
                         <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleIncludeLiveNews(includeLiveNews)}
+                            className={`text-[13px] font-black uppercase px-3 py-2 rounded-xl tracking-widest flex items-center gap-2 transition-all cursor-pointer shrink-0 border ${
+                              includeLiveNews
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                                : 'bg-slate-50 text-slate-500 border-slate-200'
+                            }`}
+                            title={lang === 'en' ? 'Include live Canada news in homepage banners' : 'Gündem haberlerini ana sayfa bannerında göster'}
+                          >
+                            <span className={`w-9 h-5 rounded-full transition-all flex items-center p-0.5 ${includeLiveNews ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                              <span className={`w-4 h-4 rounded-full bg-white shadow-xs transform transition-transform duration-200 ${includeLiveNews ? 'translate-x-4' : 'translate-x-0'}`} />
+                            </span>
+                            {lang === 'en' ? 'Live news' : 'Gündem'}
+                          </button>
                           <button 
                             type="button"
                             onClick={() => {
